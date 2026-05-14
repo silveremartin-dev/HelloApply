@@ -7,7 +7,6 @@
  */
 
 // --- CONFIGURATION ---
-const GEMINI_API_KEY = '***REMOVED***';
 const MASTER_CV_NAME = 'SilvereMartinMichiellot-CV-full'; 
 const TEMPLATE_CV_NAME = 'SilvereMartinMichiellot-CV-1pageATS-2026';
 const TEMPLATE_LETTER_NAME = 'Lettre de motivation Silvère Martin-Michiellot';
@@ -137,11 +136,13 @@ function callGemini(prompt) {
   const resText = response.getContentText();
   
   if (response.getResponseCode() !== 200) {
-    // Fallback without responseMimeType if still failing
     console.warn(`[WARN] Gemini 400, retrying without responseMimeType...`);
     delete payload.generationConfig;
+    options.payload = JSON.stringify(payload); // Update payload in options
     const retry = UrlFetchApp.fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, options);
-    return JSON.parse(extractJson(retry.getContentText()));
+    const retryJson = JSON.parse(retry.getContentText());
+    const innerText = retryJson.candidates[0].content.parts[0].text;
+    return JSON.parse(extractJson(innerText));
   }
 
   const json = JSON.parse(resText);
@@ -171,10 +172,10 @@ function createReport(jobs) {
 
   for (const job of jobs) {
     const row = table.appendTableRow();
-    row.appendTableCell(`${job.score}%`);
-    row.appendTableCell(job.decision);
-    row.appendTableCell(job.reasons);
-    row.appendTableCell(job.url);
+    row.appendTableCell(String(job.score || 0) + "%");
+    row.appendTableCell(String(job.decision || "Inconnu"));
+    row.appendTableCell(String(job.reasons || "N/A"));
+    row.appendTableCell(String(job.url || "Lien manquant"));
   }
 
   // Move to output
