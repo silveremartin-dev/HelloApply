@@ -6,3 +6,4 @@ token.json
 *.pdf
 !cv/*.pdf
 .DS_Store
+google_apps_script.js
