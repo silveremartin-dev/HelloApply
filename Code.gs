@@ -1,217 +1,198 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 1.2.0
- * LAST UPDATED: 14/05/2026 21:55
+ * VERSION: 3.9.0 (2026 Edition)
+ * LAST UPDATED: 16/05/2026 18:45
  * 
- * New: Analysis phase, matching score, and global summary report.
+ * New: Time-based execution (8h, 14h, 18h), doesn't touch read/unread status,
+ *      uses PropertiesService for persistent last-run tracking.
  */
 
 // --- CONFIGURATION ---
+const ROOT_FOLDER_NAME = "Candidature Express";
+const INPUT_FOLDER_NAME = "input";
+const OUTPUT_FOLDER_NAME = "output";
+
 const MASTER_CV_NAME = 'SilvereMartinMichiellot-CV-full'; 
 const TEMPLATE_CV_NAME = 'SilvereMartinMichiellot-CV-1pageATS-2026';
-const TEMPLATE_LETTER_NAME = 'Lettre de motivation Silvère Martin-Michiellot';
-const OUTPUT_FOLDER_NAME = 'output'; 
-const MIN_MATCH_SCORE = 60; // Seuil minimum pour postuler
+const TEMPLATE_LETTER_NAME = 'Lettre de motivation Silvère Martin-Michiellot 2026b';
+
+const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
+const MIN_MATCH_SCORE = 80; 
+
+// --- USER PREFERENCES ---
+const PREFERENCES = {
+  location: "Lorient, France",
+  radiusLocal: 20, 
+  radiusRegional: 50,
+  allowFullRemote: true,
+  preferredRegions: ["Europe", "World"]
+};
 
 /**
  * Main Entry Point
  */
 function main() {
-  const query = '(from:notification@emails.hellowork.com OR from:jobalerts-noreply@linkedin.com) is:unread';
-  const threads = GmailApp.search(query);
-  const masterCV = readAnyFile(MASTER_CV_NAME);
-  
-  if (!masterCV) {
-    console.error("[ERROR] Master CV not found. Aborting.");
-    return;
-  }
+  const props = PropertiesService.getScriptProperties();
+  const lastRunStr = props.getProperty('LAST_RUN_TIMESTAMP');
+  const lastRun = lastRunStr ? new Date(lastRunStr) : new Date(Date.now() - 24 * 60 * 60 * 1000); // 24h par défaut au 1er run
 
-  let allAnalyses = [];
-  console.log(`[START] Scanning ${threads.length} threads...`);
+  console.log(`[START] Scanning jobs since ${lastRun.toLocaleString()}...`);
+
+  const query = '(from:notification@emails.hellowork.com OR from:jobalerts-noreply@linkedin.com)';
+  const threads = GmailApp.search(query);
+  
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+
+  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
+  if (!masterCV) return;
 
   for (const thread of threads) {
+    // Si le dernier message du thread est antérieur au dernier run, on passe
+    if (thread.getLastMessageDate() <= lastRun) continue;
+
     const messages = thread.getMessages();
     for (const message of messages) {
-      if (!message.isUnread()) continue;
+      // On ne traite que les messages reçus après le dernier run
+      if (message.getDate() <= lastRun) continue;
 
       const jobUrls = extractJobUrls(message.getPlainBody());
       for (const url of jobUrls) {
         try {
           const analysis = analyzeAndTailor(url, masterCV);
-          allAnalyses.push({ url, ...analysis });
-        } catch (e) {
-          console.error(`[ERROR] Analysis failed for ${url}: ${e.message}`);
-        }
+          if (analysis) {
+            analysis.url = url;
+            analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
+            processJob(inputFolder, outputFolder, analysis);
+          }
+        } catch (e) { console.error(`[ERROR] ${url}: ${e.message}`); }
       }
-      message.markRead();
+      // Fini message.markRead() ! On respecte votre boîte mail.
     }
   }
 
-  if (allAnalyses.length === 0) {
-    console.log("[END] No jobs found to analyze.");
-    return;
-  }
-
-  // Sort by score and keep top 5
-  allAnalyses.sort((a, b) => b.score - a.score);
-  const topJobs = allAnalyses.slice(0, 5);
-
-  processTopJobs(topJobs);
+  // On enregistre l'heure de ce passage
+  props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
+  console.log(`[END] Last run timestamp updated.`);
 }
 
 /**
- * Single Gemini Call for Analysis + Data Generation
+ * Configure les déclencheurs (8h, 14h, 18h)
+ */
+function setupTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(t => ScriptApp.deleteTrigger(t));
+  
+  ScriptApp.newTrigger('main').timeBased().atHour(8).everyDays(1).create();
+  ScriptApp.newTrigger('main').timeBased().atHour(14).everyDays(1).create();
+  ScriptApp.newTrigger('main').timeBased().atHour(18).everyDays(1).create();
+  
+  console.info("Déclencheurs configurés pour 08:00, 14:00 et 18:00.");
+}
+
+/**
+ * Gemini Analysis
  */
 function analyzeAndTailor(url, masterCV) {
-  console.log(`[ANALYSIS] Analyzing: ${url}`);
-  
-  const prompt = `
-    Analyze this job (URL: ${url}) against this Master CV: ${masterCV}
-    
-    1. Score the match from 0 to 100%.
-    2. Decide if I should apply ("Postuler" if score > 60, else "Passer").
-    3. Extract pros and cons.
-    4. If decision is "Postuler", generate tailored CV data.
-
-    Return JSON only:
-    {
-      "score": 85,
-      "decision": "Postuler",
-      "reasons": "Matching skills in X, but lacks experience in Y",
-      "data": {
-        "full_name": "...",
-        "job_title": "...",
-        "summary": "...",
-        "experience": "...",
-        "skills": "...",
-        "letter_body": "..."
-      }
-    }
-  `;
-
+  const jobDescription = fetchJobDescription(url);
+  const prompt = `Analyze this JOB (${jobDescription || url}) against MASTER CV: ${masterCV}. 
+                  Score strictly. Return JSON with company, position, score, reasoning, decision, full_description, data.`;
   return callGemini(prompt);
 }
 
 /**
- * Process top jobs and generate report
+ * Process a single job
  */
-function processTopJobs(jobs) {
-  const reportId = createReport(jobs);
-  console.log(`[REPORT] Summary report created: ${reportId}`);
+function processJob(inputFolder, outputFolder, job) {
+  let cvDocUrl = "";
+  let lmDocUrl = "";
+  let attachments = [];
 
-  for (const job of jobs) {
-    if (job.decision === "Postuler") {
-      try {
-        console.log(`[GENERATE] Tailoring for ${job.url} (${job.score}%)`);
-        generateDocument(TEMPLATE_CV_NAME, job.data, `CV_${job.score}pct`);
-        generateDocument(TEMPLATE_LETTER_NAME, job.data, `Letter_${job.score}pct`);
-      } catch (e) {
-        console.error(`[ERROR] Document generation failed for ${job.url}: ${e.message}`);
-      }
-    }
+  if (job.score >= MIN_MATCH_SCORE && job.decision === "Postuler") {
+    try {
+      const rand = Math.floor(Math.random() * 900000) + 10000;
+      const cvName = `SilvereMartinMichiellot-CV-2026-${rand}`;
+      const lmName = `SilvereMartinMichiellot-LM-2026-${rand}`;
+
+      const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.data, cvName);
+      const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.data, lmName);
+
+      cvDocUrl = cvResult.docUrl;
+      lmDocUrl = lmResult.docUrl;
+      attachments = [cvResult.pdfBlob, lmResult.pdfBlob];
+
+      createDraft(job, attachments);
+    } catch (e) { console.error(e.message); }
   }
+  logToSheet(outputFolder, job, cvDocUrl, lmDocUrl);
 }
 
 /**
- * Gemini Request (Fixed for Error 400/404)
+ * Create Gmail Draft (HTML)
  */
-function callGemini(prompt) {
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { 
-      // Using standard naming for v1beta
-      responseMimeType: "application/json" 
-    }
-  };
-
-  const options = {
-    method: 'post',
-    contentType: 'application/json',
-    payload: JSON.stringify(payload),
-    muteHttpExceptions: true
-  };
-
-  // Switch to v1beta for better JSON support
-  const response = UrlFetchApp.fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, options);
-  const resText = response.getContentText();
-  
-  if (response.getResponseCode() !== 200) {
-    console.warn(`[WARN] Gemini 400, retrying without responseMimeType...`);
-    delete payload.generationConfig;
-    options.payload = JSON.stringify(payload); // Update payload in options
-    const retry = UrlFetchApp.fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, options);
-    const retryJson = JSON.parse(retry.getContentText());
-    const innerText = retryJson.candidates[0].content.parts[0].text;
-    return JSON.parse(extractJson(innerText));
-  }
-
-  const json = JSON.parse(resText);
-  return JSON.parse(json.candidates[0].content.parts[0].text);
-}
-
-function extractJson(text) {
-  const match = text.match(/\{.*\}/s);
-  return match ? match[0] : text;
+function createDraft(job, attachments) {
+  const subject = `Candidature - ${job.position} - ${job.company} (${job.score}%)`;
+  const htmlBody = `
+    <div style="font-family: Arial; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+      <p>Bonjour,</p>
+      <p>Voici ma candidature pour le poste de <strong>${job.position}</strong> chez <strong>${job.company}</strong>.</p>
+      <div style="background: #f4f7f6; padding: 15px; border-left: 5px solid #3498db; margin: 20px 0;">
+        <h3 style="margin-top: 0;">🧠 Analyse IA (Score : ${job.score}%)</h3>
+        <p><em>${job.reasoning}</em></p>
+        <p>🔗 <a href="${job.url}" style="color: #3498db;">Voir l'offre originale sur ${job.source}</a></p>
+      </div>
+      <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
+      <h4 style="color: #7f8c8d;">📄 Descriptif complet du poste :</h4>
+      <div style="font-size: 0.85em; color: #666; background: #fff; padding: 10px; border: 1px solid #eee;">
+        ${job.full_description || "N/A"}
+      </div>
+      <p style="margin-top: 20px;">Cordialement,<br><strong>Silvère Martin-Michiellot</strong></p>
+    </div>
+  `;
+  GmailApp.createDraft("", subject, "", { htmlBody: htmlBody, attachments: attachments });
 }
 
 /**
- * Create a summary report in Google Docs
+ * Helpers (Files, Folder, Gemini)
  */
-function createReport(jobs) {
-  const doc = DocumentApp.create(`HelloApply_Report_${new Date().toLocaleDateString()}`);
+function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data, finalName) {
+  const files = inputFolder.getFilesByName(templateName);
+  if (!files.hasNext()) throw new Error(`Template ${templateName} introuvable.`);
+  const copy = files.next().makeCopy(finalName, outputFolder);
+  const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
-  
-  body.appendParagraph("HelloApply: Rapport d'Analyse").setHeading(DocumentApp.ParagraphHeading.HEADING1);
-  
-  const table = body.appendTable();
-  const header = table.appendTableRow();
-  header.appendTableCell("Score");
-  header.appendTableCell("Décision");
-  header.appendTableCell("Analyse / Raisons");
-  header.appendTableCell("URL Offre");
-
-  for (const job of jobs) {
-    const row = table.appendTableRow();
-    row.appendTableCell(String(job.score || 0) + "%");
-    row.appendTableCell(String(job.decision || "Inconnu"));
-    row.appendTableCell(String(job.reasons || "N/A"));
-    row.appendTableCell(String(job.url || "Lien manquant"));
-  }
-
-  // Move to output
-  const file = DriveApp.getFileById(doc.getId());
-  const outputFolders = DriveApp.getFoldersByName(OUTPUT_FOLDER_NAME);
-  const folder = outputFolders.hasNext() ? outputFolders.next() : DriveApp.getRootFolder();
-  folder.addFile(file);
-  DriveApp.getRootFolder().removeFile(file);
-
-  return doc.getId();
+  const fields = ['FULL_NAME', 'JOB_TITLE', 'SUMMARY', 'EXPERIENCE', 'SKILLS', 'LETTER_BODY'];
+  fields.forEach(f => body.replaceText(`{{${f}}}`, data[f.toLowerCase()] || ''));
+  doc.saveAndClose();
+  const pdfBlob = copy.getAs(MimeType.PDF).setName(finalName + ".pdf");
+  outputFolder.createFile(pdfBlob);
+  return { docUrl: copy.getUrl(), pdfBlob: pdfBlob };
 }
 
-/**
- * Helpers (Read/Extract/Filter/Document)
- */
-function readAnyFile(fileName) {
-  const files = DriveApp.getFilesByName(fileName);
-  if (!files.hasNext()) {
-    const filesNoExt = DriveApp.getFilesByName(fileName.replace('.pdf', ''));
-    if (!filesNoExt.hasNext()) return null;
-    return readAnyFileObject(filesNoExt.next());
+function logToSheet(folder, job, cvUrl, lmUrl) {
+  let sheetFile;
+  const files = folder.getFilesByName(TRACKING_SHEET_NAME);
+  if (files.hasNext()) { sheetFile = SpreadsheetApp.openById(files.next().getId()); } 
+  else {
+    sheetFile = SpreadsheetApp.create(TRACKING_SHEET_NAME);
+    folder.addFile(DriveApp.getFileById(sheetFile.getId()));
+    DriveApp.getRootFolder().removeFile(DriveApp.getFileById(sheetFile.getId()));
+    sheetFile.getSheets()[0].appendRow(["Date", "Source", "Entreprise", "Poste", "Score", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Analyse"]);
   }
-  return readAnyFileObject(files.next());
+  sheetFile.getSheets()[0].appendRow([new Date().toLocaleDateString(), job.source, job.company, job.position, job.score + "%", job.url, cvUrl, lmUrl, job.reasoning]);
 }
 
-function readAnyFileObject(file) {
-  const mimeType = file.getMimeType();
-  if (mimeType === MimeType.GOOGLE_DOCS) return DocumentApp.openById(file.getId()).getBody().getText();
-  if (mimeType === MimeType.PDF) {
-    const resource = { title: file.getName(), mimeType: MimeType.GOOGLE_DOCS };
-    const docFile = Drive.Files.insert(resource, file.getBlob(), { ocr: true });
-    const content = DocumentApp.openById(docFile.id).getBody().getText();
-    Drive.Files.remove(docFile.id);
-    return content;
-  }
-  return "";
+function callGemini(prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
+  const options = { method: 'post', contentType: 'application/json', payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), muteHttpExceptions: true };
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const json = JSON.parse(response.getContentText());
+    const outputText = json.candidates[0].content.parts[0].text;
+    const match = outputText.match(/\{.*\}/s);
+    return JSON.parse(match ? match[0] : outputText);
+  } catch (e) { return null; }
 }
 
 function extractJobUrls(text) {
@@ -220,33 +201,27 @@ function extractJobUrls(text) {
   return matches.filter(url => url.includes('linkedin.com/comm/jobs/view/') || (url.includes('hellowork.com') && url.includes('/offre-')));
 }
 
-function generateDocument(templateName, data, prefix) {
-  const files = DriveApp.getFilesByName(templateName);
-  if (!files.hasNext()) return;
-  
-  const template = files.next();
-  const copy = template.makeCopy(`${prefix}_${data.full_name || 'Candidat'}_${new Date().getTime()}`);
-  const doc = DocumentApp.openById(copy.getId());
-  const body = doc.getBody();
-
-  body.replaceText('{{FULL_NAME}}', data.full_name || '');
-  body.replaceText('{{JOB_TITLE}}', data.job_title || '');
-  body.replaceText('{{SUMMARY}}', data.summary || '');
-  body.replaceText('{{EXPERIENCE}}', data.experience || '');
-  body.replaceText('{{SKILLS}}', data.skills || '');
-  body.replaceText('{{LETTER_BODY}}', data.letter_body || '');
-
-  doc.saveAndClose();
-  
-  const outputFolders = DriveApp.getFoldersByName(OUTPUT_FOLDER_NAME);
-  const folder = outputFolders.hasNext() ? outputFolders.next() : DriveApp.getRootFolder();
-  folder.addFile(copy);
-  DriveApp.getRootFolder().removeFile(copy);
+function fetchJobDescription(url) {
+  try {
+    const response = UrlFetchApp.fetch(url, { 'muteHttpExceptions': true, 'headers': { 'User-Agent': 'Mozilla/5.0' } });
+    if (response.getResponseCode() !== 200) return null;
+    return response.getContentText().replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, "").replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 8000);
+  } catch (e) { return null; }
 }
 
-function setupTrigger() {
-  const triggers = ScriptApp.getProjectTriggers();
-  triggers.forEach(t => ScriptApp.deleteTrigger(t));
-  ScriptApp.newTrigger('main').timeBased().everyMinutes(30).create();
+function getOrCreateFolder(name) {
+  const folders = DriveApp.getRootFolder().getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : DriveApp.getRootFolder().createFolder(name);
 }
 
+function getOrCreateFolderIn(parent, name) {
+  const folders = parent.getFoldersByName(name);
+  return folders.hasNext() ? folders.next() : parent.createFolder(name);
+}
+
+function readAnyFileIn(folder, fileName) {
+  const files = folder.getFilesByName(fileName);
+  if (!files.hasNext()) return null;
+  const file = files.next();
+  return file.getMimeType() === MimeType.GOOGLE_DOCS ? DocumentApp.openById(file.getId()).getBody().getText() : "";
+}

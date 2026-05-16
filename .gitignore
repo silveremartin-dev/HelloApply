@@ -1,10 +1,12 @@
-node_modules/
-dist/
-.env
-credentials.json
-token.json
-*.pdf
-!cv/*.pdf
-.DS_Store
-google_apps_script.js
+# Apps Script Secrets
 Secrets.gs
+diagnostic.js
+payload.json
+diagnostic.py
+
+# Node.js
+node_modules/
+npm-debug.log
+
+# Clasp
+.clasp.json
