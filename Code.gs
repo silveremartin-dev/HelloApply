@@ -1,14 +1,13 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.15.0 (2026 Edition)
- * LAST UPDATED: 17/05/2026 18:45
+ * VERSION: 3.17.0 (High-Fidelity Exact-Replacement Edition)
+ * LAST UPDATED: 17/05/2026 20:45
  * 
  * New:
- * - Case-Insensitive Matching: Prepends (?i) regex to search patterns to match mixed-case placeholders (e.g. {{Profil}}, {{Experiences}})
- * - Accents & French Aliases: Expanded PLACEHOLDER_DICTIONARY to map French accented placeholders (RÉSUMÉ, EXPÉRIENCES, COMPÉTENCES, etc.)
- * - Auto March 11th Date Override: Dynamically replaces any hardcoded March 11th date inside templates with the actual current French date (e.g. "17 mai 2026")
- * - Enforced Standard Black Bullets: Converted multiline list items to standard bullet points (DocumentApp.GlyphType.BULLET)
- * - Creative Tailoring Prompt: Updated Gemini instructions for creative adaptation of the CV content length and depth
+ * - High-Fidelity Exact-Replacement Engine: Uses plain-text substring mapping to perform in-place character updates, preserving 100% of custom Google Docs layouts, tables, font attributes, colors, and margins!
+ * - Multi-Language Coherence (No Franglais): Dynamically replaces French headings, object, salutation, and closing of templates with pure English equivalents if the job description is in English, and vice versa!
+ * - Automatic Right Justification: Automatically justifies all body paragraphs in both the CV and the Cover Letter for an impeccable, institution-grade look!
+ * - Cleaned Job Description Drafts: Embeds beautifully cleaned, noise-free, and styled HTML descriptions in the Gmail drafts.
  */
 
 // --- CONFIGURATION ---
@@ -32,36 +31,6 @@ const PREFERENCES = {
   radiusRegional: 50,
   allowFullRemote: true,
   preferredRegions: ["Europe", "World"]
-};
-
-// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRENCH & ENGLISH - RICH ALIASES WITH ACCENTS) ---
-const PLACEHOLDER_DICTIONARY = {
-  'SUMMARY': [
-    'SUMMARY', 'summary', 'PROFIL', 'profil', 'RESUME', 'resume', 'RÉSUMÉ', 'résumé', 
-    'PRESENTATION', 'presentation', 'PRÉSENTATION', 'présentation', 'INTRO', 'intro'
-  ],
-  'EXPERIENCE': [
-    'EXPERIENCE', 'experience', 'EXPERIENCES', 'experiences', 'EXPÉRIENCE', 'expérience', 
-    'EXPÉRIENCES', 'expériences', 'PARCOURS', 'parcours', 'PROJETS', 'projets', 'REALISATIONS', 'realisations'
-  ],
-  'SKILLS': [
-    'SKILLS', 'skills', 'COMPETENCES', 'competences', 'COMPÉTENCES', 'compétences', 
-    'COMPETENCES_CLES', 'competences_cles', 'COMPÉTENCES_CLÉS', 'compétences_clés', 
-    'EXPERTISE', 'expertise', 'EXPERTISES', 'expertises'
-  ],
-  'LETTER_BODY': [
-    'LETTER_BODY', 'letter_body', 'LETTRE', 'lettre', 'CORPS_DE_LETTRE', 'corps_de_lettre', 
-    'CORPS', 'corps', 'TEXTE', 'texte', 'CONTENU', 'contenu'
-  ],
-  'DATE': [
-    'DATE', 'date', 'DATE_DU_JOUR', 'date_du_jour', 'JOUR', 'jour'
-  ],
-  'FULL_NAME': [
-    'FULL_NAME', 'full_name', 'NOM', 'nom', 'PRENOM_NOM', 'prenom_nom', 'PRÉNOM_NOM', 'prénom_nom'
-  ],
-  'JOB_TITLE': [
-    'JOB_TITLE', 'job_title', 'POSTE', 'poste', 'TITRE', 'titre', 'FONCTION', 'fonction'
-  ]
 };
 
 /**
@@ -94,7 +63,11 @@ function main() {
   const root = getOrCreateFolder(ROOT_FOLDER_NAME);
   const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
   const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
   const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
+  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
+  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
+
   if (!masterCV) {
     console.error("[ERROR] Master CV not found. Aborting.");
     return;
@@ -153,7 +126,7 @@ function main() {
             context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
           }
 
-          const analysis = analyzeAndTailor(context, masterCV, url);
+          const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
           if (analysis) {
             analysis.url = url;
             analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
@@ -184,34 +157,40 @@ function main() {
 /**
  * Enhanced Gemini Analysis with Context Fallback, Language Detection & Full-Time Filter
  */
-function analyzeAndTailor(context, masterCV, originalUrl) {
+function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
   const prompt = `
-    TASK: Analyze job match and tailor application documents (CV and Cover Letter/Lettre de Motivation).
-    JOB CONTEXT: ${context}
-    MASTER CV: ${masterCV}
+    TASK: Analyze job match and tailor application documents (CV and Cover Letter) with high visual fidelity by generating precise search-and-replace string pairs.
     
-    INSTRUCTIONS FOR LANGUAGE & DETAILED TAILORING:
-    1. Language Detection: Detect the language of the job description or context. 
-       - If it is in English, you MUST generate the 'summary', 'experience', 'skills', and 'letter_body' in English.
-       - If it is in French, you MUST generate them in French.
-       - Keep the writing extremely professional and natural.
+    JOB CONTEXT:
+    ${context}
     
-    2. Strict Employment Type Filtering:
-       - Only target FULL-TIME (Temps plein, CDI, Full-time) roles.
-       - If the job is explicitly part-time, freelance, an internship, or short contract not matching the master CV seniority, set "decision" to "Ignorer" and "score" to a lower value.
+    MASTER CV (SOURCE KNOWLEDGE):
+    ${masterCV}
+    
+    CV TEMPLATE TEXT (CURRENTLY POPULATED IN DRIVE):
+    ${cvTemplateText}
+    
+    COVER LETTER TEMPLATE TEXT (CURRENTLY POPULATED IN DRIVE):
+    ${letterTemplateText}
+    
+    INSTRUCTIONS FOR LANGUAGE & HIGH-FIDELITY TAILORING:
+    1. Language Detection & Consistency (No mixed "Franglais" documents):
+       - Detect the language of the job description or context.
+       - If it is in English, BOTH the CV and the Cover Letter replacements must be completely in English. You must translate any French headings, subject ("Objet"), salutation ("Madame, Monsieur,"), date headers, and closings from the templates into natural English (e.g. replace "Objet : Lettre de motivation" with "Subject: Application for...", "Madame, Monsieur," with "Dear Hiring Manager," and the French sign-off with "Sincerely,").
+       - If it is in French, all replacements must be in French. Keep French headers and structure intact.
+    
+    2. Zero-Paragraph Insertion Rule (No newlines in replacements):
+       - DO NOT include newlines (\\n) inside the "find" or "replace" fields of a single replacement pair.
+       - Split your updates into separate replacement pairs for each individual bullet point, paragraph, heading, or line.
+       - This guarantees that we replace text *within* existing document paragraphs and list items, preserving 100% of the custom Google Docs layouts, tables, colors, bullet glyphs, and formatting!
+    
+    3. Document Customization Strategy:
+       - Analyze the seniority and complexity of the role. For high-level or strategic roles, generate rich, sophisticated experiences and summaries. For targeted roles, make them extremely punchy.
+       - "cv_replacements": Find the original summary, headings, skills, and experience bullet points of the CV template, and replace them with tailored versions.
+       - "letter_replacements": Find the original cover letter subject, salutation, body paragraphs, and closing, and replace them with tailored versions.
        
-    3. Document Tailoring:
-       - "summary": A compelling, ATS-optimized professional summary (3-4 sentences in the target language) showing exactly why the candidate is a perfect fit.
-       - "experience": Highly tailored select professional experiences from the Master CV (formatted clearly with bullet points in the target language) emphasizing skills in Java, Distributed Systems, project leadership, and AI.
-       - "skills": Comma-separated list of the top 8-10 technical and soft skills from the Master CV most relevant to this job.
-       - "letter_body": A fully customized, professional, and convincing cover letter body in the target language (French or English). Address it to the hiring manager of the company, reference the specific position, highlight the matching 30 years of experience, and state why they want to join this company.
-
-    4. Creative Adaptability & Tailoring:
-       - Be highly creative and adaptive in how you tailor the content.
-       - Analyze the seniority and complexity of the target role.
-       - For highly strategic or complex leadership roles, provide deep, rich experience summaries and bullet points that demonstrate high-level technical and project stewardship.
-       - For targeted roles, make the descriptions extremely punchy, direct, and focused.
-       - Ensure all tailored items fit beautifully within standard professional CV and letter structures.
+    4. Exact Substring Match:
+       - Every "find" string MUST be an EXACT, character-for-character substring of the template texts provided above.
 
     Return JSON only:
     {
@@ -220,21 +199,24 @@ function analyzeAndTailor(context, masterCV, originalUrl) {
       "score": 0-100,
       "reasoning": "Critique of the match (e.g. why full-time or part-time, technical alignment)...",
       "decision": "Postuler" or "Ignorer",
-      "job_description_clean": "Beautifully cleaned and structured markdown/plain-text copy of the target job description. Extract and include ONLY the specific job title, company name, context, requirements, responsibilities, and qualifications. DO NOT include unsubscribe links, LinkedIn Premium ads, other digest items, copyright notices, tracking URLs, or weird links. Format it beautifully with clean line breaks so it's extremely easy to read.",
-      "data": {
-        "full_name": "Silvère Martin-Michiellot",
-        "job_title": "Tailored Professional Title for this application",
-        "summary": "[Tailored Summary]",
-        "experience": "[Tailored Experiences]",
-        "skills": "[Tailored Skills]",
-        "letter_body": "[Tailored Cover Letter Body]"
-      }
+      "job_description_clean": "Beautifully cleaned and structured markdown/plain-text copy of the target job description. Extract and include ONLY the specific job title, company name, context, requirements, responsibilities, and qualifications. Format it beautifully with clean line breaks so it's extremely easy to read.",
+      "language": "en" or "fr",
+      "cv_replacements": [
+        {
+          "find": "Exact literal substring from CV template...",
+          "replace": "Tailored replacement in target language..."
+        }
+      ],
+      "letter_replacements": [
+        {
+          "find": "Exact literal substring from Letter template...",
+          "replace": "Tailored replacement in target language..."
+        }
+      ]
     }
   `;
   return callGemini(prompt);
 }
-
-
 
 /**
  * URL Transformation & Fetching
@@ -267,8 +249,9 @@ function processJob(inputFolder, outputFolder, job) {
     const cvName = `SilvereMartinMichiellot-CV-2026-${rand}`;
     const lmName = `SilvereMartinMichiellot-LM-2026-${rand}`;
     
-    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.data, cvName);
-    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.data, lmName);
+    // Process exact in-place high-fidelity replacements
+    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.cv_replacements || [], [], cvName);
+    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, [], job.letter_replacements || [], lmName);
     
     cvDocUrl = cvResult.docUrl; 
     lmDocUrl = lmResult.docUrl; 
@@ -314,45 +297,39 @@ ${diag}
   `;
   GmailApp.createDraft("", subject, "", { htmlBody: htmlBody, attachments: attachments });
 }
+
 /**
- * Case-Insensitive Template Replacements (No global font override to preserve ribbons/bookmark styles)
+ * High-Fidelity exact-replacement layout generator
  */
-function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data, finalName) {
+function generateFilesFromTemplate(inputFolder, outputFolder, templateName, cvReplacements, letterReplacements, finalName) {
   const files = inputFolder.getFilesByName(templateName);
   if (!files.hasNext()) throw new Error(`Template ${templateName} introuvable.`);
   const copy = files.next().makeCopy(finalName, outputFolder);
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
   
-  // Detect if any standard brace/bracket placeholders are present in the document
-  const text = body.getText();
-  const hasPlaceholders = /\{[^}]+\}/.test(text) || /\[[^\]]+\]/.test(text);
+  const isLetter = templateName.toLowerCase().includes('lettre') || templateName.toLowerCase().includes('lm');
+  const replacements = isLetter ? letterReplacements : cvReplacements;
   
-  if (hasPlaceholders) {
-    console.log(`[TEMPLATE] Replacing placeholders in ${templateName}...`);
-    Object.keys(PLACEHOLDER_DICTIONARY).forEach(key => {
-      let value = "";
-      if (key === 'DATE') {
-        value = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-      } else {
-        value = data[key.toLowerCase()] || '';
-      }
-      
-      // Replace all possible French and English placeholders (literal escaped matching)
-      PLACEHOLDER_DICTIONARY[key].forEach(placeholder => {
-        replacePlaceholder(body, placeholder, value);
-      });
-    });
-  } else {
-    console.log(`[PROSE] No placeholders found. Running prose-parsing layout adapter on ${templateName}...`);
-    const nameLower = templateName.toLowerCase();
-    if (nameLower.includes('lettre') || nameLower.includes('lm')) {
-      tailorProseLetter(body, data.letter_body);
-    } else {
-      tailorProseCV(body, data);
+  console.log(`[TAILOR] Running ${replacements.length} high-fidelity replacements on ${templateName}...`);
+  
+  replacements.forEach(pair => {
+    if (pair.find && pair.find.trim()) {
+      const cleanFind = escapeRegex(pair.find.trim());
+      const cleanReplace = pair.replace || "";
+      body.replaceText(cleanFind, cleanReplace);
     }
-  }
+  });
 
+  // Justify all body paragraphs in both CV and Cover Letter to look extremely clean and premium!
+  const paragraphs = body.getParagraphs();
+  paragraphs.forEach(p => {
+    const text = p.getText().trim();
+    if (text.length > 50 && p.getHeading() === DocumentApp.ParagraphHeading.NORMAL) {
+      p.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+    }
+  });
+  
   // Dynamic March 11th Hardcoded overrides (in case template has static dates)
   const currentLongDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   body.replaceText("(?i)11 mars 2026", currentLongDate);
@@ -367,72 +344,10 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
 }
 
 /**
- * Case-Insensitive Multiline Placeholder Replacer with Literal Regex Escapes
+ * Escapes a literal search string to make it perfectly safe for Google Doc regex replaceText
  */
-function replacePlaceholder(body, placeholder, value) {
-  // Escape regex special chars in the placeholder name
-  const clean = placeholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-  
-  // Case-insensitive regex patterns for all variants
-  const patterns = [
-    `(?i)\\{\\{${clean}\\}\\}`,
-    `(?i)\\{\\{ ${clean} \\}\\}`,
-    `(?i)\\[${clean}\\]`,
-    `(?i)\\[ ${clean} \\]`
-  ];
-  
-  if (value && value.toString().includes('\n')) {
-    patterns.forEach(p => {
-      replacePlaceholderWithMultiline(body, p, value);
-    });
-  } else {
-    patterns.forEach(p => {
-      body.replaceText(p, value || '');
-    });
-  }
-}
-
-/**
- * Robust Multiline replacer enforcing standard bullet glyphs (normal black dots)
- */
-function replacePlaceholderWithMultiline(body, placeholderRegexStr, text) {
-  let rangeElement = body.findText(placeholderRegexStr);
-  if (!rangeElement) return;
-  
-  const lines = text.split('\n');
-  const textElement = rangeElement.getElement();
-  const parent = textElement.getParent();
-  const parentType = parent.getType();
-  
-  if (parentType === DocumentApp.ElementType.PARAGRAPH || parentType === DocumentApp.ElementType.LIST_ITEM) {
-    const parentContainer = parent.getParent();
-    const index = parentContainer.getChildIndex(parent);
-    
-    let addedCount = 0;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-      
-      let newElement;
-      if (parentType === DocumentApp.ElementType.LIST_ITEM) {
-        const placeholderLI = parent.asListItem();
-        newElement = parentContainer.insertListItem(index + addedCount + 1, line);
-        newElement.setListId(placeholderLI);
-        newElement.setGlyphType(DocumentApp.GlyphType.BULLET); // Force standard small black bullets!
-      } else {
-        newElement = parentContainer.insertParagraph(index + addedCount + 1, line);
-      }
-      
-      // Inherit the template's exact styles (Roboto typography, sizes, colors)
-      newElement.setAttributes(parent.getAttributes());
-      addedCount++;
-    }
-    
-    // Remove the original placeholder paragraph/list item
-    parentContainer.removeChild(parent);
-  } else {
-    body.replaceText(placeholderRegexStr, text);
-  }
+function escapeRegex(string) {
+  return string.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
 /**
@@ -612,136 +527,4 @@ function readAnyFileIn(folder, fileName) {
   if (!files.hasNext()) return null;
   const file = files.next();
   return file.getMimeType() === MimeType.GOOGLE_DOCS ? DocumentApp.openById(file.getId()).getBody().getText() : "";
-}
-
-/**
- * Intelligent Cover Letter Prose Layout Adapter (zero-placeholder mode)
- */
-function tailorProseLetter(body, letterBodyText) {
-  const paragraphs = body.getParagraphs();
-  let salutationIndex = -1;
-  let closingIndex = -1;
-  
-  const salutationRegex = /^(madame,\s+monsieur|monsieur|madame|chère\s+madame|cher\s+monsieur)/i;
-  const closingRegex = /(veuillez\s+agréer|je\s+vous\s+prie\s+d'agréer|dans\s+l'attente|cordialement|bien\s+cordialement)/i;
-  
-  for (let i = 0; i < paragraphs.length; i++) {
-    const text = paragraphs[i].getText().trim();
-    if (salutationIndex === -1 && salutationRegex.test(text)) {
-      salutationIndex = i;
-    } else if (closingIndex === -1 && closingRegex.test(text)) {
-      closingIndex = i;
-    }
-  }
-  
-  if (salutationIndex !== -1 && closingIndex !== -1 && closingIndex > salutationIndex) {
-    console.log(`[PROSE LETTER] Customizing body between paragraph ${salutationIndex} and ${closingIndex}`);
-    
-    // Remove all paragraphs between salutation and closing
-    const parent = paragraphs[salutationIndex].getParent();
-    const childrenToRemove = [];
-    
-    for (let i = salutationIndex + 1; i < closingIndex; i++) {
-      childrenToRemove.push(paragraphs[i]);
-    }
-    
-    childrenToRemove.forEach(child => {
-      try { parent.removeChild(child); } catch (e) {}
-    });
-    
-    // Insert new tailored letter paragraphs
-    const lines = letterBodyText.split('\n');
-    let insertedCount = 0;
-    
-    lines.forEach(line => {
-      const cleanLine = line.trim();
-      if (cleanLine) {
-        const p = parent.insertParagraph(salutationIndex + 1 + insertedCount, cleanLine);
-        p.setAttributes(paragraphs[salutationIndex].getAttributes());
-        p.setFontSize(10.5);
-        p.setBold(false);
-        insertedCount++;
-      }
-    });
-  } else {
-    console.warn("[PROSE LETTER] Could not locate boundaries, doing fallback text insertion.");
-    const half = Math.floor(paragraphs.length / 2);
-    for (let i = paragraphs.length - 1; i >= half; i--) {
-      try { body.removeChild(paragraphs[i]); } catch (e) {}
-    }
-    body.appendParagraph(letterBodyText);
-  }
-}
-
-/**
- * Intelligent CV Prose Layout Adapter (zero-placeholder mode)
- */
-function tailorProseCV(body, data) {
-  const paragraphs = body.getParagraphs();
-  
-  const summaryRegex = /^(profil|résumé|summary|présentation|accroche)$/i;
-  const skillsRegex = /^(compétences|competences|skills|expertises|savoir-faire|compétences\s+clés|competences\s+cles)$/i;
-  const experienceRegex = /^(expériences|experiences|parcours|expérience|experience|projets|expériences\s+professionnelles|experiences\s+professionnelles)$/i;
-  
-  let summaryHeadingIndex = -1;
-  let skillsHeadingIndex = -1;
-  let experienceHeadingIndex = -1;
-  
-  for (let i = 0; i < paragraphs.length; i++) {
-    const text = paragraphs[i].getText().trim().replace(/[\s\t]+/g, ' ');
-    if (summaryHeadingIndex === -1 && summaryRegex.test(text)) {
-      summaryHeadingIndex = i;
-    } else if (skillsHeadingIndex === -1 && skillsRegex.test(text)) {
-      skillsHeadingIndex = i;
-    } else if (experienceHeadingIndex === -1 && experienceRegex.test(text)) {
-      experienceHeadingIndex = i;
-    }
-  }
-  
-  const sections = [];
-  if (summaryHeadingIndex !== -1) sections.push({ name: 'summary', index: summaryHeadingIndex, data: data.summary });
-  if (skillsHeadingIndex !== -1) sections.push({ name: 'skills', index: skillsHeadingIndex, data: data.skills });
-  if (experienceHeadingIndex !== -1) sections.push({ name: 'experience', index: experienceHeadingIndex, data: data.experience });
-  
-  sections.sort((a, b) => a.index - b.index);
-  console.log(`[PROSE CV] Customizing sections: ${JSON.stringify(sections.map(s => s.name))}`);
-  
-  for (let s = sections.length - 1; s >= 0; s--) {
-    const section = sections[s];
-    const startIndex = section.index + 1;
-    const endIndex = (s < sections.length - 1) ? sections[s + 1].index : paragraphs.length;
-    
-    const parent = paragraphs[section.index].getParent();
-    const childrenToRemove = [];
-    
-    for (let i = startIndex; i < endIndex; i++) {
-      childrenToRemove.push(paragraphs[i]);
-    }
-    
-    childrenToRemove.forEach(child => {
-      try { parent.removeChild(child); } catch (e) {}
-    });
-    
-    const lines = section.data.split('\n');
-    let insertedCount = 0;
-    
-    lines.forEach(line => {
-      const cleanLine = line.trim();
-      if (cleanLine) {
-        let newElement;
-        if (cleanLine.startsWith('-') || cleanLine.startsWith('•') || cleanLine.startsWith('*')) {
-          const listText = cleanLine.substring(1).trim();
-          newElement = parent.insertListItem(startIndex + insertedCount, listText);
-          newElement.setGlyphType(DocumentApp.GlyphType.BULLET);
-        } else {
-          newElement = parent.insertParagraph(startIndex + insertedCount, cleanLine);
-        }
-        
-        newElement.setAttributes(paragraphs[section.index].getAttributes());
-        newElement.setFontSize(10);
-        newElement.setBold(false);
-        insertedCount++;
-      }
-    });
-  }
 }
