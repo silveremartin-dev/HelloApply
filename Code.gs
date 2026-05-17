@@ -47,6 +47,7 @@ const PLACEHOLDER_DICTIONARY = {
 
 /**
  * Main Entry Point
+ * TEST_MODE: processes at most 1 LinkedIn job + 1 HelloWork job, then stops.
  */
 function main() {
   const props = PropertiesService.getScriptProperties();
@@ -54,6 +55,7 @@ function main() {
   const lastRun = TEST_MODE ? new Date(Date.now() - 48 * 60 * 60 * 1000) : (lastRunStr ? new Date(lastRunStr) : new Date(Date.now() - 12 * 60 * 60 * 1000));
 
   console.log(`[START] Scanning since ${lastRun.toLocaleString()}...`);
+  if (TEST_MODE) console.warn('⚠️ [MODE TEST] Limité à 1 offre LinkedIn + 1 offre HelloWork maximum.');
 
   let threads = [];
   const queries = [
@@ -64,7 +66,7 @@ function main() {
   ];
   
   queries.forEach(q => {
-    const result = GmailApp.search(q, 0, TEST_MODE ? 3 : 10);
+    const result = GmailApp.search(q, 0, TEST_MODE ? 5 : 10);
     threads = threads.concat(result);
   });
   
@@ -79,7 +81,14 @@ function main() {
     return;
   }
 
+  // TEST_MODE quota: max 1 LinkedIn + 1 HelloWork
+  let testLinkedInDone = false;
+  let testHelloWorkDone = false;
+
   for (const thread of threads) {
+    // In test mode, stop once both sources are covered
+    if (TEST_MODE && testLinkedInDone && testHelloWorkDone) break;
+
     if (!TEST_MODE && thread.getLastMessageDate() <= lastRun) continue;
 
     const messages = thread.getMessages();
@@ -94,6 +103,12 @@ function main() {
 
       for (let rawUrl of jobUrls) {
         let url = cleanUrl(rawUrl);
+        const isLinkedIn = url.includes('linkedin.com');
+        const isHelloWork = url.includes('hellowork.com');
+
+        // TEST_MODE: skip if we already processed this source
+        if (TEST_MODE && isLinkedIn && testLinkedInDone) { console.log('[TEST] LinkedIn quota atteint, skip.'); continue; }
+        if (TEST_MODE && isHelloWork && testHelloWorkDone) { console.log('[TEST] HelloWork quota atteint, skip.'); continue; }
         
         // Resolve click-tracking redirections for HelloWork to get the clean final page link
         if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
@@ -134,6 +149,10 @@ function main() {
             
             // Mark job as processed to prevent duplicates
             markJobProcessed(jobId);
+            
+            // TEST_MODE: flag source as done
+            if (TEST_MODE && isLinkedIn) { testLinkedInDone = true; console.log('[TEST] LinkedIn traité. Quota atteint.'); }
+            if (TEST_MODE && isHelloWork) { testHelloWorkDone = true; console.log('[TEST] HelloWork traité. Quota atteint.'); }
           }
         } catch (e) { console.error(`[ERROR] ${url}: ${e.message}`); }
       }
