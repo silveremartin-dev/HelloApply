@@ -1,13 +1,14 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.14.0 (2026 Edition)
- * LAST UPDATED: 17/05/2026 16:15
+ * VERSION: 3.14.1 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 16:34
  * 
  * New:
- * - Universal French & English placeholder dictionary matching (PROFIL, EXPERIENCES, COMPETENCES, LETTRE, etc.)
- * - Escaped regex patterns to fix the legendary Apps Script replaceText curly brace bug
- * - Full raw job description text embedded in draft bodies (scrollable box)
- * - Safe HTML drafts and HelloWork click-tracking redirection fix
+ * - Bullet Points Fix: Enforces standard small black bullet points (DocumentApp.GlyphType.BULLET) instead of copying custom ribbon bullet icons
+ * - Template Diagnostic Box: Integrates a complete inspection of all templates inside Gmail drafts (lists placeholders, file names, contents)
+ * - French & English placeholders dictionary matching
+ * - Escaped regex matching for replaceText and findText literal brace parsing
+ * - HelloWork clic link redirect check
  */
 
 // --- CONFIGURATION ---
@@ -33,7 +34,7 @@ const PREFERENCES = {
   preferredRegions: ["Europe", "World"]
 };
 
-// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRANCH & ENGLISH) ---
+// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRENCH & ENGLISH) ---
 const PLACEHOLDER_DICTIONARY = {
   'SUMMARY': ['SUMMARY', 'summary', 'PROFIL', 'profil', 'RESUME', 'resume'],
   'EXPERIENCE': ['EXPERIENCE', 'experience', 'EXPERIENCES', 'experiences', 'PARCOURS', 'parcours'],
@@ -232,10 +233,11 @@ function processJob(inputFolder, outputFolder, job) {
 }
 
 /**
- * Create Gmail Draft (Embeds complete raw job description directly)
+ * Create Gmail Draft (Embeds complete raw job description directly & diagnostic report)
  */
 function createDraft(job, attachments) {
   const subject = `[Candidature ${job.source}] - ${job.position} - ${job.company} (${job.score}%)`;
+  const diag = getTemplatesDiagnostic();
   const htmlBody = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
       <p>Bonjour,</p>
@@ -253,6 +255,12 @@ function createDraft(job, attachments) {
       <div style="font-size: 0.85em; color: #444; background: #fafafa; padding: 15px; border: 1px solid #e2e8f0; border-radius: 5px; white-space: pre-wrap; max-height: 350px; overflow-y: auto; font-family: monospace;">
         ${job.raw_description || "Non disponible"}
       </div>
+
+      <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
+      <h4 style="color: #c0392b;">[Rapport Diagnostic des Templates]</h4>
+      <pre style="font-size: 0.80em; color: #7f8c8d; background: #fdf2e9; padding: 10px; border: 1px solid #f5cba7; border-radius: 5px; white-space: pre-wrap; font-family: monospace; max-height: 250px; overflow-y: auto;">
+${diag}
+      </pre>
 
       <p style="margin-top: 20px;">Bien cordialement,<br><strong>Silvère Martin-Michiellot</strong></p>
     </div>
@@ -321,7 +329,7 @@ function replacePlaceholder(body, placeholder, value) {
 }
 
 /**
- * Robust Multiline replacer preserving typography, layouts, and custom blue ribbon bullet icons
+ * Robust Multiline replacer enforcing standard bullet glyphs (normal black dots)
  */
 function replacePlaceholderWithMultiline(body, placeholderRegexStr, text) {
   let rangeElement = body.findText(placeholderRegexStr);
@@ -346,12 +354,12 @@ function replacePlaceholderWithMultiline(body, placeholderRegexStr, text) {
         const placeholderLI = parent.asListItem();
         newElement = parentContainer.insertListItem(index + addedCount + 1, line);
         newElement.setListId(placeholderLI);
-        newElement.setGlyphType(placeholderLI.getGlyphType());
+        newElement.setGlyphType(DocumentApp.GlyphType.BULLET); // Force standard small black bullets!
       } else {
         newElement = parentContainer.insertParagraph(index + addedCount + 1, line);
       }
       
-      // Inherit the template's exact styles (Roboto typography, sizes, ribbon colors)
+      // Inherit the template's exact styles (Roboto typography, sizes, colors)
       newElement.setAttributes(parent.getAttributes());
       addedCount++;
     }
@@ -361,6 +369,51 @@ function replacePlaceholderWithMultiline(body, placeholderRegexStr, text) {
   } else {
     body.replaceText(placeholderRegexStr, text);
   }
+}
+
+/**
+ * Detailed Template Diagnostics to scan all files inside the input folder
+ */
+function getTemplatesDiagnostic() {
+  let log = "=== FILES IN INPUT FOLDER ===\n";
+  try {
+    const root = DriveApp.getRootFolder().getFoldersByName("Candidature Express").next();
+    const inputFolder = root.getFoldersByName("input").next();
+    
+    const files = inputFolder.getFiles();
+    if (!files.hasNext()) {
+      log += "No files found in 'input' folder.\n";
+    }
+    
+    while (files.hasNext()) {
+      const file = files.next();
+      log += `\nFile Name: "${file.getName()}"\n`;
+      log += `  - MIME Type: ${file.getMimeType()}\n`;
+      log += `  - ID: ${file.getId()}\n`;
+      
+      if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
+        try {
+          const doc = DocumentApp.openById(file.getId());
+          const body = doc.getBody();
+          const text = body.getText();
+          
+          const matches = text.match(/\{[^}]+\}/g) || [];
+          const brackets = text.match(/\[[^\]]+\]/g) || [];
+          
+          log += `  - Found Braces Placeholders: ${JSON.stringify([...new Set(matches)])}\n`;
+          log += `  - Found Brackets Placeholders: ${JSON.stringify([...new Set(brackets)])}\n`;
+          log += `  - Plain Text Snippet (first 150 chars): "${text.substring(0, 150).replace(/\n/g, " ")}..."\n`;
+        } catch (e) {
+          log += `  - [ERROR READING CONTENT]: ${e.message}\n`;
+        }
+      } else {
+        log += "  - [NON-GOOGLE-DOC] (cannot inspect inline text)\n";
+      }
+    }
+  } catch (e) {
+    log += `[DIAGNOSTIC ERROR] ${e.message}\n`;
+  }
+  return log;
 }
 
 /**
