@@ -1,14 +1,14 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.14.1 (2026 Edition)
- * LAST UPDATED: 17/05/2026 16:34
+ * VERSION: 3.15.0 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 18:45
  * 
  * New:
- * - Bullet Points Fix: Enforces standard small black bullet points (DocumentApp.GlyphType.BULLET) instead of copying custom ribbon bullet icons
- * - Template Diagnostic Box: Integrates a complete inspection of all templates inside Gmail drafts (lists placeholders, file names, contents)
- * - French & English placeholders dictionary matching
- * - Escaped regex matching for replaceText and findText literal brace parsing
- * - HelloWork clic link redirect check
+ * - Case-Insensitive Matching: Prepends (?i) regex to search patterns to match mixed-case placeholders (e.g. {{Profil}}, {{Experiences}})
+ * - Accents & French Aliases: Expanded PLACEHOLDER_DICTIONARY to map French accented placeholders (RÉSUMÉ, EXPÉRIENCES, COMPÉTENCES, etc.)
+ * - Auto March 11th Date Override: Dynamically replaces any hardcoded March 11th date inside templates with the actual current French date (e.g. "17 mai 2026")
+ * - Enforced Standard Black Bullets: Converted multiline list items to standard bullet points (DocumentApp.GlyphType.BULLET)
+ * - Creative Tailoring Prompt: Updated Gemini instructions for creative adaptation of the CV content length and depth
  */
 
 // --- CONFIGURATION ---
@@ -34,15 +34,34 @@ const PREFERENCES = {
   preferredRegions: ["Europe", "World"]
 };
 
-// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRENCH & ENGLISH) ---
+// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRENCH & ENGLISH - RICH ALIASES WITH ACCENTS) ---
 const PLACEHOLDER_DICTIONARY = {
-  'SUMMARY': ['SUMMARY', 'summary', 'PROFIL', 'profil', 'RESUME', 'resume'],
-  'EXPERIENCE': ['EXPERIENCE', 'experience', 'EXPERIENCES', 'experiences', 'PARCOURS', 'parcours'],
-  'SKILLS': ['SKILLS', 'skills', 'COMPETENCES', 'competences', 'COMPETENCES_CLES', 'competences_cles'],
-  'LETTER_BODY': ['LETTER_BODY', 'letter_body', 'LETTRE', 'lettre', 'CORPS_DE_LETTRE', 'corps_de_lettre', 'CORPS', 'corps'],
-  'DATE': ['DATE', 'date', 'DATE_DU_JOUR', 'date_du_jour'],
-  'FULL_NAME': ['FULL_NAME', 'full_name', 'NOM', 'nom', 'PRENOM_NOM', 'prenom_nom'],
-  'JOB_TITLE': ['JOB_TITLE', 'job_title', 'POSTE', 'poste', 'TITRE', 'titre']
+  'SUMMARY': [
+    'SUMMARY', 'summary', 'PROFIL', 'profil', 'RESUME', 'resume', 'RÉSUMÉ', 'résumé', 
+    'PRESENTATION', 'presentation', 'PRÉSENTATION', 'présentation', 'INTRO', 'intro'
+  ],
+  'EXPERIENCE': [
+    'EXPERIENCE', 'experience', 'EXPERIENCES', 'experiences', 'EXPÉRIENCE', 'expérience', 
+    'EXPÉRIENCES', 'expériences', 'PARCOURS', 'parcours', 'PROJETS', 'projets', 'REALISATIONS', 'realisations'
+  ],
+  'SKILLS': [
+    'SKILLS', 'skills', 'COMPETENCES', 'competences', 'COMPÉTENCES', 'compétences', 
+    'COMPETENCES_CLES', 'competences_cles', 'COMPÉTENCES_CLÉS', 'compétences_clés', 
+    'EXPERTISE', 'expertise', 'EXPERTISES', 'expertises'
+  ],
+  'LETTER_BODY': [
+    'LETTER_BODY', 'letter_body', 'LETTRE', 'lettre', 'CORPS_DE_LETTRE', 'corps_de_lettre', 
+    'CORPS', 'corps', 'TEXTE', 'texte', 'CONTENU', 'contenu'
+  ],
+  'DATE': [
+    'DATE', 'date', 'DATE_DU_JOUR', 'date_du_jour', 'JOUR', 'jour'
+  ],
+  'FULL_NAME': [
+    'FULL_NAME', 'full_name', 'NOM', 'nom', 'PRENOM_NOM', 'prenom_nom', 'PRÉNOM_NOM', 'prénom_nom'
+  ],
+  'JOB_TITLE': [
+    'JOB_TITLE', 'job_title', 'POSTE', 'poste', 'TITRE', 'titre', 'FONCTION', 'fonction'
+  ]
 };
 
 /**
@@ -187,6 +206,13 @@ function analyzeAndTailor(context, masterCV, originalUrl) {
        - "skills": Comma-separated list of the top 8-10 technical and soft skills from the Master CV most relevant to this job.
        - "letter_body": A fully customized, professional, and convincing cover letter body in the target language (French or English). Address it to the hiring manager of the company, reference the specific position, highlight the matching 30 years of experience, and state why they want to join this company.
 
+    4. Creative Adaptability & Tailoring:
+       - Be highly creative and adaptive in how you tailor the content.
+       - Analyze the seniority and complexity of the target role.
+       - For highly strategic or complex leadership roles, provide deep, rich experience summaries and bullet points that demonstrate high-level technical and project stewardship.
+       - For targeted roles, make the descriptions extremely punchy, direct, and focused.
+       - Ensure all tailored items fit beautifully within standard professional CV and letter structures.
+
     Return JSON only:
     {
       "company": "Real Company Name (extracted from context, DO NOT use generic placeholders like 'LinkedIn')",
@@ -300,7 +326,7 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
   Object.keys(PLACEHOLDER_DICTIONARY).forEach(key => {
     let value = "";
     if (key === 'DATE') {
-      value = new Date().toLocaleDateString('fr-FR');
+      value = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     } else {
       value = data[key.toLowerCase()] || '';
     }
@@ -310,6 +336,12 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
       replacePlaceholder(body, placeholder, value);
     });
   });
+
+  // Dynamic March 11th Hardcoded overrides (in case template doesn't have proper placeholders)
+  const currentLongDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  body.replaceText("(?i)11 mars 2026", currentLongDate);
+  body.replaceText("(?i)11 mars", currentLongDate);
+  body.replaceText("(?i)11/03/2026", new Date().toLocaleDateString('fr-FR'));
   
   doc.saveAndClose();
   const pdfBlob = copy.getAs(MimeType.PDF).setName(finalName + ".pdf");
@@ -321,19 +353,15 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
  * Case-Insensitive Multiline Placeholder Replacer with Literal Regex Escapes
  */
 function replacePlaceholder(body, placeholder, value) {
-  const upper = placeholder.toUpperCase();
-  const lower = placeholder.toLowerCase();
+  // Escape regex special chars in the placeholder name
+  const clean = placeholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
   
-  // Regex escaped search patterns for literal brace matching
+  // Case-insensitive regex patterns for all variants
   const patterns = [
-    `\\{\\{${upper}\\}\\}`,
-    `\\{\\{${lower}\\}\\}`,
-    `\\{\\{ ${upper} \\}\\}`,
-    `\\{\\{ ${lower} \\}\\}`,
-    `\\[${upper}\\]`,
-    `\\[${lower}\\]`,
-    `\\[ ${upper} \\]`,
-    `\\[ ${lower} \\]`
+    `(?i)\\{\\{${clean}\\}\\}`,
+    `(?i)\\{\\{ ${clean} \\}\\}`,
+    `(?i)\\[${clean}\\]`,
+    `(?i)\\[ ${clean} \\]`
   ];
   
   if (value && value.toString().includes('\n')) {
