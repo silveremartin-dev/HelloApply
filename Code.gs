@@ -1,13 +1,12 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.13.0 (2026 Edition)
- * LAST UPDATED: 17/05/2026 14:55
+ * VERSION: 3.13.1 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 15:10
  * 
  * New: 
- * - Full-time filter & Language adaptation (English/French)
- * - Safe subject / body text encoding (removed replacement characters)
- * - Clean LinkedIn & HelloWork URL tracking and deduplication
- * - Case-insensitive placeholder and Date/DATE_DU_JOUR replacements
+ * - Enhanced HelloWork URL parsing to support all digest and click-tracking links
+ * - Removed global setAttributes to preserve beautiful template styling (e.g. blue ribbon bullets)
+ * - Robust job ID matching for both LinkedIn and HelloWork
  */
 
 // --- CONFIGURATION ---
@@ -240,7 +239,7 @@ function createDraft(job, attachments) {
 }
 
 /**
- * Case-Insensitive Template Replacements
+ * Case-Insensitive Template Replacements (No global font override to preserve ribbons/bookmark styles)
  */
 function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data, finalName) {
   const files = inputFolder.getFilesByName(templateName);
@@ -248,8 +247,6 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
   const copy = files.next().makeCopy(finalName, outputFolder);
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
-  
-  body.setAttributes({ [DocumentApp.Attribute.FONT_FAMILY]: "Arial", [DocumentApp.Attribute.FONT_SIZE]: 10 });
   
   const fields = ['SUMMARY', 'EXPERIENCE', 'SKILLS', 'LETTER_BODY', 'DATE', 'DATE_DU_JOUR', 'FULL_NAME', 'JOB_TITLE'];
   fields.forEach(f => {
@@ -311,7 +308,7 @@ function getJobId(url) {
   const liMatch = clean.match(/\/view\/(\d+)/);
   if (liMatch) return "LI_" + liMatch[1];
   
-  const hwMatch = clean.match(/offre-(\d+)/);
+  const hwMatch = clean.match(/(?:offre-|emplois\/)(\d+)/);
   if (hwMatch) return "HW_" + hwMatch[1];
   
   return clean;
@@ -344,7 +341,7 @@ function callGemini(prompt) {
 function extractJobUrls(text) {
   const regex = /https:\/\/[^\s"<>]+/g;
   const matches = text.match(regex) || [];
-  return matches.filter(url => url.includes('linkedin.com/') || (url.includes('hellowork.com') && url.includes('/offre-')));
+  return matches.filter(url => url.includes('linkedin.com/') || url.includes('hellowork.com'));
 }
 
 function getOrCreateFolder(name) {
