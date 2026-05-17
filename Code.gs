@@ -154,9 +154,6 @@ function main() {
   if (!TEST_MODE) props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
 }
 
-/**
- * Enhanced Gemini Analysis with Context Fallback, Language Detection & Full-Time Filter
- */
 function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
   const prompt = `
     TASK: Analyze job match and tailor application documents (CV and Cover Letter) with high visual fidelity by generating precise search-and-replace string pairs.
@@ -176,7 +173,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     INSTRUCTIONS FOR LANGUAGE & HIGH-FIDELITY TAILORING:
     1. Language Detection & Consistency (No mixed "Franglais" documents):
        - Detect the language of the job description or context.
-       - If it is in English, BOTH the CV and the Cover Letter replacements must be completely in English. You must translate any French headings, subject ("Objet"), salutation ("Madame, Monsieur,"), date headers, and closings from the templates into natural English (e.g. replace "Objet : Lettre de motivation" with "Subject: Application for...", "Madame, Monsieur," with "Dear Hiring Manager," and the French sign-off with "Sincerely,").
+       - If it is in English, BOTH the CV and the Cover Letter replacements must be completely in English. You must translate any French headings, subject ("Objet"), salutation ("Madame, Monsieur,"), date headers, and closings from the templates into natural English (e.g. replace "Objet : Lettre de motivation" with "Subject: Application for...", "Madame, Monsieur," with "Dear Hiring Manager,", and the French sign-off with "Sincerely,").
+       - You must also translate any French components of the CV header (such as the candidate's professional title, phone labels 'Tél' or 'Tel mobile', and location terms) into their exact English equivalents to ensure the entire document is pristine and uniform.
        - If it is in French, all replacements must be in French. Keep French headers and structure intact.
     
     2. Zero-Paragraph Insertion Rule (No newlines in replacements):
@@ -191,6 +189,12 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        
     4. Exact Substring Match:
        - Every "find" string MUST be an EXACT, character-for-character substring of the template texts provided above.
+
+    5. CRITICAL SELF-CORRECTION & REVIEW LOOP:
+       - Before producing your final JSON response, perform a strict mental review of your generated replacements:
+       - Language Check: Is there ANY mixed-language text? If the job is in English, are there any French headings (e.g. "COMPÉTENCES"), French labels (e.g. "Tel mobile :"), or French object/salutations/closings remaining? If so, generate replacements to translate them.
+       - Substring Check: Is every single "find" string an EXACT character-for-character match in the template text?
+       - Quality Check: Are the experience bullet points and summary of high professional standard, detailed, and matching the seniority of the target role? Correct any flaws before outputting.
 
     Return JSON only:
     {
@@ -217,6 +221,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
   `;
   return callGemini(prompt);
 }
+
 
 /**
  * URL Transformation & Fetching
@@ -263,11 +268,10 @@ function processJob(inputFolder, outputFolder, job) {
 }
 
 /**
- * Create Gmail Draft (Embeds a beautifully cleaned & structured job description copy & diagnostic report)
+ * Create Gmail Draft (Embeds a beautifully cleaned & structured job description copy)
  */
 function createDraft(job, attachments) {
   const subject = `[Candidature ${job.source}] - ${job.position} - ${job.company} (${job.score}%)`;
-  const diag = getTemplatesDiagnostic();
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
       <p style="font-size: 1.1em; margin-top: 0;">Bonjour Silvère,</p>
@@ -286,18 +290,11 @@ function createDraft(job, attachments) {
 ${job.job_description_clean || job.raw_description || "Non disponible"}
       </div>
 
-      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
-      <h4 style="color: #e53e3e; margin-bottom: 10px; font-size: 1.1em; border-bottom: 2px solid #edf2f7; padding-bottom: 6px;">[Diagnostic de tes Documents Sources]</h4>
-      <pre style="font-size: 0.85em; color: #718096; background: #fffaf0; padding: 12px; border: 1px solid #feebc8; border-radius: 8px; white-space: pre-wrap; font-family: monospace; max-height: 250px; overflow-y: auto;">
-${diag}
-      </pre>
-
       <p style="margin-top: 25px; font-size: 0.95em; color: #4a5568;">Bien amicalement,<br><strong style="color: #2d3748;">Ton assistant HelloApply</strong></p>
     </div>
   `;
   GmailApp.createDraft("", subject, "", { htmlBody: htmlBody, attachments: attachments });
 }
-
 /**
  * High-Fidelity exact-replacement layout generator
  */
