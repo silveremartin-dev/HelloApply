@@ -1,13 +1,13 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.13.2 (2026 Edition)
- * LAST UPDATED: 17/05/2026 15:37
+ * VERSION: 3.13.3 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 15:55
  * 
  * New:
- * - Automatic HelloWork click-tracking redirect resolution (resolveRedirects)
- * - Enhanced HelloWork URL parsing to support all digest and click-tracking links
- * - Removed global setAttributes to preserve beautiful template styling (e.g. blue ribbon bullets)
- * - Robust job ID matching for both LinkedIn and HelloWork
+ * - Dynamic list item and paragraph multiline substitutions (replacePlaceholderWithMultiline)
+ * - Preserves templates' blue ribbon list styles and custom bullet glyphs perfectly
+ * - Correct HelloWork emails.hellowork.com/clic/ redirect tracking subdomain check
+ * - Automatic HelloWork redirect resolution
  */
 
 // --- CONFIGURATION ---
@@ -84,7 +84,7 @@ function main() {
         let url = cleanUrl(rawUrl);
         
         // Resolve click-tracking redirections for HelloWork to get the clean final page link
-        if (url.includes('click.emails.hellowork.com') || url.includes('hellowork.com/redirect')) {
+        if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
           console.log(`[RESOLVING] Resolving redirect for: ${url}`);
           url = resolveRedirects(url);
           url = cleanUrl(url);
@@ -266,14 +266,69 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
     } else {
       value = data[f.toLowerCase()] || '';
     }
-    body.replaceText(`{{${f}}}`, value);
-    body.replaceText(`{{${f.toLowerCase()}}}`, value);
+    replacePlaceholder(body, f, value);
   });
   
   doc.saveAndClose();
   const pdfBlob = copy.getAs(MimeType.PDF).setName(finalName + ".pdf");
   outputFolder.createFile(pdfBlob);
   return { docUrl: copy.getUrl(), pdfBlob: pdfBlob };
+}
+
+/**
+ * Case-Insensitive Multiline Placeholder Replacer
+ */
+function replacePlaceholder(body, placeholder, value) {
+  if (value && value.toString().includes('\n')) {
+    replacePlaceholderWithMultiline(body, `{{${placeholder.toUpperCase()}}}`, value);
+    replacePlaceholderWithMultiline(body, `{{${placeholder.toLowerCase()}}}`, value);
+  } else {
+    body.replaceText(`{{${placeholder.toUpperCase()}}}`, value || '');
+    body.replaceText(`{{${placeholder.toLowerCase()}}}`, value || '');
+  }
+}
+
+/**
+ * Robust Multiline replacer preserving typography, layouts, and custom blue ribbon bullet icons
+ */
+function replacePlaceholderWithMultiline(body, placeholder, text) {
+  let rangeElement = body.findText(placeholder);
+  if (!rangeElement) return;
+  
+  const lines = text.split('\n');
+  const textElement = rangeElement.getElement();
+  const parent = textElement.getParent();
+  const parentType = parent.getType();
+  
+  if (parentType === DocumentApp.ElementType.PARAGRAPH || parentType === DocumentApp.ElementType.LIST_ITEM) {
+    const parentContainer = parent.getParent();
+    const index = parentContainer.getChildIndex(parent);
+    
+    let addedCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      
+      let newElement;
+      if (parentType === DocumentApp.ElementType.LIST_ITEM) {
+        const placeholderLI = parent.asListItem();
+        newElement = parentContainer.insertListItem(index + addedCount + 1, line);
+        newElement.setListId(placeholderLI);
+        newElement.setGlyphType(placeholderLI.getGlyphType());
+      } else {
+        newElement = parentContainer.insertParagraph(index + addedCount + 1, line);
+      }
+      
+      // Inherit the template's exact styles (Roboto typography, sizes, ribbon colors)
+      newElement.setAttributes(parent.getAttributes());
+      addedCount++;
+    }
+    
+    // Remove the original placeholder paragraph/list item
+    parentContainer.removeChild(parent);
+  } else {
+    body.replaceText(placeholder, text);
+  }
 }
 
 /**
