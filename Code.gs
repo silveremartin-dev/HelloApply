@@ -1,9 +1,10 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.13.1 (2026 Edition)
- * LAST UPDATED: 17/05/2026 15:10
+ * VERSION: 3.13.2 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 15:37
  * 
- * New: 
+ * New:
+ * - Automatic HelloWork click-tracking redirect resolution (resolveRedirects)
  * - Enhanced HelloWork URL parsing to support all digest and click-tracking links
  * - Removed global setAttributes to preserve beautiful template styling (e.g. blue ribbon bullets)
  * - Robust job ID matching for both LinkedIn and HelloWork
@@ -80,7 +81,16 @@ function main() {
       console.log(`[MAIL] Analysing email: "${subject}"`);
 
       for (let rawUrl of jobUrls) {
-        const url = cleanUrl(rawUrl);
+        let url = cleanUrl(rawUrl);
+        
+        // Resolve click-tracking redirections for HelloWork to get the clean final page link
+        if (url.includes('click.emails.hellowork.com') || url.includes('hellowork.com/redirect')) {
+          console.log(`[RESOLVING] Resolving redirect for: ${url}`);
+          url = resolveRedirects(url);
+          url = cleanUrl(url);
+          console.log(`[RESOLVED] Final URL: ${url}`);
+        }
+        
         const jobId = getJobId(url);
         
         if (isJobProcessed(jobId)) {
@@ -285,6 +295,45 @@ function markJobProcessed(jobId) {
     if (processed.length > 500) processed.shift();
     props.setProperty('PROCESSED_JOB_IDS', JSON.stringify(processed));
   }
+}
+
+/**
+ * HelloWork click-tracking redirect resolver
+ */
+function resolveRedirects(url) {
+  let currentUrl = url;
+  let redirectCount = 0;
+  while (redirectCount < 5) {
+    try {
+      const response = UrlFetchApp.fetch(currentUrl, {
+        'followRedirects': false,
+        'muteHttpExceptions': true,
+        'headers': {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
+      const code = response.getResponseCode();
+      if (code >= 300 && code < 400) {
+        const headers = response.getHeaders();
+        const location = headers['Location'] || headers['location'];
+        if (location) {
+          if (location.startsWith('/')) {
+            const domain = currentUrl.match(/^https?:\/\/[^\/]+/)[0];
+            currentUrl = domain + location;
+          } else {
+            currentUrl = location;
+          }
+          redirectCount++;
+          continue;
+        }
+      }
+      break;
+    } catch (e) {
+      console.error("[ERROR] Redirect resolution: " + e.message);
+      break;
+    }
+  }
+  return currentUrl;
 }
 
 /**
