@@ -1,13 +1,13 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.13.3 (2026 Edition)
- * LAST UPDATED: 17/05/2026 15:55
+ * VERSION: 3.14.0 (2026 Edition)
+ * LAST UPDATED: 17/05/2026 16:15
  * 
  * New:
- * - Dynamic list item and paragraph multiline substitutions (replacePlaceholderWithMultiline)
- * - Preserves templates' blue ribbon list styles and custom bullet glyphs perfectly
- * - Correct HelloWork emails.hellowork.com/clic/ redirect tracking subdomain check
- * - Automatic HelloWork redirect resolution
+ * - Universal French & English placeholder dictionary matching (PROFIL, EXPERIENCES, COMPETENCES, LETTRE, etc.)
+ * - Escaped regex patterns to fix the legendary Apps Script replaceText curly brace bug
+ * - Full raw job description text embedded in draft bodies (scrollable box)
+ * - Safe HTML drafts and HelloWork click-tracking redirection fix
  */
 
 // --- CONFIGURATION ---
@@ -31,6 +31,17 @@ const PREFERENCES = {
   radiusRegional: 50,
   allowFullRemote: true,
   preferredRegions: ["Europe", "World"]
+};
+
+// --- UNIVERSAL PLACEHOLDER DICTIONARY (FRANCH & ENGLISH) ---
+const PLACEHOLDER_DICTIONARY = {
+  'SUMMARY': ['SUMMARY', 'summary', 'PROFIL', 'profil', 'RESUME', 'resume'],
+  'EXPERIENCE': ['EXPERIENCE', 'experience', 'EXPERIENCES', 'experiences', 'PARCOURS', 'parcours'],
+  'SKILLS': ['SKILLS', 'skills', 'COMPETENCES', 'competences', 'COMPETENCES_CLES', 'competences_cles'],
+  'LETTER_BODY': ['LETTER_BODY', 'letter_body', 'LETTRE', 'lettre', 'CORPS_DE_LETTRE', 'corps_de_lettre', 'CORPS', 'corps'],
+  'DATE': ['DATE', 'date', 'DATE_DU_JOUR', 'date_du_jour'],
+  'FULL_NAME': ['FULL_NAME', 'full_name', 'NOM', 'nom', 'PRENOM_NOM', 'prenom_nom'],
+  'JOB_TITLE': ['JOB_TITLE', 'job_title', 'POSTE', 'poste', 'TITRE', 'titre']
 };
 
 /**
@@ -111,6 +122,7 @@ function main() {
           if (analysis) {
             analysis.url = url;
             analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
+            analysis.raw_description = context; // Save full context for the draft copy
             
             if (analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE) {
               processJob(inputFolder, outputFolder, analysis);
@@ -220,7 +232,7 @@ function processJob(inputFolder, outputFolder, job) {
 }
 
 /**
- * Create Gmail Draft (Clean plain-text formatting to avoid replacement chars)
+ * Create Gmail Draft (Embeds complete raw job description directly)
  */
 function createDraft(job, attachments) {
   const subject = `[Candidature ${job.source}] - ${job.position} - ${job.company} (${job.score}%)`;
@@ -238,8 +250,8 @@ function createDraft(job, attachments) {
       
       <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
       <h4 style="color: #7f8c8d;">Description complète du poste :</h4>
-      <div style="font-size: 0.85em; color: #666; background: #fff; padding: 10px; border: 1px solid #eee; white-space: pre-wrap;">
-        ${job.full_description || "Non disponible"}
+      <div style="font-size: 0.85em; color: #444; background: #fafafa; padding: 15px; border: 1px solid #e2e8f0; border-radius: 5px; white-space: pre-wrap; max-height: 350px; overflow-y: auto; font-family: monospace;">
+        ${job.raw_description || "Non disponible"}
       </div>
 
       <p style="margin-top: 20px;">Bien cordialement,<br><strong>Silvère Martin-Michiellot</strong></p>
@@ -258,15 +270,18 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
   
-  const fields = ['SUMMARY', 'EXPERIENCE', 'SKILLS', 'LETTER_BODY', 'DATE', 'DATE_DU_JOUR', 'FULL_NAME', 'JOB_TITLE'];
-  fields.forEach(f => {
+  Object.keys(PLACEHOLDER_DICTIONARY).forEach(key => {
     let value = "";
-    if (f === 'DATE' || f === 'DATE_DU_JOUR') {
+    if (key === 'DATE') {
       value = new Date().toLocaleDateString('fr-FR');
     } else {
-      value = data[f.toLowerCase()] || '';
+      value = data[key.toLowerCase()] || '';
     }
-    replacePlaceholder(body, f, value);
+    
+    // Replace all possible French and English placeholders (literal escaped matching)
+    PLACEHOLDER_DICTIONARY[key].forEach(placeholder => {
+      replacePlaceholder(body, placeholder, value);
+    });
   });
   
   doc.saveAndClose();
@@ -276,23 +291,40 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
 }
 
 /**
- * Case-Insensitive Multiline Placeholder Replacer
+ * Case-Insensitive Multiline Placeholder Replacer with Literal Regex Escapes
  */
 function replacePlaceholder(body, placeholder, value) {
+  const upper = placeholder.toUpperCase();
+  const lower = placeholder.toLowerCase();
+  
+  // Regex escaped search patterns for literal brace matching
+  const patterns = [
+    `\\{\\{${upper}\\}\\}`,
+    `\\{\\{${lower}\\}\\}`,
+    `\\{\\{ ${upper} \\}\\}`,
+    `\\{\\{ ${lower} \\}\\}`,
+    `\\[${upper}\\]`,
+    `\\[${lower}\\]`,
+    `\\[ ${upper} \\]`,
+    `\\[ ${lower} \\]`
+  ];
+  
   if (value && value.toString().includes('\n')) {
-    replacePlaceholderWithMultiline(body, `{{${placeholder.toUpperCase()}}}`, value);
-    replacePlaceholderWithMultiline(body, `{{${placeholder.toLowerCase()}}}`, value);
+    patterns.forEach(p => {
+      replacePlaceholderWithMultiline(body, p, value);
+    });
   } else {
-    body.replaceText(`{{${placeholder.toUpperCase()}}}`, value || '');
-    body.replaceText(`{{${placeholder.toLowerCase()}}}`, value || '');
+    patterns.forEach(p => {
+      body.replaceText(p, value || '');
+    });
   }
 }
 
 /**
  * Robust Multiline replacer preserving typography, layouts, and custom blue ribbon bullet icons
  */
-function replacePlaceholderWithMultiline(body, placeholder, text) {
-  let rangeElement = body.findText(placeholder);
+function replacePlaceholderWithMultiline(body, placeholderRegexStr, text) {
+  let rangeElement = body.findText(placeholderRegexStr);
   if (!rangeElement) return;
   
   const lines = text.split('\n');
@@ -327,7 +359,7 @@ function replacePlaceholderWithMultiline(body, placeholder, text) {
     // Remove the original placeholder paragraph/list item
     parentContainer.removeChild(parent);
   } else {
-    body.replaceText(placeholder, text);
+    body.replaceText(placeholderRegexStr, text);
   }
 }
 
