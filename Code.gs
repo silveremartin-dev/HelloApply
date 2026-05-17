@@ -220,7 +220,7 @@ function analyzeAndTailor(context, masterCV, originalUrl) {
       "score": 0-100,
       "reasoning": "Critique of the match (e.g. why full-time or part-time, technical alignment)...",
       "decision": "Postuler" or "Ignorer",
-      "full_description": "Clean summary of the job description...",
+      "job_description_clean": "Beautifully cleaned and structured markdown/plain-text copy of the target job description. Extract and include ONLY the specific job title, company name, context, requirements, responsibilities, and qualifications. DO NOT include unsubscribe links, LinkedIn Premium ads, other digest items, copyright notices, tracking URLs, or weird links. Format it beautifully with clean line breaks so it's extremely easy to read.",
       "data": {
         "full_name": "Silvère Martin-Michiellot",
         "job_title": "Tailored Professional Title for this application",
@@ -233,6 +233,8 @@ function analyzeAndTailor(context, masterCV, originalUrl) {
   `;
   return callGemini(prompt);
 }
+
+
 
 /**
  * URL Transformation & Fetching
@@ -278,41 +280,40 @@ function processJob(inputFolder, outputFolder, job) {
 }
 
 /**
- * Create Gmail Draft (Embeds complete raw job description directly & diagnostic report)
+ * Create Gmail Draft (Embeds a beautifully cleaned & structured job description copy & diagnostic report)
  */
 function createDraft(job, attachments) {
   const subject = `[Candidature ${job.source}] - ${job.position} - ${job.company} (${job.score}%)`;
   const diag = getTemplatesDiagnostic();
   const htmlBody = `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
-      <p>Bonjour,</p>
-      <p>Voici ma candidature personnalisée pour le poste de <strong>${job.position}</strong> chez <strong>${job.company}</strong>.</p>
-      <p>Les fichiers PDF sont joints à ce brouillon.</p>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <p style="font-size: 1.1em; margin-top: 0;">Bonjour Silvère,</p>
+      <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">${job.position}</strong> chez <strong style="color: #2c5282;">${job.company}</strong>.</p>
+      <p>Les fichiers PDF adaptés (CV et Lettre de motivation) sont déjà joints à ce brouillon.</p>
       
-      <div style="background: #f4f7f6; padding: 15px; border-left: 5px solid #3498db; margin: 20px 0;">
-        <h3 style="margin-top: 0; color: #2c3e50;">[Analyse de l'offre - Match : ${job.score}%]</h3>
-        <p><em>${job.reasoning}</em></p>
-        <p>Lien vers l'offre originale : <a href="${job.url}" style="color: #3498db; text-decoration: none;">Voir sur ${job.source}</a></p>
+      <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
+        <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
+        <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"${job.reasoning}"</p>
+        <p style="margin: 0; font-size: 0.9em;"><a href="${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur ${job.source}</a></p>
       </div>
       
-      <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
-      <h4 style="color: #7f8c8d;">Description complète du poste :</h4>
-      <div style="font-size: 0.85em; color: #444; background: #fafafa; padding: 15px; border: 1px solid #e2e8f0; border-radius: 5px; white-space: pre-wrap; max-height: 350px; overflow-y: auto; font-family: monospace;">
-        ${job.raw_description || "Non disponible"}
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+      <h4 style="color: #4a5568; margin-bottom: 10px; font-size: 1.1em; border-bottom: 2px solid #edf2f7; padding-bottom: 6px;">Description du poste ciblée :</h4>
+      <div style="font-size: 0.9em; color: #2d3748; background: #f7fafc; padding: 18px; border: 1px solid #e2e8f0; border-radius: 8px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.5;">
+${job.job_description_clean || job.raw_description || "Non disponible"}
       </div>
 
-      <hr style="border: 0; border-top: 1px solid #ddd; margin: 30px 0;">
-      <h4 style="color: #c0392b;">[Rapport Diagnostic des Templates]</h4>
-      <pre style="font-size: 0.80em; color: #7f8c8d; background: #fdf2e9; padding: 10px; border: 1px solid #f5cba7; border-radius: 5px; white-space: pre-wrap; font-family: monospace; max-height: 250px; overflow-y: auto;">
+      <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+      <h4 style="color: #e53e3e; margin-bottom: 10px; font-size: 1.1em; border-bottom: 2px solid #edf2f7; padding-bottom: 6px;">[Diagnostic de tes Documents Sources]</h4>
+      <pre style="font-size: 0.85em; color: #718096; background: #fffaf0; padding: 12px; border: 1px solid #feebc8; border-radius: 8px; white-space: pre-wrap; font-family: monospace; max-height: 250px; overflow-y: auto;">
 ${diag}
       </pre>
 
-      <p style="margin-top: 20px;">Bien cordialement,<br><strong>Silvère Martin-Michiellot</strong></p>
+      <p style="margin-top: 25px; font-size: 0.95em; color: #4a5568;">Bien amicalement,<br><strong style="color: #2d3748;">Ton assistant HelloApply</strong></p>
     </div>
   `;
   GmailApp.createDraft("", subject, "", { htmlBody: htmlBody, attachments: attachments });
 }
-
 /**
  * Case-Insensitive Template Replacements (No global font override to preserve ribbons/bookmark styles)
  */
@@ -323,25 +324,41 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, data
   const doc = DocumentApp.openById(copy.getId());
   const body = doc.getBody();
   
-  Object.keys(PLACEHOLDER_DICTIONARY).forEach(key => {
-    let value = "";
-    if (key === 'DATE') {
-      value = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-    } else {
-      value = data[key.toLowerCase()] || '';
-    }
-    
-    // Replace all possible French and English placeholders (literal escaped matching)
-    PLACEHOLDER_DICTIONARY[key].forEach(placeholder => {
-      replacePlaceholder(body, placeholder, value);
+  // Detect if any standard brace/bracket placeholders are present in the document
+  const text = body.getText();
+  const hasPlaceholders = /\{[^}]+\}/.test(text) || /\[[^\]]+\]/.test(text);
+  
+  if (hasPlaceholders) {
+    console.log(`[TEMPLATE] Replacing placeholders in ${templateName}...`);
+    Object.keys(PLACEHOLDER_DICTIONARY).forEach(key => {
+      let value = "";
+      if (key === 'DATE') {
+        value = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      } else {
+        value = data[key.toLowerCase()] || '';
+      }
+      
+      // Replace all possible French and English placeholders (literal escaped matching)
+      PLACEHOLDER_DICTIONARY[key].forEach(placeholder => {
+        replacePlaceholder(body, placeholder, value);
+      });
     });
-  });
+  } else {
+    console.log(`[PROSE] No placeholders found. Running prose-parsing layout adapter on ${templateName}...`);
+    const nameLower = templateName.toLowerCase();
+    if (nameLower.includes('lettre') || nameLower.includes('lm')) {
+      tailorProseLetter(body, data.letter_body);
+    } else {
+      tailorProseCV(body, data);
+    }
+  }
 
-  // Dynamic March 11th Hardcoded overrides (in case template doesn't have proper placeholders)
+  // Dynamic March 11th Hardcoded overrides (in case template has static dates)
   const currentLongDate = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   body.replaceText("(?i)11 mars 2026", currentLongDate);
   body.replaceText("(?i)11 mars", currentLongDate);
   body.replaceText("(?i)11/03/2026", new Date().toLocaleDateString('fr-FR'));
+  body.replaceText("(?i)11/03/26", new Date().toLocaleDateString('fr-FR'));
   
   doc.saveAndClose();
   const pdfBlob = copy.getAs(MimeType.PDF).setName(finalName + ".pdf");
@@ -595,4 +612,136 @@ function readAnyFileIn(folder, fileName) {
   if (!files.hasNext()) return null;
   const file = files.next();
   return file.getMimeType() === MimeType.GOOGLE_DOCS ? DocumentApp.openById(file.getId()).getBody().getText() : "";
+}
+
+/**
+ * Intelligent Cover Letter Prose Layout Adapter (zero-placeholder mode)
+ */
+function tailorProseLetter(body, letterBodyText) {
+  const paragraphs = body.getParagraphs();
+  let salutationIndex = -1;
+  let closingIndex = -1;
+  
+  const salutationRegex = /^(madame,\s+monsieur|monsieur|madame|chère\s+madame|cher\s+monsieur)/i;
+  const closingRegex = /(veuillez\s+agréer|je\s+vous\s+prie\s+d'agréer|dans\s+l'attente|cordialement|bien\s+cordialement)/i;
+  
+  for (let i = 0; i < paragraphs.length; i++) {
+    const text = paragraphs[i].getText().trim();
+    if (salutationIndex === -1 && salutationRegex.test(text)) {
+      salutationIndex = i;
+    } else if (closingIndex === -1 && closingRegex.test(text)) {
+      closingIndex = i;
+    }
+  }
+  
+  if (salutationIndex !== -1 && closingIndex !== -1 && closingIndex > salutationIndex) {
+    console.log(`[PROSE LETTER] Customizing body between paragraph ${salutationIndex} and ${closingIndex}`);
+    
+    // Remove all paragraphs between salutation and closing
+    const parent = paragraphs[salutationIndex].getParent();
+    const childrenToRemove = [];
+    
+    for (let i = salutationIndex + 1; i < closingIndex; i++) {
+      childrenToRemove.push(paragraphs[i]);
+    }
+    
+    childrenToRemove.forEach(child => {
+      try { parent.removeChild(child); } catch (e) {}
+    });
+    
+    // Insert new tailored letter paragraphs
+    const lines = letterBodyText.split('\n');
+    let insertedCount = 0;
+    
+    lines.forEach(line => {
+      const cleanLine = line.trim();
+      if (cleanLine) {
+        const p = parent.insertParagraph(salutationIndex + 1 + insertedCount, cleanLine);
+        p.setAttributes(paragraphs[salutationIndex].getAttributes());
+        p.setFontSize(10.5);
+        p.setBold(false);
+        insertedCount++;
+      }
+    });
+  } else {
+    console.warn("[PROSE LETTER] Could not locate boundaries, doing fallback text insertion.");
+    const half = Math.floor(paragraphs.length / 2);
+    for (let i = paragraphs.length - 1; i >= half; i--) {
+      try { body.removeChild(paragraphs[i]); } catch (e) {}
+    }
+    body.appendParagraph(letterBodyText);
+  }
+}
+
+/**
+ * Intelligent CV Prose Layout Adapter (zero-placeholder mode)
+ */
+function tailorProseCV(body, data) {
+  const paragraphs = body.getParagraphs();
+  
+  const summaryRegex = /^(profil|résumé|summary|présentation|accroche)$/i;
+  const skillsRegex = /^(compétences|competences|skills|expertises|savoir-faire|compétences\s+clés|competences\s+cles)$/i;
+  const experienceRegex = /^(expériences|experiences|parcours|expérience|experience|projets|expériences\s+professionnelles|experiences\s+professionnelles)$/i;
+  
+  let summaryHeadingIndex = -1;
+  let skillsHeadingIndex = -1;
+  let experienceHeadingIndex = -1;
+  
+  for (let i = 0; i < paragraphs.length; i++) {
+    const text = paragraphs[i].getText().trim().replace(/[\s\t]+/g, ' ');
+    if (summaryHeadingIndex === -1 && summaryRegex.test(text)) {
+      summaryHeadingIndex = i;
+    } else if (skillsHeadingIndex === -1 && skillsRegex.test(text)) {
+      skillsHeadingIndex = i;
+    } else if (experienceHeadingIndex === -1 && experienceRegex.test(text)) {
+      experienceHeadingIndex = i;
+    }
+  }
+  
+  const sections = [];
+  if (summaryHeadingIndex !== -1) sections.push({ name: 'summary', index: summaryHeadingIndex, data: data.summary });
+  if (skillsHeadingIndex !== -1) sections.push({ name: 'skills', index: skillsHeadingIndex, data: data.skills });
+  if (experienceHeadingIndex !== -1) sections.push({ name: 'experience', index: experienceHeadingIndex, data: data.experience });
+  
+  sections.sort((a, b) => a.index - b.index);
+  console.log(`[PROSE CV] Customizing sections: ${JSON.stringify(sections.map(s => s.name))}`);
+  
+  for (let s = sections.length - 1; s >= 0; s--) {
+    const section = sections[s];
+    const startIndex = section.index + 1;
+    const endIndex = (s < sections.length - 1) ? sections[s + 1].index : paragraphs.length;
+    
+    const parent = paragraphs[section.index].getParent();
+    const childrenToRemove = [];
+    
+    for (let i = startIndex; i < endIndex; i++) {
+      childrenToRemove.push(paragraphs[i]);
+    }
+    
+    childrenToRemove.forEach(child => {
+      try { parent.removeChild(child); } catch (e) {}
+    });
+    
+    const lines = section.data.split('\n');
+    let insertedCount = 0;
+    
+    lines.forEach(line => {
+      const cleanLine = line.trim();
+      if (cleanLine) {
+        let newElement;
+        if (cleanLine.startsWith('-') || cleanLine.startsWith('•') || cleanLine.startsWith('*')) {
+          const listText = cleanLine.substring(1).trim();
+          newElement = parent.insertListItem(startIndex + insertedCount, listText);
+          newElement.setGlyphType(DocumentApp.GlyphType.BULLET);
+        } else {
+          newElement = parent.insertParagraph(startIndex + insertedCount, cleanLine);
+        }
+        
+        newElement.setAttributes(paragraphs[section.index].getAttributes());
+        newElement.setFontSize(10);
+        newElement.setBold(false);
+        insertedCount++;
+      }
+    });
+  }
 }
