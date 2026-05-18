@@ -491,12 +491,9 @@ function resolveRedirects(url) {
  */
 function cleanUrl(url) {
   if (!url) return "";
-  let clean = url.split('?')[0].trim();
+  let clean = url.trim();
   if (clean.includes('linkedin.com/comm/jobs/view/')) {
     clean = clean.replace('linkedin.com/comm/jobs/view/', 'linkedin.com/jobs/view/');
-  }
-  if (clean.includes('linkedin.com/jobs/view/') && !clean.endsWith('/')) {
-    clean += '/';
   }
   return clean;
 }
