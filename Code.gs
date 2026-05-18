@@ -628,7 +628,9 @@ function logToSheet(folder, job, cvUrl, lmUrl) {
     DriveApp.getRootFolder().removeFile(DriveApp.getFileById(sheetFile.getId()));
     sheetFile.getSheets()[0].appendRow(["Date", "Source", "Entreprise", "Poste", "Score", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Analyse"]);
   }
-  sheetFile.getSheets()[0].appendRow([new Date().toLocaleDateString(), job.source, job.company, job.position, job.score + "%", job.url, cvUrl, lmUrl, job.reasoning]);
+  const now = new Date();
+  const dateTimeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+  sheetFile.getSheets()[0].appendRow([dateTimeStr, job.source, job.company, job.position, job.score + "%", job.url, cvUrl, lmUrl, job.reasoning]);
 }
 
 function callGemini(prompt) {
@@ -646,7 +648,19 @@ function callGemini(prompt) {
 function extractJobUrls(text) {
   const regex = /https:\/\/[^\s"<>]+/g;
   const matches = text.match(regex) || [];
-  return matches.filter(url => url.includes('linkedin.com/') || url.includes('hellowork.com'));
+  return matches.filter(url => {
+    const isLinkedIn = url.includes('linkedin.com/');
+    const isHelloWork = url.includes('hellowork.com');
+    if (isLinkedIn) {
+      // Exclusively capture real job posting links containing '/view/' or '/jobs/view/'
+      return url.includes('/view/') || url.includes('/jobs/view/');
+    }
+    if (isHelloWork) {
+      // Exclusively capture real click-tracking, redirect or job detail pages
+      return url.includes('/clic/') || url.includes('/redirect') || url.includes('/emplois/') || url.includes('/offre-');
+    }
+    return false;
+  });
 }
 
 function getOrCreateFolder(name) {
