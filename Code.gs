@@ -391,13 +391,17 @@ function renderMarkdownToDoc(body, markdownText) {
       if (isListItem) {
         const text = line.substring(2).trim();
         const item = body.appendListItem(text);
-        item.setFontFamily('Roboto');
-        item.setFontSize(9.5);
-        item.setColor('#2D3748');
-        item.setSpacingBefore(2);
-        item.setSpacingAfter(2);
-        item.setLineSpacing(1.1);
+        
+        const style = {};
+        style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+        style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+        style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
+        style[DocumentApp.Attribute.SPACING_BEFORE] = 2;
+        style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.1;
+        item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+        
         formatInlineStyles(item);
         
         try { body.removeChild(firstParagraph); } catch(e) {}
@@ -407,13 +411,17 @@ function renderMarkdownToDoc(body, markdownText) {
       if (isListItem) {
         const text = line.substring(2).trim();
         const item = body.appendListItem(text);
-        item.setFontFamily('Roboto');
-        item.setFontSize(9.5);
-        item.setColor('#2D3748');
-        item.setSpacingBefore(2);
-        item.setSpacingAfter(2);
-        item.setLineSpacing(1.1);
+        
+        const style = {};
+        style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+        style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+        style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
+        style[DocumentApp.Attribute.SPACING_BEFORE] = 2;
+        style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.1;
+        item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+        
         formatInlineStyles(item);
         continue;
       } else {
@@ -425,45 +433,57 @@ function renderMarkdownToDoc(body, markdownText) {
     if (isHeading1) {
       const text = line.substring(2).trim();
       p.setText(text);
-      p.setFontFamily('Roboto');
-      p.setFontSize(16);
-      p.setBold(true);
-      p.setColor('#1A365D'); // Premium dark blue
+      
+      const style = {};
+      style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+      style[DocumentApp.Attribute.FONT_SIZE] = 16;
+      style[DocumentApp.Attribute.BOLD] = true;
+      style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#1A365D'; // Premium dark blue
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 4;
+      p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
-      p.setSpacingBefore(12);
-      p.setSpacingAfter(4);
     } else if (isHeading2) {
       const text = line.substring(3).trim();
       p.setText(text);
-      p.setFontFamily('Roboto');
-      p.setFontSize(11);
-      p.setBold(true);
-      p.setColor('#2B6CB0'); // Slate Blue
+      
+      const style = {};
+      style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+      style[DocumentApp.Attribute.FONT_SIZE] = 11;
+      style[DocumentApp.Attribute.BOLD] = true;
+      style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2B6CB0'; // Slate Blue
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 4;
+      p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
-      p.setSpacingBefore(12);
-      p.setSpacingAfter(4);
       
       // Append a beautiful dividing horizontal rule
       body.appendHorizontalRule();
     } else if (isHeading3) {
       const text = line.substring(4).trim();
       p.setText(text);
-      p.setFontFamily('Roboto');
-      p.setFontSize(10.5);
-      p.setBold(true);
-      p.setColor('#2D3748'); // Charcoal
+      
+      const style = {};
+      style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+      style[DocumentApp.Attribute.FONT_SIZE] = 10.5;
+      style[DocumentApp.Attribute.BOLD] = true;
+      style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 8;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+      p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
-      p.setSpacingBefore(8);
-      p.setSpacingAfter(2);
     } else {
       p.setText(line);
-      p.setFontFamily('Roboto');
-      p.setFontSize(9.5);
-      p.setColor('#2D3748');
-      p.setSpacingBefore(4);
-      p.setSpacingAfter(4);
-      p.setLineSpacing(1.15);
-      p.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
+      
+      const style = {};
+      style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
+      style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+      style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 4;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 4;
+      style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+      p.setAttributes(style);
+      p.setAlignment(DocumentApp.JUSTIFY);
       
       formatInlineStyles(p);
     }
@@ -477,6 +497,7 @@ function formatInlineStyles(element) {
   const cleanText = text.replace(/\*\*/g, '');
   element.setText(cleanText);
   
+  const textElement = element.editAsText();
   let regex = /\*\*(.*?)\*\*/g;
   let match;
   let searchFrom = 0;
@@ -484,7 +505,7 @@ function formatInlineStyles(element) {
     const boldText = match[1];
     const start = cleanText.indexOf(boldText, searchFrom);
     if (start !== -1) {
-      element.setBold(start, start + boldText.length - 1, true);
+      textElement.setBold(start, start + boldText.length - 1, true);
       searchFrom = start + boldText.length;
     }
   }
