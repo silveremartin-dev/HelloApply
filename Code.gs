@@ -1,13 +1,12 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 3.17.0 (High-Fidelity Exact-Replacement Edition)
- * LAST UPDATED: 17/05/2026 20:45
+ * VERSION: 3.22.0 (Executive Block-Replacement Edition)
+ * LAST UPDATED: 18/05/2026 18:15
  * 
  * New:
- * - High-Fidelity Exact-Replacement Engine: Uses plain-text substring mapping to perform in-place character updates, preserving 100% of custom Google Docs layouts, tables, font attributes, colors, and margins!
- * - Multi-Language Coherence (No Franglais): Dynamically replaces French headings, object, salutation, and closing of templates with pure English equivalents if the job description is in English, and vice versa!
- * - Automatic Right Justification: Automatically justifies all body paragraphs in both the CV and the Cover Letter for an impeccable, institution-grade look!
- * - Cleaned Job Description Drafts: Embeds beautifully cleaned, noise-free, and styled HTML descriptions in the Gmail drafts.
+ * - Executive Block-Replacement Engine: Maps all CV template sections, profile summary, skills, and professional experience bullet points as exact target substrings, completely replacing them with ultra-rich, strategic, and metric-heavy customized contents synthesized directly from CV-full and job descriptions!
+ * - Fully Operational Job Links: Preserves critical query parameters (such as otpToken, trackingId, and redirect codes) in cleanUrl to ensure Gmail draft job links remain fully operational and bypass login walls!
+ * - Emulates Gemini 3.1 Pro Gold Standard: Enforces the world-class executive writing style, action verbs, and prestigious tone from the Gemini 3.1 Pro reference CV across all documents!
  */
 
 // --- CONFIGURATION ---
