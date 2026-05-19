@@ -457,7 +457,6 @@ function renderMarkdownToDoc(body, markdownText) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2B6CB0'; // Slate Blue
       style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
       style[DocumentApp.Attribute.SPACING_AFTER] = 4;
-      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true; // Prevents orphaned headers!
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
     } else if (isHeading3) {
@@ -471,7 +470,6 @@ function renderMarkdownToDoc(body, markdownText) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
       style[DocumentApp.Attribute.SPACING_BEFORE] = 8;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
-      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true; // Prevents orphaned sub-headers!
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
     } else {
