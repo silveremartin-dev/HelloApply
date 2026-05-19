@@ -354,13 +354,13 @@ function renderMarkdownToDoc(body, markdownText) {
   const firstChild = body.getChild(0);
   if (firstChild && firstChild.getType() === DocumentApp.ElementType.PARAGRAPH) {
     firstParagraph = firstChild.asParagraph();
-    firstParagraph.setText("");
+    firstParagraph.setText(" ");
   } else {
     try {
-      firstParagraph = body.appendParagraph("");
+      firstParagraph = body.appendParagraph(" ");
       body.removeChild(firstChild);
     } catch (e) {
-      firstParagraph = body.appendParagraph("");
+      firstParagraph = body.appendParagraph(" ");
     }
   }
 
@@ -389,8 +389,8 @@ function renderMarkdownToDoc(body, markdownText) {
       
       // If the first line is a bullet item, we append it and safely clean up the empty first paragraph
       if (isListItem) {
-        const text = line.substring(2).trim();
-        const item = body.appendListItem(text);
+        const textVal = line.substring(2).trim() || " ";
+        const item = body.appendListItem(textVal);
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -409,8 +409,8 @@ function renderMarkdownToDoc(body, markdownText) {
       }
     } else {
       if (isListItem) {
-        const text = line.substring(2).trim();
-        const item = body.appendListItem(text);
+        const textVal = line.substring(2).trim() || " ";
+        const item = body.appendListItem(textVal);
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -425,14 +425,14 @@ function renderMarkdownToDoc(body, markdownText) {
         formatInlineStyles(item);
         continue;
       } else {
-        p = body.appendParagraph("");
+        p = body.appendParagraph(" ");
       }
     }
     
     // Configure paragraph p
     if (isHeading1) {
-      const text = line.substring(2).trim();
-      p.setText(text);
+      const textVal = line.substring(2).trim() || " ";
+      p.setText(textVal);
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -444,8 +444,8 @@ function renderMarkdownToDoc(body, markdownText) {
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
     } else if (isHeading2) {
-      const text = line.substring(3).trim();
-      p.setText(text);
+      const textVal = line.substring(3).trim() || " ";
+      p.setText(textVal);
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -460,8 +460,8 @@ function renderMarkdownToDoc(body, markdownText) {
       // Append a beautiful dividing horizontal rule
       body.appendHorizontalRule();
     } else if (isHeading3) {
-      const text = line.substring(4).trim();
-      p.setText(text);
+      const textVal = line.substring(4).trim() || " ";
+      p.setText(textVal);
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -473,7 +473,8 @@ function renderMarkdownToDoc(body, markdownText) {
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
     } else {
-      p.setText(line);
+      const textVal = line.trim() || " ";
+      p.setText(textVal);
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
@@ -494,7 +495,7 @@ function formatInlineStyles(element) {
   const text = element.getText();
   if (!text.includes('**')) return;
   
-  const cleanText = text.replace(/\*\*/g, '');
+  const cleanText = text.replace(/\*\*/g, '') || " ";
   element.setText(cleanText);
   
   const textElement = element.editAsText();
