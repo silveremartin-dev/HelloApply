@@ -167,7 +167,6 @@ function main() {
       }
     }
   }
-
   if (!TEST_MODE) props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
 }
 
@@ -200,7 +199,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        
     [GOLD STANDARD CV EXAMPLE]:
     "Silvère MARTIN-MICHIELLOT Lorient, France (Remote) | 07 67 81 52 02 | silvere.martin@gmail.com 
-    LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev
+    LinkedIn: linkedin.com/in/silvere-martin-michiellot-65b6a95/ | GitHub: github.com/silveremartin-dev
     
     ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
     Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
@@ -217,26 +216,30 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - For the CV:
          * Use "# " for "Silvère MARTIN-MICHIELLOT" (Centered at the top).
          * Use a normal paragraph below it for the exact contact details: "8 Rue Jean Marie Toulliou, 56100 Lorient | 07 67 81 52 02 | silvere.martin@gmail.com"
-         * Use a normal paragraph below that for LinkedIn and GitHub links: "LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev/"
-         * Use "## " for main sections (e.g. "## PROFIL PROFESSIONNEL", "## COMPÉTENCES CLÉS", "## EXPÉRIENCES PROFESSIONNELLES", "## FORMATION & LANGUES", "## ENVIRONNEMENT TECHNIQUE").
-         * Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | Lorient | 07/2025 - Présent").
-         * Use "- " or "* " for list items and experience bullets.
+         * Use a normal paragraph below that for LinkedIn and GitHub links: "LinkedIn: linkedin.com/in/silvere-martin-michiellot-65b6a95/ | GitHub: github.com/silveremartin-dev"
+         * MANDATORY CV TITLE: Use "## [Exact Target Position in Capital Letters]" (e.g. "## RESPONSABLE INFORMATIQUE") immediately below the contact block. This trône dynamically at the top!
+         * STRICT FORBIDDEN LINE: Never write "Méthodes : Agile (Scrum/Lean)..." or similar under the contact block.
+         * Use "## " for other main sections (e.g. "## PROFIL PROFESSIONNEL", "## COMPÉTENCES CLÉS", "## EXPÉRIENCES PROFESSIONNELLES", "## FORMATION & LANGUES", "## ENVIRONNEMENT TECHNIQUE").
+         * Use "### " for job titles/companies or sub-sections (e.g. "### Responsable Informatique — Equitive | Lorient | 10/2012 - 11/2023").
+         * STRICT LIST FORMATting: ALWAYS use the standard bullet point syntax ("- " or "* ") for all lists. Never use numbered lists ("1.", "2.", "3.") anywhere in the CV!
+         * STRICT CHRONOLOGICAL ORDER: The experiences MUST be sorted in strict reverse chronological order (the most recent first, e.g. 2025 then 2023 then 2012...).
+         * HIGHLIGHT LANGUAGES: Always highlight the candidate's linguistic masteries with clear CEFR/levels (e.g. "- **Anglais** : Niveau C2 (TOEFL 267), Bilingue", "- **Espagnol** : Niveau B2").
          * Use double asterisks "**" to bold key terms, technologies, and metrics.
        
        - For the Cover Letter:
-         * Include the sender details block at the very top:
+         * Include the sender details block at the very top (and nowhere else):
            Silvère Martin-Michiellot
            8 Rue Jean Marie Toulliou, 56100 Lorient
            silvere.martin@gmail.com | 07 67 81 52 02
-           LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev/
-         * Then include the date line (e.g., "Lorient, May 18, 2026" or "Lorient, le 18 mai 2026") in the correct target language.
-         * Then include the recipient details (e.g., "To the Hiring Team at [Company]" or "À l'attention du Responsable du Recrutement - [Company]").
-         * Use "## " for the Subject Line (e.g., "## Subject: Application for the [Position] role" or "## Objet : Lettre de motivation - [Poste]").
-         * Then the greeting (e.g., "Dear Hiring Manager," or "Madame, Monsieur,").
-         * Then the body paragraphs.
-         * Then the closing salutation (e.g., "Sincerely," or "Je vous prie d'agréer...").
+           LinkedIn: linkedin.com/in/silvere-martin-michiellot-65b6a95/ | GitHub: github.com/silveremartin-dev/
+         * STRICT NO DUPLICATION: Do not create any title like "# Silvère Martin-Michiellot" or duplicate the name on the right side of the cover letter.
+         * Leave a blank line after the sender details block, then write the Date line (e.g., "Lorient, le 18 mai 2026").
+         * Include the recipient details cleanly on a single line (never split it or repeat Lorient):
+           À l'attention du Responsable du Recrutement - [Company]
+         * Use "## " for the Subject Line in bold and in standard black text (e.g., "## **Objet : Candidature au poste de...**"). No horizontal rules or custom blue colors below the subject!
+         * Leave a blank line before the final signature ("Silvère Martin-Michiellot") to separate it cleanly from the text.
          * Use double asterisks "**" to bold key terms or company names for emphasis.
-       
+        
     Return JSON only:
     {
       "company": "Real Company Name (extracted from context)",
@@ -454,11 +457,9 @@ function renderMarkdownToDoc(body, markdownText) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2B6CB0'; // Slate Blue
       style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
       style[DocumentApp.Attribute.SPACING_AFTER] = 4;
+      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true; // Prevents orphaned headers!
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
-      
-      // Append a beautiful dividing horizontal rule
-      body.appendHorizontalRule();
     } else if (isHeading3) {
       const textVal = line.substring(4).trim() || " ";
       p.setText(textVal);
@@ -470,6 +471,7 @@ function renderMarkdownToDoc(body, markdownText) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
       style[DocumentApp.Attribute.SPACING_BEFORE] = 8;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true; // Prevents orphaned sub-headers!
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
     } else {
@@ -484,7 +486,7 @@ function renderMarkdownToDoc(body, markdownText) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 4;
       style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
       p.setAttributes(style);
-      p.setAlignment(DocumentApp.JUSTIFY);
+      p.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
       
       formatInlineStyles(p);
     }
@@ -507,6 +509,8 @@ function formatInlineStyles(element) {
     const start = cleanText.indexOf(boldText, searchFrom);
     if (start !== -1) {
       textElement.setBold(start, start + boldText.length - 1, true);
+      // Give bold text a beautiful, premium, consistent slate blue color highlight!
+      textElement.setForegroundColor(start, start + boldText.length - 1, '#2B6CB0');
       searchFrom = start + boldText.length;
     }
   }
@@ -625,6 +629,14 @@ function cleanUrl(url) {
   let clean = url.trim();
   if (clean.includes('linkedin.com/comm/jobs/view/')) {
     clean = clean.replace('linkedin.com/comm/jobs/view/', 'linkedin.com/jobs/view/');
+  }
+  if (clean.includes('urlRedirection=')) {
+    const match = clean.match(/urlRedirection=([^&]+)/);
+    if (match) {
+      try {
+        clean = decodeURIComponent(match[1]);
+      } catch (e) { /* ignore and use original */ }
+    }
   }
   return clean;
 }
