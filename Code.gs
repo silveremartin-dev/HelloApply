@@ -1,7 +1,13 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 5.1.0 (Dense Asymmetric Engine & PoW Index Edition)
- * LAST UPDATED: 20/05/2026 15:40
+ * VERSION: 6.0.0 (Triple-Document Generation Engine Edition)
+ * LAST UPDATED: 20/05/2026 16:45
+ * 
+ * New in v6.0.0:
+ * - Triple-Document Sourcing Engine: Systematically generates CV, traditional Cover Letter, and peer-to-peer Technical Architecture Memo as 3 separate custom PDFs.
+ * - Auto-Updating 12-Column Spreadsheet: Automatically upgrades tracking layout in-place to log all three document URLs.
+ * - Dynamic Languages Extraction: Extracts languages and levels (e.g. Anglais C2, Espagnol B2) from masterCV to dynamically form a clean "## FORMATION & LANGUES" section.
+ * - Strict Banning of "JScience": Ban JScience in all generated documents and replace it exclusively with "Episteme".
  * 
  * New in v5.1.0:
  * - Strict Banning of "JScience": Completely ban JScience and dynamically translate it to "Episteme" to preserve state-of-the-art software architecture.
@@ -164,7 +170,7 @@ function main() {
               }
             } else {
               console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision}, Required: ${requiredScore}%)`);
-              logToSheet(outputFolder, analysis, "", ""); // Always log rejected/ignored jobs
+              logToSheet(outputFolder, analysis, "", "", ""); // Always log rejected/ignored jobs
             }
             
             // Mark job as processed to prevent duplicates
@@ -180,15 +186,18 @@ function main() {
 function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
-    Instead of a traditional Cover Letter, you will generate a "Technical Architecture Memo / Audit Flash". The CV must be positioned as an "Index of Executable Proofs of Work".
+    You will systematically generate THREE distinct documents in the returned JSON object:
+    1. A tailored dynamic CV ('cv_markdown') positioned as an "Index of Executable Proofs of Work".
+    2. A traditional, premium Cover Letter ('letter_markdown') following the "You, Me, Us" narrative structure and formal styling.
+    3. A peer-to-peer Technical Architecture Memo ('memo_markdown') targeting the company's core bottlenecks.
 
     JOB DESCRIPTION:
-    ${context}
+    \${context}
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
-    ${masterCV}
+    \${masterCV}
     
-    CRITICAL INSTRUCTIONS FOR ASYMMETRIC WRITING:
+    CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
        - If the description is missing, an auth wall, or withdrawn, Score = 0, Decision = "Ignorer".
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
@@ -196,39 +205,60 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     1. LANGUAGE COMPLIANCE:
        - Strictly align with the language of the job description (English or French). Absolutely no mixed languages.
        
-    2. THE ARCHITECTURE MEMO (Replaces the Cover Letter in 'letter_markdown'):
-       - ABANDON ALL TRADITIONAL COVER LETTER FORMATS. Never use "Madame, Monsieur," or standard polite sign-offs.
-       - Format this as a peer-to-peer technical memo addressed directly to the CTO/CEO.
-       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "letter_markdown" must be the raw header block below, with absolutely no greetings, no subordination formulas ("À l'attention de..."), and no date lines before it. It must be at the absolute top of the document:
+    2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
+       - Follow the premium cover letter formatting guidelines from version 4.4.x:
+         - Sender block at the absolute top of the letter:
            Silvère Martin-Michiellot
            Architecte Systèmes d'Information & Expert IA Agentique
            Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
-           LinkedIn: linkedin.com/in/silvere-martin-michiellot
-           GitHub: github.com/silveremartin-dev/
+           LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
+           GitHub: https://github.com/silveremartin-dev/
+         - A blank line, then the Lorient date line ("Lorient, le 20 mai 2026" or "Lorient, May 20, 2026" in English, matched to the current date).
+         - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]".
+         - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (must be standard black text, no horizontal rules below it).
+         - Formal greeting: "Madame, Monsieur," in French, "Dear Hiring Manager," in English.
+         - Narrative: Clean "You, Me, Us" narrative structure:
+           - You: Show deep understanding of their business context, technical environment, and structural challenges.
+           - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
+           - Us: Propose high-value synergy and immediate technical collaboration.
+         - Formal closing salutation: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." (or English equivalent).
+         - Sign-off: "Silvère Martin-Michiellot."
+         
+    3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
+       - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
+       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, no subordination formulas ("À l'attention de..."), and no date lines before it. It must be at the absolute top of the document:
+           Silvère Martin-Michiellot
+           Architecte Systèmes d'Information & Expert IA Agentique
+           Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
+           LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
+           GitHub: https://github.com/silveremartin-dev/
        - Immediately following the header block, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
        - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
-       - **STRICTLY BAN THE MENTION OF "JScience" (OR "Jscience")**: Do not ever mention JScience or any 20-year-old legacy project. If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration). If JScience is found in the "masterCV" source experiences, dynamically translate/rename it to **"Episteme"** or replace it with modern high-performance Java architectures to keep the profile modern, elite, and state-of-the-art.
-       - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
-       - **The Proposition:** Propose a high-level architectural posture to solve it.
-       - **The Proof of Work (CRITICAL):** You MUST explicitly link their problem to the candidate's tangible assets. Select the most relevant based on the job:
-         * If the offer involves Java, high performance, or heavy algorithmics: Point to **"Episteme"** (emphasize the 450,000+ lines of scientific computing framework).
-         * If the offer involves GPU computing, hardware acceleration, TornadoVM, or complex algorithmics/massive parallel optimization: Point to **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
-         * If the offer involves modern Web/React/Next.js/AI integrations: Point to **"Open Primer"** (AI-assisted pedagogy platform).
-         * If the offer involves complex logic, distributed systems, or macro-architecture: Point to **"Swarm Forge"** or **"Ether"** (multi-agent simulations, macro-historical systems).
-         * If the offer focuses on Delivery, DevOps, or CI/CD: Highlight the use of **"Google Antigravity"** to divide delivery cycles by 5.
-       - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique."
-       - **Sign-off:** "Silvère Martin-Michiellot."
+       - The core content of the Memo must feature:
+         - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
+         - **The Proposition:** Propose a high-level architectural posture to solve it.
+         - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
+         - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique."
+         - **Sign-off:** "Silvère Martin-Michiellot."
 
-    3. THE CV AS AN INDEX (Executive Tone for 'cv_markdown'):
+    4. THE CV AS AN INDEX ('cv_markdown'):
        - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
-       - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements, rather than reduced to 2 or 3 brief lines.
-       - **STRICTLY BAN THE MENTION OF "JScience" (OR "Jscience")**: Do not ever mention JScience in the CV either. Dynamically rename/translate any JScience project reference to **"Episteme"** or replace it with modern high-performance Java/J2EE standard engineering to keep the profile modern and elite.
-       - Transform the summary into a display of absolute authority: Focus on the transition from legacy systems to AI-augmented delivery. 
+       - Contact info must include:
+         Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
+         LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
+         GitHub: https://github.com/silveremartin-dev/
+       - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
        - Highlight the capability to govern AI and structure complex logic (not just write code).
        - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" line at the end of every experience are strictly preserved.
        - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
+       - **DYNAMIC LANGUAGES EXTRACTION**: Extract the "Langues" section from the masterCV and format it under a clean "## FORMATION & LANGUES" section at the end of the CV, listing all languages and levels (e.g. Anglais C2, Espagnol B2).
+       
+    5. STRICT BANNING OF "JScience" (OR "Jscience"):
+       - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
+       - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
+       - If JScience is found in the "masterCV" source, dynamically translate/rename it to **"Episteme"**.
 
-    4. JSON STRUCTURE:
+    6. JSON STRUCTURE:
     Return JSON only:
     {
       "company": "Real Company Name",
@@ -239,10 +269,22 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
       "job_description_clean": "Cleaned job description in plain text...",
       "language": "en" or "fr",
       "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
-      "letter_markdown": "The Architecture Memo / Flash Audit..."
+      "letter_markdown": "The traditional Cover Letter following the premium You-Me-Us structure...",
+      "memo_markdown": "The peer-to-peer Technical Architecture Memo..."
     }
   `;
-  return callGemini(prompt);
+  
+  let result = callGemini(prompt);
+  if (result) {
+    const fields = ['cv_markdown', 'letter_markdown', 'memo_markdown'];
+    fields.forEach(field => {
+      if (result[field]) {
+        // Robust programmatic shield to replace JScience with Episteme (case-insensitive)
+        result[field] = result[field].replace(/jscience/gi, "Episteme");
+      }
+    });
+  }
+  return result;
 }
 
 /**
@@ -270,23 +312,26 @@ function fetchJobDescription(url) {
  * Process Job
  */
 function processJob(inputFolder, outputFolder, job) {
-  let cvDocUrl = ""; let lmDocUrl = ""; let attachments = [];
+  let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let attachments = [];
   try {
     const rand = Math.floor(Math.random() * 900000) + 10000;
     const cvName = `SilvereMartinMichiellot-CV-2026-${rand}`;
     const lmName = `SilvereMartinMichiellot-LM-2026-${rand}`;
+    const memoName = `SilvereMartinMichiellot-Memo-2026-${rand}`;
     
     // Process complete generation from Markdown
     const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.cv_markdown || "", cvName);
     const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.letter_markdown || "", lmName);
+    const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.memo_markdown || "", memoName);
     
     cvDocUrl = cvResult.docUrl; 
     lmDocUrl = lmResult.docUrl; 
-    attachments = [cvResult.pdfBlob, lmResult.pdfBlob];
+    memoDocUrl = memoResult.docUrl;
+    attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
     
     createDraft(job, attachments);
   } catch (e) { console.error(`[ERROR] Processing ${job.company}: ${e.message}`); }
-  logToSheet(outputFolder, job, cvDocUrl, lmDocUrl);
+  logToSheet(outputFolder, job, cvDocUrl, lmDocUrl, memoDocUrl);
 }
 
 /**
@@ -297,19 +342,19 @@ function createDraft(job, attachments) {
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
       <p style="font-size: 1.1em; margin-top: 0;">Bonjour Silvère,</p>
-      <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">${job.position}</strong> chez <strong style="color: #2c5282;">${job.company}</strong>.</p>
-      <p>Les fichiers PDF adaptés (CV et Lettre de motivation) sont déjà joints à ce brouillon.</p>
+      <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">\${job.position}</strong> chez <strong style="color: #2c5282;">\${job.company}</strong>.</p>
+      <p>Les fichiers PDF adaptés (CV, Lettre de motivation, et Mémo d'architecture) sont déjà joints à ce brouillon.</p>
       
       <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
-        <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
-        <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"${job.reasoning}"</p>
-        <p style="margin: 0; font-size: 0.9em;"><a href="${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur ${job.source}</a></p>
+        <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : \${job.score}%]</h3>
+        <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"\${job.reasoning}"</p>
+        <p style="margin: 0; font-size: 0.9em;"><a href="\${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur \${job.source}</a></p>
       </div>
       
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
       <h4 style="color: #4a5568; margin-bottom: 10px; font-size: 1.1em; border-bottom: 2px solid #edf2f7; padding-bottom: 6px;">Description du poste ciblée :</h4>
       <div style="font-size: 0.9em; color: #2d3748; background: #f7fafc; padding: 18px; border: 1px solid #e2e8f0; border-radius: 8px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.5;">
-${job.job_description_clean || job.raw_description || "Non disponible"}
+\${job.job_description_clean || job.raw_description || "Non disponible"}
       </div>
 
       <p style="margin-top: 25px; font-size: 0.95em; color: #4a5568;">Bien amicalement,<br><strong style="color: #2d3748;">Ton assistant HelloApply</strong></p>
@@ -431,6 +476,7 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
+        item.setPreventWidowOrphan(true);
         
         const txt = item.editAsText();
         txt.setFontSize(9.5);
@@ -464,6 +510,7 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
+        item.setPreventWidowOrphan(true);
         
         const txt = item.editAsText();
         txt.setFontSize(9.5);
@@ -492,6 +539,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT); // Left-align name per feedback
+      p.setKeepWithNext(true);
+      p.setPreventWidowOrphan(true);
       formatInlineStyles(p);
     } else if (isHeading2) {
       heading2Count++;
@@ -513,6 +562,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
+      p.setKeepWithNext(true);
+      p.setPreventWidowOrphan(true);
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
       if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil")) {
@@ -536,6 +587,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 1;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
+      p.setKeepWithNext(true);
+      p.setPreventWidowOrphan(true);
       formatInlineStyles(p);
     } else {
       const textVal = line.trim() || " ";
@@ -550,6 +603,7 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
       p.setAttributes(style);
+      p.setPreventWidowOrphan(true);
       
       const txt = p.editAsText();
       txt.setFontSize(9.5);
@@ -574,7 +628,8 @@ function formatInlineStyles(element) {
   let hasBold = text.includes('**');
   let hasMarkdownLink = text.includes('[');
   let hasPlainLink = text.toLowerCase().includes('linkedin.com') || text.toLowerCase().includes('github.com');
-  if (!hasBold && !hasMarkdownLink && !hasPlainLink) return;
+  let hasEmail = text.includes('@');
+  if (!hasBold && !hasMarkdownLink && !hasPlainLink && !hasEmail) return;
   
   const textElement = element.editAsText();
   
@@ -661,6 +716,23 @@ function formatInlineStyles(element) {
         destinationUrl = 'https://' + destinationUrl;
       }
       textElement.setLinkUrl(startIdx, endIdx, destinationUrl);
+      textElement.setForegroundColor(startIdx, endIdx, '#2B6CB0');
+      textElement.setUnderline(startIdx, endIdx, true);
+      textElement.setFontSize(startIdx, endIdx, baseFontSize);
+      textElement.setFontFamily(startIdx, endIdx, baseFontFamily);
+    }
+  }
+
+  // 4. Process Plain Email Addresses to make them clickable
+  text = element.getText();
+  let emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+  let emailMatch;
+  while ((emailMatch = emailRegex.exec(text)) !== null) {
+    const fullMatch = emailMatch[0];
+    const startIdx = text.indexOf(fullMatch);
+    if (startIdx !== -1) {
+      const endIdx = startIdx + fullMatch.length - 1;
+      textElement.setLinkUrl(startIdx, endIdx, "mailto:" + fullMatch);
       textElement.setForegroundColor(startIdx, endIdx, '#2B6CB0');
       textElement.setUnderline(startIdx, endIdx, true);
       textElement.setFontSize(startIdx, endIdx, baseFontSize);
@@ -806,11 +878,11 @@ function getJobId(url) {
   return clean;
 }
 
-function logToSheet(folder, job, cvUrl, lmUrl) {
+function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   let sheetFile; const files = folder.getFilesByName(TRACKING_SHEET_NAME);
-  const status = (cvUrl && lmUrl) ? "Acceptée" : "Rejetée";
+  const status = (cvUrl && lmUrl && memoUrl) ? "Acceptée" : "Rejetée";
   
-  const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Origine", "Analyse"];
+  const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
   
   let sheet;
   if (files.hasNext()) { 
@@ -820,12 +892,20 @@ function logToSheet(folder, job, cvUrl, lmUrl) {
     // Auto-update spreadsheet headers in-place if they don't match the new layout
     const lastCol = sheet.getLastColumn();
     const existingHeaders = lastCol > 0 ? sheet.getRange(1, 1, 1, Math.max(lastCol, headers.length)).getValues()[0] : [];
+    
+    // Check if we need to insert the "Lien Mémo (Doc)" column (column 10) dynamically to preserve historical rows
+    if (lastCol === 11 && existingHeaders[9] === "Lien Origine") {
+      sheet.insertColumnBefore(10);
+      console.log(`[UPGRADE] Dynamically inserted column J (10th column) for 'Lien Mémo (Doc)'.`);
+    }
+    
     let needsUpdate = false;
-    if (lastCol < headers.length) {
+    if (sheet.getLastColumn() < headers.length) {
       needsUpdate = true;
     } else {
+      const currentHeaders = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
       for (let i = 0; i < headers.length; i++) {
-        if (existingHeaders[i] !== headers[i]) {
+        if (currentHeaders[i] !== headers[i]) {
           needsUpdate = true;
           break;
         }
@@ -833,7 +913,7 @@ function logToSheet(folder, job, cvUrl, lmUrl) {
     }
     if (needsUpdate) {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-      console.log(`[UPDATE] Spreadsheet headers updated successfully to match the 11-column layout.`);
+      console.log(`[UPDATE] Spreadsheet headers updated successfully to match the 12-column layout.`);
     }
   } 
   else {
@@ -846,7 +926,7 @@ function logToSheet(folder, job, cvUrl, lmUrl) {
   
   const now = new Date();
   const dateTimeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-  sheet.appendRow([dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.url, cvUrl, lmUrl, job.originalUrl || "", job.reasoning]);
+  sheet.appendRow([dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.url, cvUrl, lmUrl, memoUrl, job.originalUrl || "", job.reasoning]);
 }
 
 function callGemini(prompt) {
