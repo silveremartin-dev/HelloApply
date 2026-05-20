@@ -202,22 +202,69 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - If the description is missing, an auth wall, or withdrawn, Score = 0, Decision = "Ignorer".
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
-    1. LANGUAGE COMPLIANCE:
-       - Strictly align with the language of the job description (English or French). Absolutely no mixed languages.
+    1. LANGUAGE DETECTION & CONSISTENCY (No mixed "Franglais" documents):
+       - Detect the language of the job description or context.
+       - If it is in English, ALL documents MUST be completely in English. You must translate any French terms, headings, dates, and locations from the templates/master CV into perfect natural English.
+         * The date block MUST be in English (e.g., "Lorient, May 18, 2026"). Never write "Lorient, le...".
+         * The greetings and Recipient MUST be in English (e.g., "Attention: Hiring Manager", "Dear Hiring Manager,").
+         * The closing salutation MUST be in English (e.g., "Sincerely,"). Never mix French closings!
+       - If it is in French, ALL documents MUST be entirely in French.
+         * The date block MUST be in French (e.g., "Lorient, le 18 mai 2026").
+         * The greeting MUST be "Madame, Monsieur,".
+         * The closing salutation MUST be "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.".
+       
+    1.5. EXECUTIVE WRITING STYLE (Emulate the Gold Standard tone):
+       - Emulate the high-impact, prestigious tone of the Gemini 3.1 Pro reference CV below.
+       - Write extremely rich, strategic, and metric-heavy bullet points and summaries from the Master CV details. Do not write short or generic bullet points.
+       
+    [GOLD STANDARD CV EXAMPLE]:
+    "Silvère MARTIN-MICHIELLOT Lorient, France (Remote) | 07 67 81 52 02 | silvere.martin@gmail.com 
+    LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev
+    ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
+    Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
+    COMPÉTENCES CLÉS
+    Architectures IA & Frameworks Agentiques : Orchestration multi-agents, frameworks autonomes et semi-autonomes (Google Antigravity, architectures de type LangChain/AutoGen), LLMs, Prompt Engineering, patterns RAG, et bases de données vectorielles.
+    Ingénierie Logicielle & Systèmes Distribués : Expertise Java (J2SE 1.0 à 25+), Python, C#, Micro-services, architectures orientées événements, API REST/MCP, calcul scientifique distribué haute performance.
+    Modernisation de Legacy & Delivery Lifecycle : Audit et refactoring de codes patrimoniaux critiques, automatisation end-to-end des phases d'analyse, build, test (TDD), documentation et déploiement via agents IA.
+    Environnements Cloud & MLOps/DevOps : Maîtrise multi-cloud (GCP, AWS, architectures hybrides), conteneurisation (Docker, Kubernetes), CI/CD, observabilité, et gouvernance/sécurité des données (RGPD, chiffrement).
+    Leadership Technique & Advisory : Direction d'équipes d'ingénierie (jusqu'à 8 développeurs en environnement Agile/Scrum), relation client stratégique (AMOA), vulgarisation de concepts IA complexes auprès d'audiences techniques et exécutives. EXPÉRIENCES PROFESSIONNELLES
+    Lead Architecte & Développeur Open Source | Mécénat GitHub | Lorient (Remote) | 07/2025 – Présent
+    Création de la bibliothèque de calcul scientifique Episteme (+400 000 lignes de code) avec des performances 10x supérieures aux standards Apache.
+    Développement d'un client-serveur distribué pour la résolution d'Eternity II et d'une simulation 3D d'insectes sociaux.
+    Automatisation de 80% des tests unitaires et de la documentation via l'outil Antigravity.
+    Spécialiste Support Informatique Senior | Techteam (Fives Syleps) | Lorient | 06/2024 – 07/2025
+    Résolution d'incidents critiques 24/7 (Niveaux 1, 2, 3) sur plateformes logistiques robotisées (WMS/WCS).
+    Réorganisation de l'accès VPN et de la gestion des machines virtuelles, réduisant le temps de connexion de l'équipe de 35%.
+    Responsable IT / Chef de Projet AMOA | Equitive (Groupe Deloitte) | Lorient | 10/2012 – 11/2023
+    Accompagnement technique stratégique ayant généré une hausse de 400% du chiffre d'affaires client en 7 ans.
+    Déploiement de solutions de dématérialisation (facturation, paie) pour le Ministère de la Culture.
+    Coordination de 8 développeurs en environnements Agiles et DevOps.
+    Migration d'infrastructure vers une architecture hybride de plus de 80 machines virtuelles sécurisées.
+    FORMATION & LANGUES
+    Certificat de Neurosciences Cognitives & DESS Psychologie Expérimentale : Université de Genève (1998).
+    DEA Sciences Cognitives (Intelligence Artificielle) : INPG Grenoble (1994).
+    Maîtrise d'Informatique : Université Joseph Fourier, Grenoble (1993).
+    Langues : Anglais C2 (TOEFL 267/300), Espagnol B2, Italien B1.
+    ENVIRONNEMENT TECHNIQUE
+    Langages : Java (Expert), Python, C#, Javascript, SQL, C++, LISP, PHP, Powershell.
+    Outils IA : Google Antigravity, TensorFlow, Keras, Gemini 3, ChatGPT, HuggingFace, N8N
+    Frameworks & Data : SpringBoot, Hibernate, Spark, Kafka, Tornado VM, Three.js, Redis, Oracle, PostgreSQL.
+    Méthodes : Agile (Scrum/Lean), TDD, Design Patterns, UML."
+    ========================================================================
        
     2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
        - Follow the premium cover letter formatting guidelines from version 4.4.x:
          - Sender block at the absolute top of the letter:
            Silvère Martin-Michiellot
-           Architecte Systèmes d'Information & Expert IA Agentique
+           [Target Position Title matching the CV]
            Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
            LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
            GitHub: https://github.com/silveremartin-dev/
-         - A blank line, then the Lorient date line ("Lorient, le 20 mai 2026" or "Lorient, May 20, 2026" in English, matched to the current date).
-         - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]".
-         - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (must be standard black text, no horizontal rules below it).
-         - Formal greeting: "Madame, Monsieur," in French, "Dear Hiring Manager," in English.
-         - Narrative: Clean "You, Me, Us" narrative structure:
+         - A blank line, then the Lorient date line, matched to the current date.
+         - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]" (or English equivalent).
+         - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (or English equivalent) (must be standard black text, no horizontal rules below it).
+         - Formal greeting: "Madame, Monsieur," (or English equivalent).
+         - Narrative: Clean "You, Me, Us" narrative structure (written entirely in the target language):
            - You: Show deep understanding of their business context, technical environment, and structural challenges.
            - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
            - Us: Propose high-value synergy and immediate technical collaboration.
@@ -226,32 +273,36 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
          
     3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
        - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
-       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, no subordination formulas ("À l'attention de..."), and no date lines before it. It must be at the absolute top of the document:
+       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, and no subordination formulas ("À l'attention de..."). It must be at the absolute top of the document:
            Silvère Martin-Michiellot
-           Architecte Systèmes d'Information & Expert IA Agentique
+           [Target Position Title matching the CV]
            Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
            LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
            GitHub: https://github.com/silveremartin-dev/
-       - Immediately following the header block, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
+       - A blank line, then the Lorient date line, positioned right after the header block and before the subject line.
+       - Immediately following the date line, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**" (or English equivalent).
        - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
        - The core content of the Memo must feature:
          - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
          - **The Proposition:** Propose a high-level architectural posture to solve it.
          - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
-         - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique."
+         - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." (or English equivalent).
          - **Sign-off:** "Silvère Martin-Michiellot."
 
     4. THE CV AS AN INDEX ('cv_markdown'):
+       - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | Lorient | 07/2025 - Présent").
        - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
-       - Contact info must include:
+       - Contact info must include exactly these lines without any bullet points:
          Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
          LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
          GitHub: https://github.com/silveremartin-dev/
+       - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
+       - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
        - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
        - Highlight the capability to govern AI and structure complex logic (not just write code).
-       - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" line at the end of every experience are strictly preserved.
+       - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" (in French) or "**Technical Environment:**" (in English) line at the end of every experience are strictly preserved.
        - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
-       - **DYNAMIC LANGUAGES EXTRACTION**: Extract the "Langues" section from the masterCV and format it under a clean "## FORMATION & LANGUES" section at the end of the CV, listing all languages and levels (e.g. Anglais C2, Espagnol B2).
+       - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
        
     5. STRICT BANNING OF "JScience" (OR "Jscience"):
        - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
@@ -347,19 +398,19 @@ function createDraft(job, attachments) {
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
       <p style="font-size: 1.1em; margin-top: 0;">Bonjour Silvère,</p>
-      <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">\${job.position}</strong> chez <strong style="color: #2c5282;">\${job.company}</strong>.</p>
+      <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">${job.position}</strong> chez <strong style="color: #2c5282;">${job.company}</strong>.</p>
       <p>Les fichiers PDF adaptés (CV, Lettre de motivation, et Mémo d'architecture) sont déjà joints à ce brouillon.</p>
       
       <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
-        <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : \${job.score}%]</h3>
-        <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"\${job.reasoning}"</p>
-        <p style="margin: 0; font-size: 0.9em;"><a href="\${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur \${job.source}</a></p>
+        <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
+        <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"${job.reasoning}"</p>
+        <p style="margin: 0; font-size: 0.9em;"><a href="${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur ${job.source}</a></p>
       </div>
       
       <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
       <h4 style="color: #4a5568; margin-bottom: 10px; font-size: 1.1em; border-bottom: 2px solid #edf2f7; padding-bottom: 6px;">Description du poste ciblée :</h4>
       <div style="font-size: 0.9em; color: #2d3748; background: #f7fafc; padding: 18px; border: 1px solid #e2e8f0; border-radius: 8px; white-space: pre-wrap; max-height: 400px; overflow-y: auto; line-height: 1.5;">
-\${job.job_description_clean || job.raw_description || "Non disponible"}
+${job.job_description_clean || job.raw_description || "Non disponible"}
       </div>
 
       <p style="margin-top: 25px; font-size: 0.95em; color: #4a5568;">Bien amicalement,<br><strong style="color: #2d3748;">Ton assistant HelloApply</strong></p>
