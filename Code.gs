@@ -1,15 +1,16 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 4.3.0 (ATS Hyperlink & Quantified Experience Edition)
- * LAST UPDATED: 20/05/2026 02:10
+ * VERSION: 5.0.0 (Asymmetric Architecture Memo & Proof of Work Index Edition)
+ * LAST UPDATED: 20/05/2026 02:20
  * 
- * New:
+ * New in v5.0.0:
+ * - Asymmetric Sourcing Engine: Mutation from traditional cover letters to peer-to-peer "Technical Architecture Memo / Audit Flash" targeting critical company bottlenecks.
+ * - CV as Index of Executable Proofs of Work: Positions the CV as a display of absolute authority showcasing tangible, production-ready assets.
+ * - Dynamic Proofs of Work matching: Automatically scans target roles to link them directly to Episteme, Eternity, Swarm Forge, Open Primer, or Antigravity.
  * - Dynamic 11-Column Spreadsheet Headers: Dynamically updates the column layout of existing sheets in-place by verifying against the maximum current column index.
  * - Accurate Status Validation: Correctly marks ignored or low-scoring jobs in Test Mode as 'Rejetée' in the tracking sheet based on whether drafts were actually generated.
  * - Robust Link Auto-Format: Automatically detects and formats plain LinkedIn/GitHub URLs inside paragraph/list text into premium, blue, underlined, clickable hyperlinked anchors.
  * - Reset Character-Level Style Inheritance: Overrides text-level style inheritance from preceding headings by explicitly applying Roboto 9.5 and normal weights to both paragraphs and list items.
- * - Enforce Rich ATS Experience Bullet Points: Mandates highly detailed STAR-method experiences, specific quantified results, and dedicated tech stack lines for each experience.
- * - Strictly Shields Hallucinated Offers: Prevents CV/LM creation on expired, withdrawn, or login-walled offers by automatically ignoring them if detailed descriptions cannot be retrieved.
  */
 
 // --- CONFIGURATION ---
@@ -172,95 +173,63 @@ function main() {
 
 function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
   const prompt = `
-    TASK: Generate a fully tailored, executive-level CV and Cover Letter in Markdown format from the candidate's Master CV and the target job description.
-    
+    TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
+    Instead of a traditional Cover Letter, you will generate a "Technical Architecture Memo / Audit Flash". The CV must be positioned as an "Index of Executable Proofs of Work".
+
     JOB DESCRIPTION:
     ${context}
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
     ${masterCV}
     
-    INSTRUCTIONS FOR LANGUAGE & EXECUTIVE WRITING:
+    CRITICAL INSTRUCTIONS FOR ASYMMETRIC WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
-       - Verify if the JOB DESCRIPTION is actually a valid job offer containing a real job title and professional requirements.
-       - If the detailed job description is missing, extremely brief (e.g., just a job title and company name with no responsibilities or skills, or a simple list of jobs from a newsletter), or indicates the offer is withdrawn/expired, you MUST strictly set the score to 0, decision to "Ignorer", reasoning to "La description détaillée du poste est manquante ou indisponible (lien expiré, retiré ou restreint), empêchant toute personnalisation réelle.", and leave cv_markdown and letter_markdown empty ("").
-       - If it is NOT a job offer (e.g., general emails, email headers/footers, notifications, unsubscribe details, general chat, or empty/unrelated text), you MUST strictly set the score to 0, decision to "Ignorer", reasoning to "Le texte fourni ne contient pas une description de poste valide.", and leave cv_markdown and letter_markdown empty ("").
-       - If the job is real but the candidate's profile is completely mismatching (e.g., medical, hospitality, mechanical engineering, junior sales, etc., or roles requiring less than 5 years of experience when the candidate has 30 years, or junior developer roles), you MUST score it below 50% and set decision to "Ignorer".
-       - Be extremely critical and realistic. A score >= 80% ("Postuler") should only be given if there is a strong, demonstrable alignment with the candidate's core expertise: IT Management, IT Project Direction, IT Systems Architecture, or Senior AI Engineering. If key leadership/architectural components are completely missing or if the technical environment is completely alien, score strictly below 80%.
-
-    1. Language Detection & Consistency (No mixed "Franglais" documents):
-       - Detect the language of the job description or context.
-       - If it is in English, BOTH the CV and the Cover Letter MUST be completely in English. You must translate any French terms, headings, dates, and locations from the templates/master CV into perfect natural English.
-       - For the Cover Letter in English:
-         * The date block MUST be in English (e.g., "Lorient, May 18, 2026"). Never write "Lorient, le...".
-         * The greeting MUST be in English (e.g., "Dear Hiring Manager," or "Dear Avanade Team,"). Never write "Madame, Monsieur,".
-         * The closing salutation MUST be in English (e.g., "Sincerely," or "Best regards,"). Never mix French closings ("Je vous prie d'agréer...") with English titles!
-       - If it is in French, both documents MUST be entirely in French.
-         * The date block MUST be in French (e.g., "Lorient, le 18 mai 2026").
-         * The greeting MUST be "Madame, Monsieur,".
-         * The closing salutation MUST be "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.".
+       - If the description is missing, an auth wall, or withdrawn, Score = 0, Decision = "Ignorer".
+       - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
-    2. Executive Writing Style (Emulate the Gold Standard tone):
-       - Emulate the high-impact, prestigious tone of the Gemini 3.1 Pro reference CV below.
-       - Write extremely rich, strategic, and metric-heavy bullet points and summaries from the Master CV details. Do not write short or generic bullet points.
-       - For each professional experience, expand details extensively: describe the scope of the role, list major key projects, and quantify achievements with specific metrics (e.g., budget size, team size, percentage improvements, time saved, data volumes).
-       - MANDATORY TECHNICAL ENVIRONMENT FOR EACH EXPERIENCE: For each experience in the CV, you MUST include a dedicated bullet point at the end starting with "**Environnement technique :** " followed by a comprehensive list of the specific technologies, systems, methodologies, and tools used in that role, extracted from the Master CV.
-       - Ensure all dates, job titles (such as "Support Technique Senior N1/N2/N3" at "TechTeam & Fives Syleps"), and candidate achievements are completely and accurately preserved.
+    1. LANGUAGE COMPLIANCE:
+       - Strictly align with the language of the job description (English or French). Absolutely no mixed languages.
        
-    [GOLD STANDARD CV EXAMPLE]:
-    "Jean DUPONT Paris, France (Remote) | 06 00 00 00 00 | jean.dupont@gmail.com 
-    LinkedIn: linkedin.com/in/jean-dupont | GitHub: github.com/jeandupont-dev
-    
-    ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
-    Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
-    
-    COMPÉTENCES CLÉS
-    Architectures IA & Frameworks Agentiques : Orchestration multi-agents, frameworks autonomes et semi-autonomes (Google Antigravity, architectures de type LangChain/AutoGen), LLMs, Prompt Engineering, patterns RAG, et bases de données vectorielles.
-    Ingénierie Logicielle & Systèmes Distribués : Expertise Java (J2SE 1.0 à 25+), Python, C#, Micro-services, architectures orientées événements, API REST/MCP, calcul scientifique distribué haute performance.
-    Modernisation de Legacy & Delivery Lifecycle : Audit et refactoring de codes patrimoniaux critiques, automatisation end-to-end des phases d'analyse, build, test (TDD), documentation et déploiement via agents IA.
-    Environnements Cloud & MLOps/DevOps : Maîtrise multi-cloud (GCP, AWS, architectures hybrides), conteneurisation (Docker, Kubernetes), CI/CD, observabilité, et gouvernance/sécurité des données (RGPD, chiffrement).
-    Leadership Technique & Advisory : Direction d'équipes d'ingénierie (jusqu'à 8 développeurs en environnement Agile/Scrum), relation client stratégique (AMOA), vulgarisation de concepts IA complexes auprès d'audiences techniques et exécutives."
-    ========================================================================
-
-    3. Formatting Instructions (Markdown for rendering):
-       - For the CV:
-         * Use "# " for "Silvère MARTIN-MICHIELLOT" (Centered at the top).
-         * Use a normal paragraph below it for the exact contact details: "8 Rue Jean Marie Toulliou, 56100 Lorient | 07 67 81 52 02 | silvere.martin@gmail.com"
-         * Use a normal paragraph below that for LinkedIn and GitHub links: "LinkedIn: linkedin.com/in/silvere-martin-michiellot | GitHub: github.com/silveremartin-dev"
-         * MANDATORY CV TITLE: Use "## [Exact Target Position in Capital Letters]" (e.g. "## RESPONSABLE INFORMATIQUE") immediately below the contact block. This trône dynamically at the top!
-         * STRICT FORBIDDEN LINE: Never write "Méthodes : Agile (Scrum/Lean)..." or similar under the contact block.
-         * Use "## " for other main sections (e.g. "## PROFIL PROFESSIONNEL", "## COMPÉTENCES CLÉS", "## EXPÉRIENCES PROFESSIONNELLES", "## FORMATION & LANGUES", "## ENVIRONNEMENT TECHNIQUE").
-         * Use "### " for job titles/companies or sub-sections (e.g. "### Responsable Informatique — Equitive | Lorient | 10/2012 - 11/2023").
-         * STRICT LIST FORMATting: ALWAYS use the standard bullet point syntax ("- " or "* ") for all lists. Never use numbered lists ("1.", "2.", "3.") anywhere in the CV!
-         * STRICT CHRONOLOGICAL ORDER: The experiences MUST be sorted in strict reverse chronological order (the most recent first, e.g. 2025 then 2023 then 2012...).
-         * HIGHLIGHT LANGUAGES: Always highlight the candidate's linguistic masteries with clear CEFR/levels (e.g. "- **Anglais** : Niveau C2 (TOEFL 267), Bilingue", "- **Espagnol** : Niveau B2").
-         * Use double asterisks "**" to bold key terms, technologies, and metrics.
-       
-       - For the Cover Letter:
-         * Include the sender details block at the very top (and nowhere else):
+    2. THE ARCHITECTURE MEMO (Replaces the Cover Letter in 'letter_markdown'):
+       - ABANDON ALL TRADITIONAL COVER LETTER FORMATS. Never use "Madame, Monsieur," or standard polite sign-offs.
+       - Format this as a peer-to-peer technical memo addressed directly to the CTO/CEO.
+       - **Header:**
            Silvère Martin-Michiellot
-           8 Rue Jean Marie Toulliou, 56100 Lorient
-           silvere.martin@gmail.com | 07 67 81 52 02
-           LinkedIn: linkedin.com/in/silvere-martin-michiellot | GitHub: github.com/silveremartin-dev/
-         * STRICT NO DUPLICATION: Do not create any title like "# Silvère Martin-Michiellot" or duplicate the name on the right side of the cover letter.
-         * Leave a blank line after the sender details block, then write the Date line (e.g., "Lorient, le 18 mai 2026").
-         * Include the recipient details cleanly on a single line (never split it or repeat Lorient):
-           À l'attention du Responsable du Recrutement - [Company]
-         * Use "## " for the Subject Line in bold and in standard black text (e.g., "## **Objet : Candidature au poste de...**"). No horizontal rules or custom blue colors below the subject!
-         * Leave a blank line before the final signature ("Silvère Martin-Michiellot") to separate it cleanly from the text.
-         * Use double asterisks "**" to bold key terms or company names for emphasis.
-        
+           Architecte Systèmes d'Information & Expert IA Agentique
+           Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
+           LinkedIn: linkedin.com/in/silvere-martin-michiellot
+           GitHub: github.com/silveremartin-dev/
+       - **Subject Line:** "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
+       - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
+       - **The Proposition:** Propose a high-level architectural posture to solve it.
+       - **The Proof of Work (CRITICAL):** You MUST explicitly link their problem to the candidate's tangible assets. Select the most relevant based on the job:
+         * If the offer involves Java, high performance, or heavy algorithmics: Point to **"Episteme"** (emphasize the 450,000+ lines of scientific computing framework).
+         * If the offer involves GPU computing, hardware acceleration, TornadoVM, or complex algorithmics/massive parallel optimization: Point to **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
+         * If the offer involves modern Web/React/Next.js/AI integrations: Point to **"Open Primer"** (AI-assisted pedagogy platform).
+         * If the offer involves complex logic, distributed systems, or macro-architecture: Point to **"Swarm Forge"** or **"Ether"** (multi-agent simulations, macro-historical systems).
+         * If the offer focuses on Delivery, DevOps, or CI/CD: Highlight the use of **"Google Antigravity"** to divide delivery cycles by 5.
+       - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique."
+       - **Sign-off:** "Silvère Martin-Michiellot."
+
+    3. THE CV AS AN INDEX (Executive Tone for 'cv_markdown'):
+       - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
+       - Transform the summary into a display of absolute authority: Focus on the transition from legacy systems to AI-augmented delivery. 
+       - Highlight the capability to govern AI and structure complex logic (not just write code).
+       - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" line at the end of every experience are strictly preserved.
+       - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
+
+    4. JSON STRUCTURE:
     Return JSON only:
     {
-      "company": "Real Company Name (extracted from context)",
-      "position": "Exact Job Title (extracted from context)",
+      "company": "Real Company Name",
+      "position": "Exact Job Title",
       "score": 0-100,
-      "reasoning": "Detailed technical critique of the match...",
+      "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, Eternity, Antigravity, etc.) solves their architectural problem.",
       "decision": "Postuler" or "Ignorer",
       "job_description_clean": "Cleaned job description in plain text...",
       "language": "en" or "fr",
-      "cv_markdown": "Full, complete tailored CV in Markdown format, following the styling rules...",
-      "letter_markdown": "Full, complete tailored Cover Letter in Markdown format..."
+      "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
+      "letter_markdown": "The Architecture Memo / Flash Audit..."
     }
   `;
   return callGemini(prompt);

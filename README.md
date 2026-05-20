@@ -1,6 +1,6 @@
-# HelloApply v3.9.0 (2026 Edition) 🤖💼
+# HelloApply v5.0.0 (Asymmetric Architecture Memo Edition) 🤖💼
 
-Système autonome de veille et de personnalisation de candidatures via Gmail, Google Apps Script et Gemini 3.1 Flash Lite.
+Système autonome de veille, de diagnostic de debt technique, et d'application asymétrique via Gmail, Google Apps Script et Gemini 3.1 Flash Lite.
 
 ## 🚀 Fonctionnalités
 - **Scan Intelligent** : Analyse les mails LinkedIn et HelloWork reçus depuis le dernier passage (8h, 14h, 18h).
