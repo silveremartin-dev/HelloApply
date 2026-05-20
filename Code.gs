@@ -199,7 +199,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     
     CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
-       - If the description is missing, an auth wall, or withdrawn, Score = 0, Decision = "Ignorer".
+       - CRITICAL: If the specific Company Name or Job Title cannot be found in the description (e.g. if it's an auth wall, empty, or generic boilerplate), you MUST set Score = 0 and Decision = "Ignorer". DO NOT invent a job title like "Not specified". DO NOT generate documents.
        - LOCATION FILTER: The candidate is based in Lorient, France. If the job is geographically far from Lorient (e.g. Paris, Lyon, Villeurbanne) and is NOT explicitly marked as "Full Remote" (100% télétravail), Decision = "Ignorer".
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
@@ -219,6 +219,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - Emulate the high-impact, prestigious tone of the Gemini 3.1 Pro reference CV below.
        - Write extremely rich, strategic, and metric-heavy bullet points and summaries from the Master CV details. Do not write short or generic bullet points.
        
+    <tone_reference_only_do_not_copy>
     [GOLD STANDARD CV EXAMPLE]:
     "Silvère MARTIN-MICHIELLOT Lorient, France (Remote) | 07 67 81 52 02 | silvere.martin@gmail.com 
     LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev
@@ -252,6 +253,9 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     Outils IA : Google Antigravity, TensorFlow, Keras, Gemini 3, ChatGPT, HuggingFace, N8N
     Frameworks & Data : SpringBoot, Hibernate, Spark, Kafka, Tornado VM, Three.js, Redis, Oracle, PostgreSQL.
     Méthodes : Agile (Scrum/Lean), TDD, Design Patterns, UML."
+    </tone_reference_only_do_not_copy>
+    
+    WARNING: The above is ONLY A TONE REFERENCE. DO NOT COPY THE JOB TITLES, COMPANY NAMES, OR EXACT BULLET POINTS FROM IT. ALWAYS EXTRACT THE TARGET TITLE FROM THE JOB DESCRIPTION, AND YOUR ACTUAL EXPERIENCE FROM THE MASTER CV.
     ========================================================================
        
     2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
