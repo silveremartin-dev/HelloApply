@@ -321,16 +321,21 @@ function processJob(inputFolder, outputFolder, job) {
     
     // Process complete generation from Markdown
     const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.cv_markdown || "", cvName);
-    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.letter_markdown || "", lmName);
-    const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.memo_markdown || "", memoName);
+    cvDocUrl = cvResult.docUrl;
     
-    cvDocUrl = cvResult.docUrl; 
-    lmDocUrl = lmResult.docUrl; 
+    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.letter_markdown || "", lmName);
+    lmDocUrl = lmResult.docUrl;
+    
+    const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.memo_markdown || "", memoName);
     memoDocUrl = memoResult.docUrl;
+    
     attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
     
     createDraft(job, attachments);
-  } catch (e) { console.error(`[ERROR] Processing ${job.company}: ${e.message}`); }
+    console.log(`[SUCCESS] 3 PDFs created & draft sent for ${job.company} (${job.score}%)`);
+  } catch (e) {
+    console.error(`[ERROR] Processing ${job.company}: ${e.message}\nStack: ${e.stack || 'N/A'}`);
+  }
   logToSheet(outputFolder, job, cvDocUrl, lmDocUrl, memoDocUrl);
 }
 
@@ -476,7 +481,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
-        item.setPreventWidowOrphan(true);
         
         const txt = item.editAsText();
         txt.setFontSize(9.5);
@@ -510,7 +514,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
-        item.setPreventWidowOrphan(true);
         
         const txt = item.editAsText();
         txt.setFontSize(9.5);
@@ -539,8 +542,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT); // Left-align name per feedback
-      p.setKeepWithNext(true);
-      p.setPreventWidowOrphan(true);
       formatInlineStyles(p);
     } else if (isHeading2) {
       heading2Count++;
@@ -562,8 +563,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
-      p.setKeepWithNext(true);
-      p.setPreventWidowOrphan(true);
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
       if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil")) {
@@ -587,8 +586,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 1;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
-      p.setKeepWithNext(true);
-      p.setPreventWidowOrphan(true);
       formatInlineStyles(p);
     } else {
       const textVal = line.trim() || " ";
@@ -603,7 +600,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
       p.setAttributes(style);
-      p.setPreventWidowOrphan(true);
       
       const txt = p.editAsText();
       txt.setFontSize(9.5);
@@ -805,6 +801,15 @@ function markJobProcessed(jobId) {
     if (processed.length > 500) processed.shift();
     props.setProperty('PROCESSED_JOB_IDS', JSON.stringify(processed));
   }
+}
+
+/**
+ * Utility: Reset the list of processed job IDs so they can be re-tried.
+ * Run this function manually from the Apps Script editor before re-testing.
+ */
+function resetProcessedJobs() {
+  PropertiesService.getScriptProperties().deleteProperty('PROCESSED_JOB_IDS');
+  console.log('[RESET] PROCESSED_JOB_IDS cleared. All jobs will be re-processed on next run.');
 }
 
 /**
