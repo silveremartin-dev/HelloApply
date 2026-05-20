@@ -200,10 +200,12 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
        - If the description is missing, an auth wall, or withdrawn, Score = 0, Decision = "Ignorer".
+       - LOCATION FILTER: The candidate is based in Lorient, France. If the job is geographically far from Lorient (e.g. Paris, Lyon, Villeurbanne) and is NOT explicitly marked as "Full Remote" (100% télétravail), Decision = "Ignorer".
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
-    1. LANGUAGE DETECTION & CONSISTENCY (No mixed "Franglais" documents):
-       - Detect the language of the job description or context.
+    1. LANGUAGE DETECTION & CONSISTENCY (CRITICAL):
+       - Detect the native language of the job description.
+       - IMPORTANT: Even though this prompt is in English, if the job offer is in French, YOU MUST WRITE EVERY SINGLE DOCUMENT ENTIRELY IN FRENCH. Do not output English for a French job.
        - If it is in English, ALL documents MUST be completely in English. You must translate any French terms, headings, dates, and locations from the templates/master CV into perfect natural English.
          * The date block MUST be in English (e.g., "Lorient, May 18, 2026"). Never write "Lorient, le...".
          * The greetings and Recipient MUST be in English (e.g., "Attention: Hiring Manager", "Dear Hiring Manager,").
@@ -296,6 +298,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
          Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
          LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
          GitHub: https://github.com/silveremartin-dev/
+       - **MANDATORY SECTIONS**: You MUST include a "## COMPÉTENCES CLÉS" (in French) or "## KEY COMPETENCIES" (in English) section right after the profile summary. Never skip it.
        - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
        - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
        - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
@@ -464,11 +467,11 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
   // Clear the body completely using our robust clearance engine
   const firstParagraph = clearBodyCompletely(body);
 
-  // Set Margins (ATS Standard: 0.5 inch top/bottom, 0.75 inch left/right)
-  body.setMarginTop(36);
-  body.setMarginBottom(36);
-  body.setMarginLeft(54);
-  body.setMarginRight(54);
+  // Set Margins (Tight ATS: 0.33 inch top/bottom, 0.5 inch left/right to fit everything on 1 page)
+  body.setMarginTop(24);
+  body.setMarginBottom(24);
+  body.setMarginLeft(36);
+  body.setMarginRight(36);
   
   const lines = markdownText.split('\n');
   let isFirstLine = true;
@@ -523,18 +526,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+        style[DocumentApp.Attribute.FONT_SIZE] = 9;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
         style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
         style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.05;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
         
         const txt = item.editAsText();
-        txt.setFontSize(9.5);
+        txt.setFontSize(9);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -556,18 +559,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+        style[DocumentApp.Attribute.FONT_SIZE] = 9;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
         style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
         style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.05;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
         
         const txt = item.editAsText();
-        txt.setFontSize(9.5);
+        txt.setFontSize(9);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -633,8 +636,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       style[DocumentApp.Attribute.FONT_SIZE] = 10.5;
       style[DocumentApp.Attribute.BOLD] = true;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 8;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 1;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 4;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
       formatInlineStyles(p);
@@ -644,16 +647,16 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 9.5;
+      style[DocumentApp.Attribute.FONT_SIZE] = 9;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
       style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
       style[DocumentApp.Attribute.SPACING_BEFORE] = 2;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
-      style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+      style[DocumentApp.Attribute.LINE_SPACING] = 1.1;
       p.setAttributes(style);
       
       const txt = p.editAsText();
-      txt.setFontSize(9.5);
+      txt.setFontSize(9);
       txt.setFontFamily('Roboto');
       txt.setBold(false);
       txt.setForegroundColor('#2D3748');
