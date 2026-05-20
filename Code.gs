@@ -505,14 +505,7 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
     let isNumberedList = /^\d+\s*\.\s+(.*)/.test(line);
     let isListItem = line.startsWith('- ') || line.startsWith('* ') || isNumberedList;
     
-    // Prevent orphan lines (Espagnol split under FORMATION & LANGUES)
-    if (isHeading2 && isCV) {
-      const h2Text = line.substring(3).trim();
-      const upperText = h2Text.toUpperCase();
-      if (upperText === "FORMATION" || upperText === "EDUCATION" || upperText === "FORMATIONS" || upperText === "EDUCATIONS" || upperText.startsWith("FORMATION &") || upperText.startsWith("EDUCATION &")) {
-        body.appendPageBreak();
-      }
-    }
+    // Note: no manual page break here — rely on section heading SPACING_BEFORE instead.
     
     if (isFirstLine) {
       isFirstLine = false;
