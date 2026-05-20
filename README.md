@@ -1,4 +1,4 @@
-# HelloApply v5.0.0 (Asymmetric Architecture Memo Edition) 🤖💼
+# HelloApply v5.1.0 (Dense Asymmetric Engine Edition) 🤖💼
 
 Système autonome de veille, de diagnostic de debt technique, et d'application asymétrique via Gmail, Google Apps Script et Gemini 3.1 Flash Lite.
 

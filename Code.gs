@@ -1,7 +1,13 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 5.0.0 (Asymmetric Architecture Memo & Proof of Work Index Edition)
- * LAST UPDATED: 20/05/2026 02:20
+ * VERSION: 5.1.0 (Dense Asymmetric Engine & PoW Index Edition)
+ * LAST UPDATED: 20/05/2026 15:40
+ * 
+ * New in v5.1.0:
+ * - Strict Banning of "JScience": Completely ban JScience and dynamically translate it to "Episteme" to preserve state-of-the-art software architecture.
+ * - Mandatory Architecture Memo Header: Enforces the contact header at the absolute top of the letter.
+ * - Safe CV Page-Break Engine: Prevents false positives by only triggering the page break on exact "FORMATION/EDUCATION" section headings.
+ * - Max CV Density: Strictly mandates the preserving of complete responsibilities and technologies without truncation.
  * 
  * New in v5.0.0:
  * - Asymmetric Sourcing Engine: Mutation from traditional cover letters to peer-to-peer "Technical Architecture Memo / Audit Flash" targeting critical company bottlenecks.
@@ -193,13 +199,15 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     2. THE ARCHITECTURE MEMO (Replaces the Cover Letter in 'letter_markdown'):
        - ABANDON ALL TRADITIONAL COVER LETTER FORMATS. Never use "Madame, Monsieur," or standard polite sign-offs.
        - Format this as a peer-to-peer technical memo addressed directly to the CTO/CEO.
-       - **Header:**
+       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "letter_markdown" must be the raw header block below, with absolutely no greetings, no subordination formulas ("À l'attention de..."), and no date lines before it. It must be at the absolute top of the document:
            Silvère Martin-Michiellot
            Architecte Systèmes d'Information & Expert IA Agentique
            Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
            LinkedIn: linkedin.com/in/silvere-martin-michiellot
            GitHub: github.com/silveremartin-dev/
-       - **Subject Line:** "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
+       - Immediately following the header block, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
+       - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
+       - **STRICTLY BAN THE MENTION OF "JScience" (OR "Jscience")**: Do not ever mention JScience or any 20-year-old legacy project. If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration). If JScience is found in the "masterCV" source experiences, dynamically translate/rename it to **"Episteme"** or replace it with modern high-performance Java architectures to keep the profile modern, elite, and state-of-the-art.
        - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
        - **The Proposition:** Propose a high-level architectural posture to solve it.
        - **The Proof of Work (CRITICAL):** You MUST explicitly link their problem to the candidate's tangible assets. Select the most relevant based on the job:
@@ -213,6 +221,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
 
     3. THE CV AS AN INDEX (Executive Tone for 'cv_markdown'):
        - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
+       - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements, rather than reduced to 2 or 3 brief lines.
+       - **STRICTLY BAN THE MENTION OF "JScience" (OR "Jscience")**: Do not ever mention JScience in the CV either. Dynamically rename/translate any JScience project reference to **"Episteme"** or replace it with modern high-performance Java/J2EE standard engineering to keep the profile modern and elite.
        - Transform the summary into a display of absolute authority: Focus on the transition from legacy systems to AI-augmented delivery. 
        - Highlight the capability to govern AI and structure complex logic (not just write code).
        - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" line at the end of every experience are strictly preserved.
@@ -390,7 +400,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
     // Prevent orphan lines (Espagnol split under FORMATION & LANGUES)
     if (isHeading2 && isCV) {
       const h2Text = line.substring(3).trim();
-      if (h2Text.toUpperCase().includes("FORMATION") || h2Text.toUpperCase().includes("EDUCATION")) {
+      const upperText = h2Text.toUpperCase();
+      if (upperText === "FORMATION" || upperText === "EDUCATION" || upperText === "FORMATIONS" || upperText === "EDUCATIONS" || upperText.startsWith("FORMATION &") || upperText.startsWith("EDUCATION &")) {
         body.appendPageBreak();
       }
     }
