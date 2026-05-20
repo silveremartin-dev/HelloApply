@@ -88,3 +88,29 @@ function inspectTemplates() {
   outputFolder.createFile("TemplateInspection.txt", log);
   console.log("Inspection complete! Check TemplateInspection.txt in output folder.");
 }
+
+/**
+ * Utility to manually generate tailored CV and Letter PDFs from Markdown text
+ * directly from the Google Apps Script editor.
+ * Fill in your markdown text, select this function, and click Run!
+ */
+function generateManual() {
+  const cvMarkdown = ``;
+  const letterMarkdown = ``;
+  
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const rand = Math.floor(Math.random() * 900000) + 10000;
+  const cvName = `SilvereMartinMichiellot-CV-Manual-${rand}`;
+  const lmName = `SilvereMartinMichiellot-LM-Manual-${rand}`;
+  
+  console.log("Generating manual files...");
+  const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, cvMarkdown, cvName);
+  const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, letterMarkdown, lmName);
+  
+  console.log("✅ Success!");
+  console.log("CV PDF URL: " + cvResult.docUrl);
+  console.log("LM PDF URL: " + lmResult.docUrl);
+}
