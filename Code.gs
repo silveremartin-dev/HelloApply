@@ -109,7 +109,7 @@ function main() {
 
     const messages = thread.getMessages();
     for (const message of messages) {
-      if (TEST_MODE && testProcessedCount >= 2) break;
+      if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
       if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) break;
       
       if (!TEST_MODE && message.getDate() <= lastRun) continue;
