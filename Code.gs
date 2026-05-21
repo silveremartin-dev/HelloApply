@@ -91,12 +91,13 @@ function main() {
     return;
   }
 
-  // TEST_MODE quota: process up to 2 high-matching jobs (score >= 95%)
-  let testProcessedCount = 0;
+  // TEST_MODE quota: process up to 1 LinkedIn + 1 HelloWork job (score >= threshold)
+  let testLinkedInCount = 0;
+  let testHelloWorkCount = 0;
   const TEST_MATCH_THRESHOLD = 95;
 
   for (const thread of threads) {
-    if (TEST_MODE && testProcessedCount >= 2) break;
+    if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
     
     // Safety check: close to Google execution limit (6 min)
     if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) {
@@ -120,21 +121,28 @@ function main() {
       console.log(`[MAIL] Analysing email: "${subject}"`);
 
       for (let rawUrl of jobUrls) {
-        if (TEST_MODE && testProcessedCount >= 2) break;
+        if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
         if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) break;
 
         let url = cleanUrl(rawUrl);
         const isLinkedIn = url.includes('linkedin.com');
         const isHelloWork = url.includes('hellowork.com');
 
-        // TEST_MODE: skip if we already processed 2 matching jobs
-        if (TEST_MODE && testProcessedCount >= 2) continue;
+        // TEST_MODE: skip if we already have 1 LinkedIn + 1 HelloWork
+        if (TEST_MODE) {
+          if (isLinkedIn && testLinkedInCount >= 1) continue;
+          if (isHelloWork && testHelloWorkCount >= 1) continue;
+        }
         
         // Resolve click-tracking redirections for HelloWork to get the clean final page link
         if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
           console.log(`[RESOLVING] Resolving redirect for: ${url}`);
-          url = resolveRedirects(url);
-          url = cleanUrl(url);
+          const resolved = resolveRedirects(url);
+          if (!resolved || resolved === url || !resolved.includes('/emplois/')) {
+            console.warn(`[SKIP] Could not resolve tracking URL to a valid job page: ${url}`);
+            continue; // Skip unresolvable tracking URLs
+          }
+          url = cleanUrl(resolved);
           console.log(`[RESOLVED] Final URL: ${url}`);
         }
         
@@ -165,8 +173,9 @@ function main() {
             if (analysis.decision === "Postuler" && analysis.score >= requiredScore) {
               processJob(inputFolder, outputFolder, analysis);
               if (TEST_MODE) {
-                testProcessedCount++;
-                console.log(`[TEST] High-matching job processed (${testProcessedCount}/2) with score ${analysis.score}%`);
+                if (isLinkedIn) testLinkedInCount++;
+                else testHelloWorkCount++;
+                console.log(`[TEST] Job processed (LinkedIn: ${testLinkedInCount}/1, HelloWork: ${testHelloWorkCount}/1) with score ${analysis.score}%`);
               }
             } else {
               console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision}, Required: ${requiredScore}%)`);
@@ -310,6 +319,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" (in French) or "**Technical Environment:**" (in English) line at the end of every experience are strictly preserved.
        - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
        - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
+       - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
        
     5. STRICT BANNING OF "JScience" (OR "Jscience"):
        - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
@@ -523,18 +533,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 9;
+        style[DocumentApp.Attribute.FONT_SIZE] = 10;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
         style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
         style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.05;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
         
         const txt = item.editAsText();
-        txt.setFontSize(9);
+        txt.setFontSize(10);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -556,18 +566,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 9;
+        style[DocumentApp.Attribute.FONT_SIZE] = 10;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
         style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
         style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.05;
+        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
         
         const txt = item.editAsText();
-        txt.setFontSize(9);
+        txt.setFontSize(10);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -611,8 +621,8 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2B6CB0'; // Slate Blue
       }
       
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 12;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 14;
+      style[DocumentApp.Attribute.SPACING_AFTER] = 3;
       p.setAttributes(style);
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
@@ -630,10 +640,10 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 10.5;
+      style[DocumentApp.Attribute.FONT_SIZE] = 11;
       style[DocumentApp.Attribute.BOLD] = true;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 4;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = 6;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
@@ -644,16 +654,16 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 9;
+      style[DocumentApp.Attribute.FONT_SIZE] = 10;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
       style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
       style[DocumentApp.Attribute.SPACING_BEFORE] = 2;
       style[DocumentApp.Attribute.SPACING_AFTER] = 2;
-      style[DocumentApp.Attribute.LINE_SPACING] = 1.1;
+      style[DocumentApp.Attribute.LINE_SPACING] = 1.2;
       p.setAttributes(style);
       
       const txt = p.editAsText();
-      txt.setFontSize(9);
+      txt.setFontSize(10);
       txt.setFontFamily('Roboto');
       txt.setBold(false);
       txt.setForegroundColor('#2D3748');
@@ -681,7 +691,7 @@ function formatInlineStyles(element) {
   const textElement = element.editAsText();
   
   // Read existing element-level attributes for base formatting preservation
-  let baseFontSize = 9.5;
+  let baseFontSize = 10;
   let baseFontFamily = 'Roboto';
   let baseColor = '#2D3748';
   
