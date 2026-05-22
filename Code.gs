@@ -172,7 +172,7 @@ function main() {
           let description = fetchJobDescription(url);
           let context = description;
           
-          if (!description || description.includes("authWall") || description.includes("login")) {
+          if (!description || description === "authWall") {
             console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
             context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
           }
@@ -230,6 +230,12 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
 
     JOB DESCRIPTION:
     \${context}
+    
+    TARGET JOB URL:
+    \${originalUrl}
+    
+    CRITICAL FALLBACK & CONTEXT ALIGNMENT:
+    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL. You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to the TARGET JOB URL.
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
     \${masterCV}
@@ -396,9 +402,20 @@ function fetchJobDescription(url) {
       }
     };
     const response = UrlFetchApp.fetch(url, options);
-    const html = response.getContentText();
+    const finalUrl = response.getUrl().toLowerCase();
     
-    if (html.includes("authWall") || html.includes("login") || html.includes("Sign in")) return "authWall";
+    // Check if the final URL indicates we redirected to a login or auth wall page
+    if (finalUrl.includes("login") || finalUrl.includes("signin") || finalUrl.includes("authwall")) {
+      return "authWall";
+    }
+    
+    const html = response.getContentText();
+    const htmlLower = html.toLowerCase();
+    
+    // Precise checks: only treat as auth wall if explicitly stated in title or redirect params
+    if (htmlLower.includes("<title>sign in</title>") || htmlLower.includes("authwall") || htmlLower.includes("redirect_to=login")) {
+      return "authWall";
+    }
     
     return html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, "").replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 40000);
   } catch (e) { return null; }
