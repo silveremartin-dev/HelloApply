@@ -26,7 +26,7 @@
  */
 
 // --- CONFIGURATION ---
-const TEST_MODE = true; // Set to true to run infinite tests on the latest emails
+const TEST_MODE = false; // Set to true to run infinite tests on the latest emails
 
 const ROOT_FOLDER_NAME = "Candidature Express";
 const INPUT_FOLDER_NAME = "input";
@@ -37,8 +37,8 @@ const TEMPLATE_CV_NAME = 'SilvereMartinMichiellot-CV-1pageATS-2026';
 const TEMPLATE_LETTER_NAME = 'Lettre de motivation Silvère Martin-Michiellot 2026b';
 
 const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
-const MIN_MATCH_SCORE = 85; 
-
+const MIN_MATCH_SCORE = 97; 
+const MAX_GENERATIONS_PER_RUN = 3; // Prevent timeout & API exhaustion by processing at most 3 jobs in a single run
 // --- USER PREFERENCES ---
 const PREFERENCES = {
   location: "Lorient, France",
@@ -91,17 +91,22 @@ function main() {
     return;
   }
 
-  // TEST_MODE quota: process up to 1 LinkedIn + 1 HelloWork job (score >= threshold)
+  // Production & Test mode quotas
   let testLinkedInCount = 0;
   let testHelloWorkCount = 0;
   const TEST_MATCH_THRESHOLD = 95;
+  
+  let generationCount = 0;
+  let exitRequested = false;
 
   for (const thread of threads) {
+    if (exitRequested) break;
     if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
     
     // Safety check: close to Google execution limit (6 min)
     if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) {
       console.log(`[TIMEOUT] Proche de la limite Apps Script (6 min). Arrêt gracieux, la suite au prochain passage.`);
+      exitRequested = true;
       break;
     }
 
@@ -109,8 +114,13 @@ function main() {
 
     const messages = thread.getMessages();
     for (const message of messages) {
+      if (exitRequested) break;
       if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
-      if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) break;
+      if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) {
+        console.log(`[TIMEOUT] Proche de la limite Apps Script (6 min). Arrêt gracieux.`);
+        exitRequested = true;
+        break;
+      }
       
       if (!TEST_MODE && message.getDate() <= lastRun) continue;
 
@@ -121,8 +131,13 @@ function main() {
       console.log(`[MAIL] Analysing email: "${subject}"`);
 
       for (let rawUrl of jobUrls) {
+        if (exitRequested) break;
         if (TEST_MODE && testLinkedInCount >= 1 && testHelloWorkCount >= 1) break;
-        if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) break;
+        if (new Date().getTime() - startTime > MAX_EXECUTION_TIME_MS) {
+          console.log(`[TIMEOUT] Proche de la limite Apps Script (6 min). Arrêt gracieux.`);
+          exitRequested = true;
+          break;
+        }
 
         let url = cleanUrl(rawUrl);
         const isLinkedIn = url.includes('linkedin.com');
@@ -176,6 +191,13 @@ function main() {
                 if (isLinkedIn) testLinkedInCount++;
                 else testHelloWorkCount++;
                 console.log(`[TEST] Job processed (LinkedIn: ${testLinkedInCount}/1, HelloWork: ${testHelloWorkCount}/1) with score ${analysis.score}%`);
+              } else {
+                generationCount++;
+                console.log(`[GENERATION] Candidature générée (${generationCount}/${MAX_GENERATIONS_PER_RUN}) pour ${analysis.company}`);
+                if (generationCount >= MAX_GENERATIONS_PER_RUN) {
+                  console.log(`[SHIELD] Cap maximum de générations atteint (${MAX_GENERATIONS_PER_RUN}) pour ce passage. Arrêt gracieux.`);
+                  exitRequested = true;
+                }
               }
             } else {
               console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision}, Required: ${requiredScore}%)`);
@@ -184,6 +206,12 @@ function main() {
             
             // Mark job as processed to prevent duplicates
             markJobProcessed(jobId);
+          }
+          
+          // Throttling in production to avoid hitting API rate limits or saturating network resources
+          if (!TEST_MODE) {
+            console.log(`[THROTTLE] Pause de sécurité de 2 secondes...`);
+            Utilities.sleep(2000);
           }
         } catch (e) { console.error(`[ERROR] ${url}: ${e.message}`); }
       }
@@ -997,14 +1025,76 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
 
 function callGemini(prompt) {
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
-  const options = { method: 'post', contentType: 'application/json', payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), muteHttpExceptions: true };
-  try {
-    const response = UrlFetchApp.fetch(url, options);
-    const json = JSON.parse(response.getContentText());
-    const outputText = json.candidates[0].content.parts[0].text;
-    const match = outputText.match(/\{.*\}/s);
-    return JSON.parse(match ? match[0] : outputText);
-  } catch (e) { return null; }
+  const options = { 
+    method: 'post', 
+    contentType: 'application/json', 
+    payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), 
+    muteHttpExceptions: true 
+  };
+  
+  const retries = 3;
+  let delayMs = 2000;
+  
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = UrlFetchApp.fetch(url, options);
+      const code = response.getResponseCode();
+      
+      if (code === 429) {
+        console.warn(`[WARN] Gemini API Rate Limit (429) on attempt ${attempt}/${retries}. Retrying in ${delayMs}ms...`);
+        Utilities.sleep(delayMs);
+        delayMs *= 2.5; // Exponential backoff with a slightly higher multiplier for safety
+        continue;
+      }
+      
+      const responseText = response.getContentText();
+      let json;
+      try {
+        json = JSON.parse(responseText);
+      } catch (err) {
+        console.error(`[ERROR] JSON parsing failed for response text. Attempt ${attempt}/${retries}.`);
+        if (attempt < retries) {
+          Utilities.sleep(delayMs);
+          delayMs *= 2;
+          continue;
+        }
+        return null;
+      }
+      
+      if (json.error) {
+        console.error(`[ERROR] Gemini API returned error: ${json.error.message} (Code: ${json.error.code})`);
+        if (attempt < retries) {
+          Utilities.sleep(delayMs);
+          delayMs *= 2;
+          continue;
+        }
+        return null;
+      }
+      
+      if (!json.candidates || json.candidates.length === 0 || !json.candidates[0].content || !json.candidates[0].content.parts || json.candidates[0].content.parts.length === 0) {
+        console.error(`[ERROR] Invalid Gemini API payload structure. Attempt ${attempt}/${retries}.`);
+        if (attempt < retries) {
+          Utilities.sleep(delayMs);
+          delayMs *= 2;
+          continue;
+        }
+        return null;
+      }
+      
+      const outputText = json.candidates[0].content.parts[0].text;
+      const match = outputText.match(/\{.*\}/s);
+      return JSON.parse(match ? match[0] : outputText);
+    } catch (e) {
+      console.error(`[ERROR] Exception calling Gemini API on attempt ${attempt}/${retries}: ${e.message}`);
+      if (attempt < retries) {
+        Utilities.sleep(delayMs);
+        delayMs *= 2;
+        continue;
+      }
+      return null;
+    }
+  }
+  return null;
 }
 
 function extractJobUrls(text) {
