@@ -7,14 +7,6 @@
  * template auditing, and direct manual document generation.
  */
 
-// --- CANDIDATE PROFILE ---
-const CANDIDATE_PROFILE = {
-  fullName: "Silvère Martin-Michiellot",
-  safeName: "SilvereMartinMichiellot",
-  templateCvName: "SilvereMartinMichiellot-CV-1pageATS-2026",
-  templateLetterName: "Lettre de motivation Silvère Martin-Michiellot 2026b"
-};
-
 function testModels() {
   const models = [
     "gemini-3.1-flash-lite",
