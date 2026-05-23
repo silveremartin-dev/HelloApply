@@ -177,36 +177,22 @@ function main() {
         const jobId = getJobId(url);
         
         const previousJob = findJobInSheet(outputFolder, jobId);
-        if (previousJob || isJobProcessed(jobId)) {
-          console.log(`[SKIP] Job already processed previously: ${jobId}`);
+        if (previousJob) {
+          console.log(`[DUPLICATE] Job already processed in sheet: ${jobId}`);
+          console.log(`[DUPLICATE] Logging duplicate row for ${previousJob.position} at ${previousJob.company}`);
           
-          if (previousJob) {
-            console.log(`[DUPLICATE] Logging duplicate row for ${previousJob.position} at ${previousJob.company}`);
-            
-            const prevScore = previousJob.score ? previousJob.score.replace("%", "") : "0";
-            const duplicateJob = {
-              source: previousJob.source,
-              company: previousJob.company,
-              position: previousJob.position,
-              score: prevScore,
-              url: previousJob.url,
-              originalUrl: rawUrl,
-              reasoning: `[DOUBLON] Cette offre a déjà été traitée le ${previousJob.date} (Décision précédente: ${previousJob.status}, Score: ${previousJob.score}).`
-            };
-            
-            logToSheet(outputFolder, duplicateJob, previousJob.cvUrl, previousJob.lmUrl, previousJob.memoUrl);
-          } else {
-            const fallbackJob = {
-              source: url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork',
-              company: "Inconnue (Déjà traitée)",
-              position: "Inconnu (Déjà traité)",
-              score: "0",
-              url: url,
-              originalUrl: rawUrl,
-              reasoning: `[DOUBLON] Offre déjà traitée lors d'un précédent run (détails non trouvés dans la feuille).`
-            };
-            logToSheet(outputFolder, fallbackJob, "", "", "");
-          }
+          const prevScore = previousJob.score ? previousJob.score.replace("%", "") : "0";
+          const duplicateJob = {
+            source: previousJob.source,
+            company: previousJob.company,
+            position: previousJob.position,
+            score: prevScore,
+            url: previousJob.url,
+            originalUrl: rawUrl,
+            reasoning: `[DOUBLON] Cette offre a déjà été traitée le ${previousJob.date} (Décision précédente: ${previousJob.status}, Score: ${previousJob.score}).`
+          };
+          
+          logToSheet(outputFolder, duplicateJob, previousJob.cvUrl, previousJob.lmUrl, previousJob.memoUrl);
           
           markJobProcessed(jobId);
           continue;
@@ -1077,6 +1063,13 @@ function cleanUrl(url) {
       try {
         clean = decodeURIComponent(match[1]);
       } catch (e) { /* ignore and use original */ }
+    }
+  }
+  // Strip query parameters for HelloWork and LinkedIn to prevent redirect walls and captcha pages
+  if (clean.includes('hellowork.com') || clean.includes('linkedin.com')) {
+    const qIndex = clean.indexOf('?');
+    if (qIndex !== -1) {
+      clean = clean.substring(0, qIndex);
     }
   }
   return clean;
