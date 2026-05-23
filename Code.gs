@@ -1,29 +1,41 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 6.0.0 (Triple-Document Generation Engine Edition)
- * LAST UPDATED: 20/05/2026 16:45
+ * VERSION: 6.2.0 (Resilient Production Safety Shield & Configurable Identity Edition)
+ * LAST UPDATED: 23/05/2026 15:10
+ * 
+ * New in v6.2.0:
+ * - Centralized Candidate Profile: Isolated all personal identity details (name, email, phone, links, and template names) in a single configuration block at the very top.
+ * - Descriptively Updated Header: Accurate versioning and changelog tracking last modifications.
+ * 
+ * New in v6.1.0:
+ * - Anti-Faux Positive Auth Wall: Refined detection to check redirected final URL and strict EXACT page titles, bypassing common page body headers.
+ * - Expected Job ID Context Alignment: Injects regex-extracted job ID to perfectly match tracking URLs inside Gmail fallback alerts.
  * 
  * New in v6.0.0:
  * - Triple-Document Sourcing Engine: Systematically generates CV, traditional Cover Letter, and peer-to-peer Technical Architecture Memo as 3 separate custom PDFs.
  * - Auto-Updating 12-Column Spreadsheet: Automatically upgrades tracking layout in-place to log all three document URLs.
  * - Dynamic Languages Extraction: Extracts languages and levels (e.g. Anglais C2, Espagnol B2) from masterCV to dynamically form a clean "## FORMATION & LANGUES" section.
  * - Strict Banning of "JScience": Ban JScience in all generated documents and replace it exclusively with "Episteme".
- * 
- * New in v5.1.0:
- * - Strict Banning of "JScience": Completely ban JScience and dynamically translate it to "Episteme" to preserve state-of-the-art software architecture.
- * - Mandatory Architecture Memo Header: Enforces the contact header at the absolute top of the letter.
- * - Safe CV Page-Break Engine: Prevents false positives by only triggering the page break on exact "FORMATION/EDUCATION" section headings.
- * - Max CV Density: Strictly mandates the preserving of complete responsibilities and technologies without truncation.
- * 
- * New in v5.0.0:
- * - Asymmetric Sourcing Engine: Mutation from traditional cover letters to peer-to-peer "Technical Architecture Memo / Audit Flash" targeting critical company bottlenecks.
- * - CV as Index of Executable Proofs of Work: Positions the CV as a display of absolute authority showcasing tangible, production-ready assets.
- * - Dynamic Proofs of Work matching: Automatically scans target roles to link them directly to Episteme, Eternity, Swarm Forge, Open Primer, or Antigravity.
- * - Dynamic 11-Column Spreadsheet Headers: Dynamically updates the column layout of existing sheets in-place by verifying against the maximum current column index.
- * - Accurate Status Validation: Correctly marks ignored or low-scoring jobs in Test Mode as 'Rejetée' in the tracking sheet based on whether drafts were actually generated.
- * - Robust Link Auto-Format: Automatically detects and formats plain LinkedIn/GitHub URLs inside paragraph/list text into premium, blue, underlined, clickable hyperlinked anchors.
- * - Reset Character-Level Style Inheritance: Overrides text-level style inheritance from preceding headings by explicitly applying Roboto 9.5 and normal weights to both paragraphs and list items.
  */
+
+// --- CANDIDATE PROFILE ---
+const CANDIDATE_PROFILE = {
+  fullName: "Silvère Martin-Michiellot",
+  safeName: "SilvereMartinMichiellot", // Used in generated file names (alphanumeric, no spaces)
+  location: "Lorient, France",
+  city: "Lorient",
+  phone: "07 67 81 52 02",
+  email: "silvere.martin@gmail.com",
+  linkedinUrl: "https://www.linkedin.com/in/silvere-martin-michiellot",
+  linkedinRaw: "linkedin.com/in/silvere-martin-michiellot/", // Short version for CV formatting
+  githubUrl: "https://github.com/silveremartin-dev/",
+  githubRaw: "github.com/silveremartin-dev", // Short version for CV formatting
+  
+  // Google Drive Reference Files (inside input/ folder)
+  masterCvName: "SilvereMartinMichiellot-CV-full",
+  templateCvName: "SilvereMartinMichiellot-CV-1pageATS-2026",
+  templateLetterName: "Lettre de motivation Silvère Martin-Michiellot 2026b"
+};
 
 // --- CONFIGURATION ---
 const TEST_MODE = false; // Set to true to run infinite tests on the latest emails
@@ -32,16 +44,17 @@ const ROOT_FOLDER_NAME = "Candidature Express";
 const INPUT_FOLDER_NAME = "input";
 const OUTPUT_FOLDER_NAME = "output";
 
-const MASTER_CV_NAME = 'SilvereMartinMichiellot-CV-full'; 
-const TEMPLATE_CV_NAME = 'SilvereMartinMichiellot-CV-1pageATS-2026';
-const TEMPLATE_LETTER_NAME = 'Lettre de motivation Silvère Martin-Michiellot 2026b';
+const MASTER_CV_NAME = CANDIDATE_PROFILE.masterCvName; 
+const TEMPLATE_CV_NAME = CANDIDATE_PROFILE.templateCvName;
+const TEMPLATE_LETTER_NAME = CANDIDATE_PROFILE.templateLetterName;
 
 const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
 const MIN_MATCH_SCORE = 97; 
 const MAX_GENERATIONS_PER_RUN = 3; // Prevent timeout & API exhaustion by processing at most 3 jobs in a single run
+
 // --- USER PREFERENCES ---
 const PREFERENCES = {
-  location: "Lorient, France",
+  location: CANDIDATE_PROFILE.location,
   radiusLocal: 20, 
   radiusRegional: 50,
   allowFullRemote: true,
@@ -272,8 +285,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        
     <tone_reference_only_do_not_copy>
     [GOLD STANDARD CV EXAMPLE]:
-    "Silvère MARTIN-MICHIELLOT Lorient, France (Remote) | 07 67 81 52 02 | silvere.martin@gmail.com 
-    LinkedIn: linkedin.com/in/silvere-martin-michiellot/ | GitHub: github.com/silveremartin-dev
+    "${CANDIDATE_PROFILE.fullName.toUpperCase()} ${CANDIDATE_PROFILE.location} (Remote) | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email} 
+    LinkedIn: ${CANDIDATE_PROFILE.linkedinRaw} | GitHub: ${CANDIDATE_PROFILE.githubRaw}
     ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
     Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
     COMPÉTENCES CLÉS
@@ -312,12 +325,12 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
        - Follow the premium cover letter formatting guidelines from version 4.4.x:
          - Sender block at the absolute top of the letter:
-           Silvère Martin-Michiellot
+           ${CANDIDATE_PROFILE.fullName}
            [Target Position Title matching the CV]
-           Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
-           LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
-           GitHub: https://github.com/silveremartin-dev/
-         - A blank line, then the Lorient date line, matched to the current date.
+           ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+           LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+           GitHub: ${CANDIDATE_PROFILE.githubUrl}
+         - A blank line, then the ${CANDIDATE_PROFILE.city} date line, matched to the current date.
          - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]" (or English equivalent).
          - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (or English equivalent) (must be standard black text, no horizontal rules below it).
          - Formal greeting: "Madame, Monsieur," (or English equivalent).
@@ -326,17 +339,17 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
            - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
            - Us: Propose high-value synergy and immediate technical collaboration.
          - Formal closing salutation: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." (or English equivalent).
-         - Sign-off: "Silvère Martin-Michiellot."
+         - Sign-off: "${CANDIDATE_PROFILE.fullName}."
          
     3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
        - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
        - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, and no subordination formulas ("À l'attention de..."). It must be at the absolute top of the document:
-           Silvère Martin-Michiellot
+           ${CANDIDATE_PROFILE.fullName}
            [Target Position Title matching the CV]
-           Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
-           LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
-           GitHub: https://github.com/silveremartin-dev/
-       - A blank line, then the Lorient date line, positioned right after the header block and before the subject line.
+           ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+           LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+           GitHub: ${CANDIDATE_PROFILE.githubUrl}
+       - A blank line, then the ${CANDIDATE_PROFILE.city} date line, positioned right after the header block and before the subject line.
        - Immediately following the date line, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**" (or English equivalent).
        - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
        - The core content of the Memo must feature:
@@ -344,15 +357,15 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
          - **The Proposition:** Propose a high-level architectural posture to solve it.
          - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
          - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." (or English equivalent).
-         - **Sign-off:** "Silvère Martin-Michiellot."
+         - **Sign-off:** "${CANDIDATE_PROFILE.fullName}."
 
     4. THE CV AS AN INDEX ('cv_markdown'):
-       - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | Lorient | 07/2025 - Présent").
+       - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | ${CANDIDATE_PROFILE.city} | 07/2025 - Présent").
        - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
        - Contact info must include exactly these lines without any bullet points:
-         Lorient | 07 67 81 52 02 | silvere.martin@gmail.com
-         LinkedIn: https://www.linkedin.com/in/silvere-martin-michiellot
-         GitHub: https://github.com/silveremartin-dev/
+         ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+         LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+         GitHub: ${CANDIDATE_PROFILE.githubUrl}
        - **MANDATORY SECTIONS**: You MUST include a "## COMPÉTENCES CLÉS" (in French) or "## KEY COMPETENCIES" (in English) section right after the profile summary. Never skip it.
        - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
        - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
@@ -436,9 +449,9 @@ function processJob(inputFolder, outputFolder, job) {
   let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let attachments = [];
   try {
     const rand = Math.floor(Math.random() * 900000) + 10000;
-    const cvName = `SilvereMartinMichiellot-CV-2026-${rand}`;
-    const lmName = `SilvereMartinMichiellot-LM-2026-${rand}`;
-    const memoName = `SilvereMartinMichiellot-Memo-2026-${rand}`;
+    const cvName = `${CANDIDATE_PROFILE.safeName}-CV-2026-${rand}`;
+    const lmName = `${CANDIDATE_PROFILE.safeName}-LM-2026-${rand}`;
+    const memoName = `${CANDIDATE_PROFILE.safeName}-Memo-2026-${rand}`;
     
     // Process complete generation from Markdown
     const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.cv_markdown || "", cvName);

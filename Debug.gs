@@ -1,9 +1,29 @@
+/**
+ * HelloApply: Cloud Edition - Diagnostics & Utilities
+ * VERSION: 6.2.0 (Configurable Identity Edition)
+ * LAST UPDATED: 23/05/2026 15:15
+ * 
+ * Part of the HelloApply autonomous agent suite. Contains manual diagnostics, 
+ * template auditing, and direct manual document generation.
+ */
+
+// --- CANDIDATE PROFILE ---
+const CANDIDATE_PROFILE = {
+  fullName: "Silvère Martin-Michiellot",
+  safeName: "SilvereMartinMichiellot",
+  templateCvName: "SilvereMartinMichiellot-CV-1pageATS-2026",
+  templateLetterName: "Lettre de motivation Silvère Martin-Michiellot 2026b"
+};
+
 function testModels() {
   const models = [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
     "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.0-pro",
-    "gemini-pro"
+    "gemini-1.5-flash-8b",
+    "gemini-1.5-pro"
   ];
   const versions = ["v1", "v1beta"];
   
@@ -79,8 +99,8 @@ function inspectTemplates() {
     }
   };
   
-  inspectDoc("SilvereMartinMichiellot-CV-1pageATS-2026");
-  inspectDoc("Lettre de motivation Silvère Martin-Michiellot 2026b");
+  inspectDoc(CANDIDATE_PROFILE.templateCvName);
+  inspectDoc(CANDIDATE_PROFILE.templateLetterName);
   
   // Write log to file
   const files = outputFolder.getFilesByName("TemplateInspection.txt");
@@ -103,12 +123,12 @@ function generateManual() {
   const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
   
   const rand = Math.floor(Math.random() * 900000) + 10000;
-  const cvName = `SilvereMartinMichiellot-CV-Manual-${rand}`;
-  const lmName = `SilvereMartinMichiellot-LM-Manual-${rand}`;
+  const cvName = `${CANDIDATE_PROFILE.safeName}-CV-Manual-${rand}`;
+  const lmName = `${CANDIDATE_PROFILE.safeName}-LM-Manual-${rand}`;
   
   console.log("Generating manual files...");
-  const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, cvMarkdown, cvName);
-  const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, letterMarkdown, lmName);
+  const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateCvName, cvMarkdown, cvName);
+  const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, letterMarkdown, lmName);
   
   console.log("✅ Success!");
   console.log("CV PDF URL: " + cvResult.docUrl);
