@@ -221,6 +221,8 @@ function main() {
 }
 
 function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
+  const jobId = getJobId(originalUrl);
+  const numericId = jobId.replace(/^(HW_|LI_)/, "");
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
     You will systematically generate THREE distinct documents in the returned JSON object:
@@ -234,8 +236,14 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     TARGET JOB URL:
     \${originalUrl}
     
+    EXPECTED JOB ID:
+    \${jobId}
+    
+    NUMERIC ID:
+    \${numericId}
+    
     CRITICAL FALLBACK & CONTEXT ALIGNMENT:
-    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL. You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to the TARGET JOB URL.
+    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL or associated with the EXPECTED JOB ID or NUMERIC ID (matching any links containing the sub-strings '\${jobId}' or '\${numericId}'). You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to this TARGET JOB URL / EXPECTED JOB ID / NUMERIC ID.
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
     \${masterCV}
@@ -412,8 +420,8 @@ function fetchJobDescription(url) {
     const html = response.getContentText();
     const htmlLower = html.toLowerCase();
     
-    // Precise checks: only treat as auth wall if explicitly stated in title or redirect params
-    if (htmlLower.includes("<title>sign in</title>") || htmlLower.includes("authwall") || htmlLower.includes("redirect_to=login")) {
+    // Extremely specific check: if page title is explicitly "sign in" or similar
+    if (htmlLower.includes("<title>sign in</title>") || htmlLower.includes("<title>connexion</title>")) {
       return "authWall";
     }
     
