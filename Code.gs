@@ -176,8 +176,39 @@ function main() {
         
         const jobId = getJobId(url);
         
-        if (isJobProcessed(jobId)) {
-          console.log(`[SKIP] Job already processed: ${jobId}`);
+        const previousJob = findJobInSheet(outputFolder, jobId);
+        if (previousJob || isJobProcessed(jobId)) {
+          console.log(`[SKIP] Job already processed previously: ${jobId}`);
+          
+          if (previousJob) {
+            console.log(`[DUPLICATE] Logging duplicate row for ${previousJob.position} at ${previousJob.company}`);
+            
+            const prevScore = previousJob.score ? previousJob.score.replace("%", "") : "0";
+            const duplicateJob = {
+              source: previousJob.source,
+              company: previousJob.company,
+              position: previousJob.position,
+              score: prevScore,
+              url: previousJob.url,
+              originalUrl: rawUrl,
+              reasoning: `[DOUBLON] Cette offre a déjà été traitée le ${previousJob.date} (Décision précédente: ${previousJob.status}, Score: ${previousJob.score}).`
+            };
+            
+            logToSheet(outputFolder, duplicateJob, previousJob.cvUrl, previousJob.lmUrl, previousJob.memoUrl);
+          } else {
+            const fallbackJob = {
+              source: url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork',
+              company: "Inconnue (Déjà traitée)",
+              position: "Inconnu (Déjà traité)",
+              score: "0",
+              url: url,
+              originalUrl: rawUrl,
+              reasoning: `[DOUBLON] Offre déjà traitée lors d'un précédent run (détails non trouvés dans la feuille).`
+            };
+            logToSheet(outputFolder, fallbackJob, "", "", "");
+          }
+          
+          markJobProcessed(jobId);
           continue;
         }
 
@@ -922,6 +953,54 @@ function isJobProcessed(jobId) {
   const props = PropertiesService.getScriptProperties();
   const processed = JSON.parse(props.getProperty('PROCESSED_JOB_IDS') || '[]');
   return processed.indexOf(jobId) !== -1;
+}
+
+/**
+ * Scan the tracking sheet to look up a previously processed job by its ID.
+ * Returns the job details if found, or null if not found.
+ */
+function findJobInSheet(folder, jobId) {
+  if (!jobId) return null;
+  try {
+    const files = folder.getFilesByName(TRACKING_SHEET_NAME);
+    if (!files.hasNext()) return null;
+    
+    const sheetFile = SpreadsheetApp.openById(files.next().getId());
+    const sheet = sheetFile.getSheets()[0];
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return null;
+    
+    const lastCol = sheet.getLastColumn();
+    const data = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+    
+    // Search from bottom to top (most recent first)
+    for (let i = data.length - 1; i >= 0; i--) {
+      const row = data[i];
+      const offerUrl = row[6] || "";
+      if (offerUrl) {
+        const rowJobId = getJobId(offerUrl);
+        if (rowJobId === jobId) {
+          return {
+            date: row[0],
+            source: row[1],
+            company: row[2],
+            position: row[3],
+            score: row[4] ? String(row[4]) : "",
+            status: row[5],
+            url: row[6],
+            cvUrl: row[7] || "",
+            lmUrl: row[8] || "",
+            memoUrl: row[9] || "",
+            originalUrl: row[10] || "",
+            reasoning: row[11] || ""
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn(`[WARN] Error scanning spreadsheet for duplicate jobId ${jobId}: ${e.message}`);
+  }
+  return null;
 }
 
 function markJobProcessed(jobId) {
