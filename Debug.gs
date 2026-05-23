@@ -126,3 +126,33 @@ function generateManual() {
   console.log("CV PDF URL: " + cvResult.docUrl);
   console.log("LM PDF URL: " + lmResult.docUrl);
 }
+
+/**
+ * Diagnostic tool to check active triggers and configure automated hourly execution.
+ * Run this function manually in the Google Apps Script editor to ensure automation is active!
+ */
+function checkAndSetupTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  console.log(`[TRIGGER ENGINE] Found ${triggers.length} active trigger(s) in project.`);
+  
+  let hasMainTrigger = false;
+  triggers.forEach((trigger, index) => {
+    const handler = trigger.getHandlerFunction();
+    const type = trigger.getEventType();
+    console.log(`  - Trigger #${index + 1}: calls function "${handler}" | Event Type: ${type}`);
+    if (handler === 'main') {
+      hasMainTrigger = true;
+    }
+  });
+  
+  if (hasMainTrigger) {
+    console.log("✅ Automated execution ('main') is already programmed and active!");
+  } else {
+    console.log("⚠️ No active trigger found for 'main'. Creating a time-driven trigger to run every hour automatically...");
+    ScriptApp.newTrigger('main')
+      .timeBased()
+      .everyHours(1)
+      .create();
+    console.log("✅ Success! Time-driven trigger successfully created. 'main' will run automatically every hour.");
+  }
+}

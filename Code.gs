@@ -123,7 +123,7 @@ function main() {
       break;
     }
 
-    if (!TEST_MODE && thread.getLastMessageDate() <= lastRun) continue;
+    if (!TEST_MODE && thread.getLastMessageDate() <= lastRun && !thread.isUnread()) continue;
 
     const messages = thread.getMessages();
     for (const message of messages) {
@@ -135,7 +135,7 @@ function main() {
         break;
       }
       
-      if (!TEST_MODE && message.getDate() <= lastRun) continue;
+      if (!TEST_MODE && message.getDate() <= lastRun && !message.isUnread()) continue;
 
       const subject = message.getSubject();
       const body = message.getPlainBody();
@@ -228,6 +228,11 @@ function main() {
           }
         } catch (e) { console.error(`[ERROR] ${url}: ${e.message}`); }
       }
+    }
+    
+    if (!TEST_MODE && thread.isUnread()) {
+      thread.markRead();
+      console.log(`[MAIL] Marked thread as read: "${thread.getFirstMessageSubject()}"`);
     }
   }
   if (!TEST_MODE) props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
