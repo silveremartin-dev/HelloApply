@@ -32,7 +32,7 @@ const CANDIDATE_PROFILE = {
   githubRaw: "github.com/silveremartin-dev", // Short version for CV formatting
   
   // Google Drive Reference Files (inside input/ folder)
-  masterCvName: "SilvereMartinMichiellot-CV-full",
+  masterCvName: "mastercv.md",
   templateCvName: "SilvereMartinMichiellot-CV-1pageATS-2026",
   templateLetterName: "Lettre de motivation Silvère Martin-Michiellot 2026b"
 };
@@ -49,7 +49,7 @@ const TEMPLATE_CV_NAME = CANDIDATE_PROFILE.templateCvName;
 const TEMPLATE_LETTER_NAME = CANDIDATE_PROFILE.templateLetterName;
 
 const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
-const MIN_MATCH_SCORE = 97; 
+const MIN_MATCH_SCORE = 75; 
 const MAX_GENERATIONS_PER_RUN = 3; // Prevent timeout & API exhaustion by processing at most 3 jobs in a single run
 
 // --- USER PREFERENCES ---
@@ -152,7 +152,8 @@ function main() {
           break;
         }
 
-        let url = cleanUrl(rawUrl);
+        let decodedUrl = decodeHelloworkTrackingUrl(rawUrl);
+        let url = cleanUrl(decodedUrl);
         const isLinkedIn = url.includes('linkedin.com');
         const isHelloWork = url.includes('hellowork.com');
 
@@ -174,27 +175,28 @@ function main() {
           console.log(`[RESOLVED] Final URL: ${url}`);
         }
         
+        // Strict Post-Resolution Validator: Ensure the final URL is indeed a deep job detail page
+        const isRealLinkedInJob = url.includes('linkedin.com/jobs/view/') || url.includes('linkedin.com/view/');
+        const isRealHelloWorkJob = url.includes('hellowork.com/') && (url.includes('/emplois/') || url.includes('/offre-'));
+        
+        if (!isRealLinkedInJob && !isRealHelloWorkJob) {
+          console.warn(`[SKIP] Final URL is not a valid job detail page: ${url}`);
+          continue;
+        }
+        
         const jobId = getJobId(url);
         
+        // 1st guard: fast ScriptProperties cache (survives between runs, avoids sheet scan)
+        if (isJobProcessed(jobId)) {
+          console.log(`[SKIP] Already processed (cache): ${jobId}`);
+          continue;
+        }
+        
+        // 2nd guard: slower sheet scan (fallback if cache was reset or job was processed before cache existed)
         const previousJob = findJobInSheet(outputFolder, jobId);
         if (previousJob) {
-          console.log(`[DUPLICATE] Job already processed in sheet: ${jobId}`);
-          console.log(`[DUPLICATE] Logging duplicate row for ${previousJob.position} at ${previousJob.company}`);
-          
-          const prevScore = previousJob.score ? previousJob.score.replace("%", "") : "0";
-          const duplicateJob = {
-            source: previousJob.source,
-            company: previousJob.company,
-            position: previousJob.position,
-            score: prevScore,
-            url: previousJob.url,
-            originalUrl: rawUrl,
-            reasoning: `[DOUBLON] Cette offre a déjà été traitée le ${previousJob.date} (Décision précédente: ${previousJob.status}, Score: ${previousJob.score}).`
-          };
-          
-          logToSheet(outputFolder, duplicateJob, previousJob.cvUrl, previousJob.lmUrl, previousJob.memoUrl);
-          
-          markJobProcessed(jobId);
+          console.log(`[SKIP] Already processed (sheet): ${jobId} — ${previousJob.position} @ ${previousJob.company} (${previousJob.date})`);
+          markJobProcessed(jobId); // Sync cache so future runs are fast
           continue;
         }
 
@@ -258,30 +260,45 @@ function main() {
 function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
   const jobId = getJobId(originalUrl);
   const numericId = jobId.replace(/^(HW_|LI_)/, "");
+  
+  // Dynamically calculate current dates to inject into the LLM prompt
+  const now = new Date();
+  const monthsFr = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dateFr = `Lorient, le ${now.getDate()} ${monthsFr[now.getMonth()]} ${now.getFullYear()}`;
+  const dateEn = `Lorient, ${monthsEn[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
+    You will systematically generate THREE distinct documents in the returned JSON object, and extract three precise meta-fields from the job description:
+    - 'contract_type': e.g., "CDI", "CDD", "Freelance", or "?" if you cannot extract the information.
+    - 'location': e.g., "Lorient", "Paris", or "?" if you cannot extract the information.
+    - 'workplace_setting': e.g., "Full remote", "Hybride / Télétravail partiel", "Présentiel", or "?" if you cannot extract the information.
+    
+    You will return all of this in the JSON structure at the bottom.
+
     You will systematically generate THREE distinct documents in the returned JSON object:
     1. A tailored dynamic CV ('cv_markdown') positioned as an "Index of Executable Proofs of Work".
     2. A traditional, premium Cover Letter ('letter_markdown') following the "You, Me, Us" narrative structure and formal styling.
     3. A peer-to-peer Technical Architecture Memo ('memo_markdown') targeting the company's core bottlenecks.
 
     JOB DESCRIPTION:
-    \${context}
+    ${context}
     
     TARGET JOB URL:
-    \${originalUrl}
+    ${originalUrl}
     
     EXPECTED JOB ID:
-    \${jobId}
+    ${jobId}
     
     NUMERIC ID:
-    \${numericId}
+    ${numericId}
     
     CRITICAL FALLBACK & CONTEXT ALIGNMENT:
-    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL or associated with the EXPECTED JOB ID or NUMERIC ID (matching any links containing the sub-strings '\${jobId}' or '\${numericId}'). You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to this TARGET JOB URL / EXPECTED JOB ID / NUMERIC ID.
+    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL or associated with the EXPECTED JOB ID or NUMERIC ID (matching any links containing the sub-strings '${jobId}' or '${numericId}'). You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to this TARGET JOB URL / EXPECTED JOB ID / NUMERIC ID.
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
-    \${masterCV}
+    ${masterCV}
     
     CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
@@ -289,17 +306,18 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - LOCATION FILTER: The candidate is based in Lorient, France. If the job is geographically far from Lorient (e.g. Paris, Lyon, Villeurbanne) and is NOT explicitly marked as "Full Remote" (100% télétravail), Decision = "Ignorer".
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
-    1. LANGUAGE DETECTION & CONSISTENCY (CRITICAL):
-       - Detect the native language of the job description.
-       - IMPORTANT: Even though this prompt is in English, if the job offer is in French, YOU MUST WRITE EVERY SINGLE DOCUMENT ENTIRELY IN FRENCH. Do not output English for a French job.
-       - If it is in English, ALL documents MUST be completely in English. You must translate any French terms, headings, dates, and locations from the templates/master CV into perfect natural English.
-         * The date block MUST be in English (e.g., "Lorient, May 18, 2026"). Never write "Lorient, le...".
-         * The greetings and Recipient MUST be in English (e.g., "Attention: Hiring Manager", "Dear Hiring Manager,").
-         * The closing salutation MUST be in English (e.g., "Sincerely,"). Never mix French closings!
-       - If it is in French, ALL documents MUST be entirely in French.
-         * The date block MUST be in French (e.g., "Lorient, le 18 mai 2026").
-         * The greeting MUST be "Madame, Monsieur,".
-         * The closing salutation MUST be "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.".
+    1. LANGUAGE DETECTION & CONSISTENCY (ABSOLUTE PRIORITY):
+        - Detect the native language of the job description (usually English or French).
+        - CRITICAL RULE: If the job description is in English, ALL THREE generated documents ('cv_markdown', 'letter_markdown', 'memo_markdown') MUST be written 100% ENTIRELY IN ENGLISH. 
+          * This means you MUST fully translate the French Master CV (headings, job titles, achievements, responsibilities, locations, and dates) into premium, high-level corporate English! 
+          * Absolutely NO French words should remain in the generated documents (e.g., change "Compétences clés" to "Key Competencies", "Expériences professionnelles" to "Professional Experience", "Formation & Langues" to "Education & Languages", "Présent" to "Present", "le" in dates to "${dateEn}").
+          * The French template and the French reference CV below are strictly structure and density references—you must produce their fluent English equivalents.
+          * The greetings and Recipient MUST be in English (e.g., "Attention: Hiring Manager", "Dear Hiring Manager,").
+          * The closing salutation MUST be in English (e.g., "Sincerely,"). Never mix French closings!
+        - If the job description is in French, ALL documents MUST be written 100% entirely in French.
+          * The date block MUST be in French (e.g., "${dateFr}").
+          * The greeting MUST be "Madame, Monsieur,".
+          * The closing salutation MUST be "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.".
        
     1.5. EXECUTIVE WRITING STYLE (Emulate the Gold Standard tone):
        - Emulate the high-impact, prestigious tone of the Gemini 3.1 Pro reference CV below.
@@ -411,6 +429,9 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
       "score": 0-100,
       "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, Eternity, Antigravity, etc.) solves their architectural problem.",
       "decision": "Postuler" or "Ignorer",
+      "contract_type": "CDI", // or other type, or "?" if not found
+      "location": "Lorient", // or other city, or "?" if not found
+      "workplace_setting": "Full remote", // or "Hybride / Télétravail partiel", "Présentiel", or "?" if not found
       "job_description_clean": "Cleaned job description in plain text...",
       "language": "en" or "fr",
       "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
@@ -421,6 +442,16 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
   
   let result = callGemini(prompt);
   if (result) {
+    if (result.score !== undefined) {
+      let sc = parseFloat(result.score);
+      if (!isNaN(sc)) {
+        if (sc <= 1.0) {
+          result.score = Math.round(sc * 100);
+        } else {
+          result.score = Math.round(sc);
+        }
+      }
+    }
     const fields = ['cv_markdown', 'letter_markdown', 'memo_markdown'];
     fields.forEach(field => {
       if (result[field]) {
@@ -434,35 +465,164 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
 
 /**
  * URL Transformation & Fetching
+ * 3-tier extraction strategy:
+ *   1. JSON-LD JobPosting schema  (cleanest — immune to cookie banners / login overlays)
+ *   2. Open Graph meta tags       (title + description fallback)
+ *   3. Targeted HTML scraping     (last resort, strips scripts/styles and finds content areas)
  */
 function fetchJobDescription(url) {
   try {
     const options = {
       'muteHttpExceptions': true,
+      'followRedirects': true,
       'headers': {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7'
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       }
     };
     const response = UrlFetchApp.fetch(url, options);
-    const finalUrl = response.getUrl().toLowerCase();
-    
-    // Check if the final URL indicates we redirected to a login or auth wall page
-    if (finalUrl.includes("login") || finalUrl.includes("signin") || finalUrl.includes("authwall")) {
-      return "authWall";
-    }
-    
     const html = response.getContentText();
     const htmlLower = html.toLowerCase();
-    
-    // Extremely specific check: if page title is explicitly "sign in" or similar
-    if (htmlLower.includes("<title>sign in</title>") || htmlLower.includes("<title>connexion</title>")) {
-      return "authWall";
+
+    // --- TRUE auth wall: response code indicates unauthorized or page title confirms login page ---
+    const code = response.getResponseCode();
+    const titleIsLogin = /<title[^>]*>\s*(sign in|connexion|se connecter|authwall|login)\s*<\/title>/i.test(html);
+    if (code === 401 || code === 403 || titleIsLogin) {
+      console.warn(`[AUTH WALL] Login page detected (Code: ${code}, Title: ${titleIsLogin})`);
+      return 'authWall';
     }
-    
-    return html.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmi, "").replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().substring(0, 40000);
-  } catch (e) { return null; }
+
+    // --- Tier 1: JSON-LD JobPosting (best quality, works even with overlays) ---
+    const jsonLd = extractJsonLdJobPosting(html);
+    if (jsonLd && jsonLd.length > 100) {
+      console.log(`[FETCH] ✅ Tier 1 — JSON-LD JobPosting extracted (${jsonLd.length} chars)`);
+      return jsonLd;
+    }
+
+    // --- Tier 2: Strip HTML & targeted descriptions (full detailed content) ---
+    const stripped = extractStrippedContent(html, url);
+    if (stripped && stripped.length > 200) {
+      console.log(`[FETCH] ✅ Tier 2 — Detailed HTML/JSON content extracted (${stripped.length} chars)`);
+      return stripped;
+    }
+
+    // --- Tier 3: Open Graph / meta tags (last resort summary fallback) ---
+    const og = extractOpenGraphJob(html);
+    if (og && og.length > 150) {
+      console.log(`[FETCH] ✅ Tier 3 — Open Graph metadata fallback extracted (${og.length} chars)`);
+      return og;
+    }
+
+    // Nothing useful found at all
+    console.warn(`[FETCH] ❌ No usable content found for ${url}`);
+    return 'authWall';
+
+  } catch (e) {
+    console.error(`[FETCH ERROR] ${url}: ${e.message}`);
+    return null;
+  }
 }
+
+/** Extracts a clean text summary from a JSON-LD JobPosting schema block */
+function extractJsonLdJobPosting(html) {
+  try {
+    const jsonLdRegex = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+    let match;
+    while ((match = jsonLdRegex.exec(html)) !== null) {
+      try {
+        const data = JSON.parse(match[1]);
+        const posting = findJobPostingNode(data);
+        if (posting) return formatJobPostingNode(posting);
+      } catch (e) { /* malformed JSON, skip */ }
+    }
+  } catch (e) {}
+  return null;
+}
+
+/** Recursively finds a JobPosting node in a JSON-LD graph */
+function findJobPostingNode(data) {
+  if (!data) return null;
+  if (data['@type'] === 'JobPosting') return data;
+  if (Array.isArray(data)) {
+    for (const item of data) {
+      const found = findJobPostingNode(item);
+      if (found) return found;
+    }
+  }
+  if (data['@graph']) return findJobPostingNode(data['@graph']);
+  return null;
+}
+
+/** Formats a JobPosting node into a clean readable string for Gemini */
+function formatJobPostingNode(p) {
+  const clean = s => (s || '').replace(/<[^>]+>/g, ' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&nbsp;/g,' ').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
+  const parts = [];
+  if (p.title)                          parts.push(`Poste : ${clean(p.title)}`);
+  if (p.hiringOrganization)             parts.push(`Entreprise : ${clean(p.hiringOrganization.name || p.hiringOrganization)}`);
+  if (p.jobLocation && p.jobLocation.address) {
+    const a = p.jobLocation.address;
+    parts.push(`Lieu : ${[a.addressLocality, a.addressRegion, a.addressCountry].filter(Boolean).join(', ')}`);
+  }
+  if (p.employmentType)                 parts.push(`Contrat : ${clean(p.employmentType)}`);
+  if (p.datePosted)                     parts.push(`Date : ${p.datePosted}`);
+  if (p.baseSalary && p.baseSalary.value) {
+    const v = p.baseSalary.value;
+    parts.push(`Salaire : ${v.minValue || ''}–${v.maxValue || ''} ${v.unitText || ''}`.trim());
+  }
+  if (p.description)                    parts.push(`\nDescription :\n${clean(p.description)}`);
+  if (p.skills)                         parts.push(`Compétences : ${clean(Array.isArray(p.skills) ? p.skills.join(', ') : p.skills)}`);
+  if (p.qualifications)                 parts.push(`Qualifications : ${clean(p.qualifications)}`);
+  const result = parts.join('\n');
+  return result.length > 50 ? result : null;
+}
+
+/** Extracts Open Graph / meta tag summary as fallback */
+function extractOpenGraphJob(html) {
+  const metas = {};
+  const metaRegex = /<meta[^>]+(?:property|name)=["']([^"']+)["'][^>]+content=["']([^"']*?)["'][^>]*>/gi;
+  let m;
+  while ((m = metaRegex.exec(html)) !== null) metas[m[1]] = m[2];
+  const parts = [];
+  if (metas['og:title'])       parts.push(`Poste : ${metas['og:title']}`);
+  if (metas['og:site_name'])   parts.push(`Source : ${metas['og:site_name']}`);
+  if (metas['og:description']) parts.push(`Description : ${metas['og:description']}`);
+  if (metas['description'])    parts.push(`Résumé : ${metas['description']}`);
+  return parts.join('\n');
+}
+
+/** Last-resort: strip scripts/styles/tags, prioritise large text blocks */
+function extractStrippedContent(html, url) {
+  // Remove noisy blocks
+  let cleaned = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gmi, '')
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gmi, '')
+    .replace(/<!--[\s\S]*?-->/g, '');
+
+  // For LinkedIn: the job description lives in <code> tags as serialised JSON (Voyager API)
+  if (url && url.includes('linkedin.com')) {
+    const codeMatch = cleaned.match(/<code[^>]*>([\s\S]{500,}?)<\/code>/i);
+    if (codeMatch) {
+      try {
+        // Try to pull plain text out of the encoded JSON blob
+        const decoded = codeMatch[1].replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"');
+        const descMatch = decoded.match(/"description"\s*:\s*"([\s\S]{100,}?)(?<!\\)"/);
+        if (descMatch) return `Description LinkedIn :\n${descMatch[1].replace(/\\n/g,'\n').replace(/\\u[\da-f]{4}/gi, c => String.fromCharCode(parseInt(c.slice(2), 16)))}`.substring(0, 40000);
+      } catch(e) {}
+    }
+  }
+
+  // Generic: strip remaining tags
+  return cleaned
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .substring(0, 40000);
+}
+
+
 
 /**
  * Process Job
@@ -509,6 +669,15 @@ function createDraft(job, attachments) {
       <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
         <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
         <p style="font-style: italic; color: #2d3748; margin-bottom: 12px;">"${job.reasoning}"</p>
+        
+        <div style="margin: 15px 0; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #bee3f8; font-size: 0.9em; color: #2d3748;">
+          <ul style="margin: 0; padding-left: 20px; list-style-type: square; line-height: 1.5;">
+            <li><strong>Type de contrat :</strong> ${job.contract_type || "?"}</li>
+            <li><strong>Lieu :</strong> ${job.location || "?"}</li>
+            <li><strong>Cadre de travail :</strong> ${job.workplace_setting || "?"}</li>
+          </ul>
+        </div>
+        
         <p style="margin: 0; font-size: 0.9em;"><a href="${job.url}" style="color: #3182ce; text-decoration: underline; font-weight: bold;">Voir l'offre originale sur ${job.source}</a></p>
       </div>
       
@@ -540,14 +709,173 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
   }
   
   const body = doc.getBody();
+  const isCV = templateName.includes("CV") || templateName.toLowerCase().includes("cv");
   
-  // Render Markdown beautifully with styles, including robust safe clearing of the template!
-  renderMarkdownToDoc(body, markdownText, templateName);
+  if (isCV) {
+    // --- CV DYNAMIC LAYOUT OPTIMIZER ---
+    // Start with Standard Comfortable layout
+    let layout = {
+      bodySize: 10,
+      h1Size: 16,
+      h2Size: 11,
+      h3Size: 11,
+      marginTop: 24,
+      marginBottom: 24,
+      marginLeft: 36,
+      marginRight: 36,
+      lineSpacing: 1.15,
+      spacingBeforeH1: 10,
+      spacingAfterH1: 2,
+      spacingBeforeH2: 14,
+      spacingAfterH2: 3,
+      spacingBeforeH3: 6,
+      spacingAfterH3: 2,
+      spacingBeforeBody: 2,
+      spacingAfterBody: 2,
+      spacingBeforeList: 1,
+      spacingAfterList: 1
+    };
+    
+    renderMarkdownToDoc(body, markdownText, templateName, layout);
+    doc.saveAndClose();
+    
+    let pdfFile = null;
+    let pageCount = 1;
+    try {
+      const pdfBlobTemp = copy.getAs(MimeType.PDF);
+      pdfFile = outputFolder.createFile(pdfBlobTemp.setName(finalName + "_temp.pdf"));
+      pageCount = getPdfPageCount(pdfFile.getId());
+      pdfFile.setTrashed(true); // Clean up temp file
+    } catch (e) {
+      console.warn("[WARN] Could not measure page count: " + e.message);
+    }
+    
+    console.log(`[CV OPTIMIZER] Standard render page count: ${pageCount} pages. Char count: ${markdownText.length}`);
+    
+    // If standard layout spills slightly onto the 2nd page, try to fit it on exactly 1 page
+    if (pageCount === 2) {
+      console.log("[CV OPTIMIZER] Spills onto 2 pages. Attempting compact render to fit on 1 page...");
+      let compactLayout = {
+        bodySize: 9.3,
+        h1Size: 14,
+        h2Size: 10,
+        h3Size: 10,
+        marginTop: 18,
+        marginBottom: 18,
+        marginLeft: 30,
+        marginRight: 30,
+        lineSpacing: 1.1,
+        spacingBeforeH1: 8,
+        spacingAfterH1: 1,
+        spacingBeforeH2: 10,
+        spacingAfterH2: 2,
+        spacingBeforeH3: 4,
+        spacingAfterH3: 1,
+        spacingBeforeBody: 1,
+        spacingAfterBody: 1,
+        spacingBeforeList: 0.5,
+        spacingAfterList: 0.5
+      };
+      
+      const docToReopen = DocumentApp.openById(copy.getId());
+      const bodyToReopen = docToReopen.getBody();
+      renderMarkdownToDoc(bodyToReopen, markdownText, templateName, compactLayout);
+      docToReopen.saveAndClose();
+      
+      let compactPageCount = 2;
+      try {
+        const pdfBlobTemp = copy.getAs(MimeType.PDF);
+        pdfFile = outputFolder.createFile(pdfBlobTemp.setName(finalName + "_temp.pdf"));
+        compactPageCount = getPdfPageCount(pdfFile.getId());
+        pdfFile.setTrashed(true);
+      } catch (e) {}
+      
+      console.log(`[CV OPTIMIZER] Compact render page count: ${compactPageCount} page(s).`);
+      
+      if (compactPageCount === 1) {
+        console.log(`[CV OPTIMIZER] Success! CV successfully compressed into exactly 1 page.`);
+        // Keep compact version!
+      } else {
+        // If it still doesn't fit on 1 page, it's a genuine 2-page CV.
+        // We will render it with a comfortable layout to fill the 2 pages beautifully.
+        console.log(`[CV OPTIMIZER] Genuine 2-page CV. Reverting to comfortable standard layout.`);
+        const docToReopen2 = DocumentApp.openById(copy.getId());
+        const bodyToReopen2 = docToReopen2.getBody();
+        renderMarkdownToDoc(bodyToReopen2, markdownText, templateName, layout);
+        docToReopen2.saveAndClose();
+      }
+    } else if (pageCount > 2) {
+      // If it spills onto page 3, attempt to fit it on 2 pages!
+      console.log("[CV OPTIMIZER] Spills onto 3 pages. Attempting compact render to fit on 2 pages...");
+      let compactLayout2 = {
+        bodySize: 9.3,
+        h1Size: 14,
+        h2Size: 10,
+        h3Size: 10,
+        marginTop: 18,
+        marginBottom: 18,
+        marginLeft: 30,
+        marginRight: 30,
+        lineSpacing: 1.1,
+        spacingBeforeH1: 8,
+        spacingAfterH1: 1,
+        spacingBeforeH2: 10,
+        spacingAfterH2: 2,
+        spacingBeforeH3: 4,
+        spacingAfterH3: 1,
+        spacingBeforeBody: 1,
+        spacingAfterBody: 1,
+        spacingBeforeList: 0.5,
+        spacingAfterList: 0.5
+      };
+      
+      const docToReopen3 = DocumentApp.openById(copy.getId());
+      const bodyToReopen3 = docToReopen3.getBody();
+      renderMarkdownToDoc(bodyToReopen3, markdownText, templateName, compactLayout2);
+      docToReopen3.saveAndClose();
+    }
+  } else {
+    // Non-CV: standard render
+    renderMarkdownToDoc(body, markdownText, templateName);
+    doc.saveAndClose();
+  }
   
-  doc.saveAndClose();
   const pdfBlob = copy.getAs(MimeType.PDF).setName(finalName + ".pdf");
   outputFolder.createFile(pdfBlob);
   return { docUrl: copy.getUrl(), pdfBlob: pdfBlob };
+}
+
+/**
+ * Utility to parse PDF page count from PDF binary stream (using `/Type /Pages /Count N`)
+ */
+function getPdfPageCount(fileId) {
+  try {
+    const file = DriveApp.getFileById(fileId);
+    const blob = file.getAs(MimeType.PDF);
+    const data = blob.getDataAsString();
+    
+    // Parse standard PDF Page Tree Pages object and get Count property
+    const pagesTreeMatch = data.match(/\/Type\s*\/Pages[\s\S]*?\/Count\s+(\d+)/);
+    if (pagesTreeMatch) {
+      const pageCount = parseInt(pagesTreeMatch[1], 10);
+      if (pageCount > 0 && pageCount < 10) return pageCount;
+    }
+    
+    // Fallback Page Object regex matching
+    const countMatch = data.match(/\/Count\s+(\d+)/);
+    if (countMatch) {
+      const pageCount = parseInt(countMatch[1], 10);
+      if (pageCount > 0 && pageCount < 10) return pageCount;
+    }
+    
+    const pagesMatch = data.match(/\/Type\s*\/Page\b/g);
+    if (pagesMatch) {
+      return pagesMatch.length;
+    }
+  } catch (e) {
+    console.warn("[WARN] Error parsing PDF page count: " + e.message);
+  }
+  return 1; // Default fallback
 }
 
 function clearBodyCompletely(body) {
@@ -565,20 +893,44 @@ function clearBodyCompletely(body) {
   return tempPara;
 }
 
-function renderMarkdownToDoc(body, markdownText, templateName) {
+function renderMarkdownToDoc(body, markdownText, templateName, layout) {
   // Clear the body completely using our robust clearance engine
   const firstParagraph = clearBodyCompletely(body);
 
-  // Set Margins (Tight ATS: 0.33 inch top/bottom, 0.5 inch left/right to fit everything on 1 page)
-  body.setMarginTop(24);
-  body.setMarginBottom(24);
-  body.setMarginLeft(36);
-  body.setMarginRight(36);
+  const isCV = templateName.includes("CV") || templateName.toLowerCase().includes("cv");
+
+  // Layout default variables (can be adjusted dynamically)
+  const cfg = layout || {
+    bodySize: 10,
+    h1Size: 16,
+    h2Size: 11,
+    h3Size: 11,
+    marginTop: 24,
+    marginBottom: 24,
+    marginLeft: 36,
+    marginRight: 36,
+    lineSpacing: 1.15,
+    spacingBeforeH1: 10,
+    spacingAfterH1: 2,
+    spacingBeforeH2: 14,
+    spacingAfterH2: 3,
+    spacingBeforeH3: 6,
+    spacingAfterH3: 2,
+    spacingBeforeBody: 2,
+    spacingAfterBody: 2,
+    spacingBeforeList: 1,
+    spacingAfterList: 1
+  };
+
+  // Set Margins
+  body.setMarginTop(cfg.marginTop);
+  body.setMarginBottom(cfg.marginBottom);
+  body.setMarginLeft(cfg.marginLeft);
+  body.setMarginRight(cfg.marginRight);
   
   const lines = markdownText.split('\n');
   let isFirstLine = true;
   let heading2Count = 0;
-  const isCV = templateName.includes("CV") || templateName.toLowerCase().includes("cv");
 
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i].trim();
@@ -603,8 +955,6 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
     let isNumberedList = /^\d+\s*\.\s+(.*)/.test(line);
     let isListItem = line.startsWith('- ') || line.startsWith('* ') || isNumberedList;
     
-    // Note: no manual page break here — rely on section heading SPACING_BEFORE instead.
-    
     if (isFirstLine) {
       isFirstLine = false;
       p = firstParagraph;
@@ -621,18 +971,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 10;
+        style[DocumentApp.Attribute.FONT_SIZE] = cfg.bodySize;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
-        style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
-        style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+        style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeList;
+        style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterList;
+        style[DocumentApp.Attribute.LINE_SPACING] = cfg.lineSpacing;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
-        item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
+        item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets
         
         const txt = item.editAsText();
-        txt.setFontSize(10);
+        txt.setFontSize(cfg.bodySize);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -654,18 +1004,18 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         
         const style = {};
         style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-        style[DocumentApp.Attribute.FONT_SIZE] = 10;
+        style[DocumentApp.Attribute.FONT_SIZE] = cfg.bodySize;
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
         style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
-        style[DocumentApp.Attribute.SPACING_BEFORE] = 1;
-        style[DocumentApp.Attribute.SPACING_AFTER] = 1;
-        style[DocumentApp.Attribute.LINE_SPACING] = 1.15;
+        style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeList;
+        style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterList;
+        style[DocumentApp.Attribute.LINE_SPACING] = cfg.lineSpacing;
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
-        item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets (no 1. 2. 3. 4.)
+        item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets
         
         const txt = item.editAsText();
-        txt.setFontSize(10);
+        txt.setFontSize(cfg.bodySize);
         txt.setFontFamily('Roboto');
         txt.setBold(false);
         txt.setForegroundColor('#2D3748');
@@ -684,13 +1034,14 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 16;
+      style[DocumentApp.Attribute.FONT_SIZE] = cfg.h1Size;
       style[DocumentApp.Attribute.BOLD] = true;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#1A365D'; // Premium dark blue
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 10;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH1;
+      style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH1;
       p.setAttributes(style);
-      p.setAlignment(DocumentApp.HorizontalAlignment.LEFT); // Left-align name per feedback
+      p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
+      p.setKeepWithNext(true); // Enforce keep with next to prevent orphaning
       formatInlineStyles(p);
     } else if (isHeading2) {
       heading2Count++;
@@ -699,7 +1050,7 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 11;
+      style[DocumentApp.Attribute.FONT_SIZE] = cfg.h2Size;
       style[DocumentApp.Attribute.BOLD] = true;
       
       // Keep Objet/Subject line in standard charcoal black
@@ -709,13 +1060,14 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
         style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2B6CB0'; // Slate Blue
       }
       
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 14;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 3;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH2;
+      style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH2;
       p.setAttributes(style);
+      p.setKeepWithNext(true); // Enforce keep with next to prevent orphaning
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
       if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil")) {
-        style[DocumentApp.Attribute.FONT_SIZE] = 12;
+        style[DocumentApp.Attribute.FONT_SIZE] = cfg.h2Size + 1; // Slightly larger for CV main title
         p.setAttributes(style);
         p.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
       } else {
@@ -728,13 +1080,14 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 11;
+      style[DocumentApp.Attribute.FONT_SIZE] = cfg.h3Size;
       style[DocumentApp.Attribute.BOLD] = true;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 6;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH3;
+      style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH3;
       p.setAttributes(style);
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
+      p.setKeepWithNext(true); // Enforce keep with next to prevent orphaning of experiences titles!
       formatInlineStyles(p);
     } else {
       const textVal = line.trim() || " ";
@@ -742,16 +1095,16 @@ function renderMarkdownToDoc(body, markdownText, templateName) {
       
       const style = {};
       style[DocumentApp.Attribute.FONT_FAMILY] = 'Roboto';
-      style[DocumentApp.Attribute.FONT_SIZE] = 10;
+      style[DocumentApp.Attribute.FONT_SIZE] = cfg.bodySize;
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748';
       style[DocumentApp.Attribute.BOLD] = false; // Disable default bold inheritance
-      style[DocumentApp.Attribute.SPACING_BEFORE] = 2;
-      style[DocumentApp.Attribute.SPACING_AFTER] = 2;
-      style[DocumentApp.Attribute.LINE_SPACING] = 1.2;
+      style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeBody;
+      style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterBody;
+      style[DocumentApp.Attribute.LINE_SPACING] = cfg.lineSpacing;
       p.setAttributes(style);
       
       const txt = p.editAsText();
-      txt.setFontSize(10);
+      txt.setFontSize(cfg.bodySize);
       txt.setFontFamily('Roboto');
       txt.setBold(false);
       txt.setForegroundColor('#2D3748');
@@ -966,12 +1319,25 @@ function findJobInSheet(folder, jobId) {
       if (offerUrl) {
         const rowJobId = getJobId(offerUrl);
         if (rowJobId === jobId) {
+          let scoreVal = row[4];
+          if (typeof scoreVal === 'number') {
+            if (scoreVal <= 1.0) {
+              scoreVal = Math.round(scoreVal * 100) + "%";
+            } else {
+              scoreVal = scoreVal + "%";
+            }
+          } else {
+            scoreVal = String(scoreVal || "");
+            if (scoreVal && !scoreVal.includes('%')) {
+              scoreVal = scoreVal + "%";
+            }
+          }
           return {
             date: row[0],
             source: row[1],
             company: row[2],
             position: row[3],
-            score: row[4] ? String(row[4]) : "",
+            score: scoreVal,
             status: row[5],
             url: row[6],
             cvUrl: row[7] || "",
@@ -995,7 +1361,7 @@ function markJobProcessed(jobId) {
   const processed = JSON.parse(props.getProperty('PROCESSED_JOB_IDS') || '[]');
   if (processed.indexOf(jobId) === -1) {
     processed.push(jobId);
-    if (processed.length > 500) processed.shift();
+    if (processed.length > 300) processed.shift();
     props.setProperty('PROCESSED_JOB_IDS', JSON.stringify(processed));
   }
 }
@@ -1049,6 +1415,31 @@ function resolveRedirects(url) {
 }
 
 /**
+ * Decodes HelloWork base64url tracking click URL to its real destination URL.
+ */
+function decodeHelloworkTrackingUrl(url) {
+  if (!url || !url.includes('emails.hellowork.com/clic')) return url;
+  try {
+    const parts = url.split('/');
+    const lastPart = parts[parts.length - 1];
+    if (!lastPart) return url;
+    
+    // Replace URL-safe base64 characters
+    const base64Str = lastPart.replace(/-/g, '+').replace(/_/g, '/');
+    const decodedBytes = Utilities.base64Decode(base64Str);
+    const decodedStr = Utilities.newBlob(decodedBytes).getDataAsString('UTF-8');
+    
+    const httpsIndex = decodedStr.indexOf('https://');
+    if (httpsIndex !== -1) {
+      return decodedStr.substring(httpsIndex);
+    }
+  } catch (e) {
+    console.error("[ERROR] Decoding HelloWork tracking URL: " + e.message);
+  }
+  return url;
+}
+
+/**
  * URL Sanitizers
  */
 function cleanUrl(url) {
@@ -1065,12 +1456,10 @@ function cleanUrl(url) {
       } catch (e) { /* ignore and use original */ }
     }
   }
-  // Strip query parameters for HelloWork and LinkedIn to prevent redirect walls and captcha pages
-  if (clean.includes('hellowork.com') || clean.includes('linkedin.com')) {
-    const qIndex = clean.indexOf('?');
-    if (qIndex !== -1) {
-      clean = clean.substring(0, qIndex);
-    }
+  // Always strip query string (? and everything after) to avoid redirect walls and tracking params
+  const qIndex = clean.indexOf('?');
+  if (qIndex !== -1) {
+    clean = clean.substring(0, qIndex);
   }
   return clean;
 }
@@ -1090,10 +1479,9 @@ function getJobId(url) {
 function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   let sheetFile; const files = folder.getFilesByName(TRACKING_SHEET_NAME);
   const status = (cvUrl && lmUrl && memoUrl) ? "Acceptée" : "Rejetée";
-  
   const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
   
-  let sheet;
+let sheet;
   if (files.hasNext()) { 
     sheetFile = SpreadsheetApp.openById(files.next().getId()); 
     sheet = sheetFile.getSheets()[0];
@@ -1215,16 +1603,32 @@ function callGemini(prompt) {
 function extractJobUrls(text) {
   const regex = /https:\/\/[^\s"<>]+/g;
   const matches = text.match(regex) || [];
+  const seen = new Set();
   return matches.filter(url => {
-    const isLinkedIn = url.includes('linkedin.com/');
-    const isHelloWork = url.includes('hellowork.com');
-    if (isLinkedIn) {
-      // Exclusively capture real job posting links containing '/view/' or '/jobs/view/'
-      return url.includes('/view/') || url.includes('/jobs/view/');
+    // --- LinkedIn job links only ---
+    if (url.includes('linkedin.com/')) {
+      // Must contain /jobs/view/ (real job page) - NOT /company/, /in/, /comm/company/
+      if (!url.includes('/jobs/view/') && !url.includes('/comm/jobs/view/')) return false;
+      const clean = cleanUrl(url);
+      if (seen.has(clean)) return false;
+      seen.add(clean);
+      return true;
     }
-    if (isHelloWork) {
-      // Exclusively capture real click-tracking, redirect or job detail pages
-      return url.includes('/clic/') || url.includes('/redirect') || url.includes('/emplois/') || url.includes('/offre-');
+    // --- HelloWork job links only ---
+    if (url.includes('hellowork.com')) {
+      // Must be a click-tracking link OR a real job/search page
+      const isClickTracking = url.includes('emails.hellowork.com/clic/');
+      const isJobPage = url.includes('/emplois/') || url.includes('/offre-');
+      // /home/redirect is a bare redirect with no path — skip /redirection and all nav pages
+      const isBareRedirect = /\/home\/redirect(\?|$)/.test(url);
+      if (!isClickTracking && !isJobPage && !isBareRedirect) return false;
+      // Exclude navigation / footer / account pages
+      const navPatterns = ['/fr-fr/', '/page/', '/candidat/', '/company/', '/entreprise/', 'instagram.com', 'facebook.com'];
+      if (navPatterns.some(p => url.includes(p))) return false;
+      const clean = cleanUrl(url);
+      if (seen.has(clean)) return false;
+      seen.add(clean);
+      return true;
     }
     return false;
   });
@@ -1244,5 +1648,10 @@ function readAnyFileIn(folder, fileName) {
   const files = folder.getFilesByName(fileName);
   if (!files.hasNext()) return null;
   const file = files.next();
-  return file.getMimeType() === MimeType.GOOGLE_DOCS ? DocumentApp.openById(file.getId()).getBody().getText() : "";
+  const mime = file.getMimeType();
+  if (mime === MimeType.GOOGLE_DOCS) {
+    return DocumentApp.openById(file.getId()).getBody().getText();
+  } else {
+    return file.getBlob().getDataAsString('UTF-8');
+  }
 }

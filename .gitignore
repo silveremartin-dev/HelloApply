@@ -12,3 +12,6 @@ npm-debug.log
 
 # Clasp
 .clasp.json
+
+# Local temporary data
+tmp/
