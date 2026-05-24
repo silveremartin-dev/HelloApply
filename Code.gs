@@ -1042,8 +1042,12 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#1A365D'; // Premium dark blue
       style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH1;
       style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH1;
-      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true;
       p.setAttributes(style);
+      try {
+        p.setAttributes({ [DocumentApp.Attribute.KEEP_WITH_NEXT]: true });
+      } catch (e) {
+        console.warn("[WARN] Could not set KEEP_WITH_NEXT on H1: " + e.message);
+      }
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
       formatInlineStyles(p);
     } else if (isHeading2) {
@@ -1065,8 +1069,12 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
       
       style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH2;
       style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH2;
-      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true;
       p.setAttributes(style);
+      try {
+        p.setAttributes({ [DocumentApp.Attribute.KEEP_WITH_NEXT]: true });
+      } catch (e) {
+        console.warn("[WARN] Could not set KEEP_WITH_NEXT on H2: " + e.message);
+      }
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
       if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil")) {
@@ -1088,8 +1096,12 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
       style[DocumentApp.Attribute.FOREGROUND_COLOR] = '#2D3748'; // Charcoal
       style[DocumentApp.Attribute.SPACING_BEFORE] = cfg.spacingBeforeH3;
       style[DocumentApp.Attribute.SPACING_AFTER] = cfg.spacingAfterH3;
-      style[DocumentApp.Attribute.KEEP_WITH_NEXT] = true;
       p.setAttributes(style);
+      try {
+        p.setAttributes({ [DocumentApp.Attribute.KEEP_WITH_NEXT]: true });
+      } catch (e) {
+        console.warn("[WARN] Could not set KEEP_WITH_NEXT on H3: " + e.message);
+      }
       p.setAlignment(DocumentApp.HorizontalAlignment.LEFT);
       formatInlineStyles(p);
     } else {
