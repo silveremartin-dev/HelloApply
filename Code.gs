@@ -203,10 +203,12 @@ function main() {
         try {
           let description = fetchJobDescription(url);
           let context = description;
+          let isFallback = false;
           
           if (!description || description === "authWall") {
             console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
             context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
+            isFallback = true;
           }
 
           const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
@@ -215,6 +217,7 @@ function main() {
             analysis.originalUrl = rawUrl; // Save original URL from email for reporting
             analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
             analysis.raw_description = context; // Save full context for the draft copy
+            analysis.isEmailFallback = isFallback;
             
             const requiredScore = TEST_MODE ? TEST_MATCH_THRESHOLD : MIN_MATCH_SCORE;
             if (analysis.decision === "Postuler" && analysis.score >= requiredScore) {
@@ -1478,10 +1481,17 @@ function getJobId(url) {
 
 function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   let sheetFile; const files = folder.getFilesByName(TRACKING_SHEET_NAME);
-  const status = (cvUrl && lmUrl && memoUrl) ? "Acceptée" : "Rejetée";
+  
+  let status = "Rejetée";
+  if (cvUrl && lmUrl && memoUrl) {
+    status = "Acceptée";
+  } else if (job.isEmailFallback) {
+    status = "Rejetée (sur email, à revoir)";
+  }
+  
   const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
   
-let sheet;
+  let sheet;
   if (files.hasNext()) { 
     sheetFile = SpreadsheetApp.openById(files.next().getId()); 
     sheet = sheetFile.getSheets()[0];
@@ -1523,7 +1533,31 @@ let sheet;
   
   const now = new Date();
   const dateTimeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-  sheet.appendRow([dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.url, cvUrl, lmUrl, memoUrl, job.originalUrl || "", job.reasoning]);
+  const rowValues = [dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.url, cvUrl, lmUrl, memoUrl, job.originalUrl || "", job.reasoning];
+  
+  // Try to find if this jobId already has a row to update in-place instead of creating duplicates
+  const jobId = getJobId(job.url);
+  let targetRowIndex = -1;
+  if (jobId) {
+    const lastRow = sheet.getLastRow();
+    if (lastRow >= 2) {
+      const urls = sheet.getRange(2, 7, lastRow - 1, 1).getValues();
+      for (let i = 0; i < urls.length; i++) {
+        if (getJobId(urls[i][0]) === jobId) {
+          targetRowIndex = i + 2; // 2-based because range starts at row 2
+          break;
+        }
+      }
+    }
+  }
+  
+  if (targetRowIndex !== -1) {
+    sheet.getRange(targetRowIndex, 1, 1, headers.length).setValues([rowValues]);
+    console.log(`[SHEET] Updated existing row ${targetRowIndex} for ${job.company} with status: ${status}`);
+  } else {
+    sheet.appendRow(rowValues);
+    console.log(`[SHEET] Appended new row for ${job.company} with status: ${status}`);
+  }
 }
 
 function callGemini(prompt) {

@@ -156,3 +156,138 @@ function checkAndSetupTriggers() {
     console.log("✅ Success! Time-driven trigger successfully created. 'main' will run automatically every hour.");
   }
 }
+
+/**
+ * Utility to clear the processed jobs cache from ScriptProperties.
+ * Allows re-running all offers immediately without clearing Google Sheets.
+ */
+function resetPropertiesCache() {
+  const props = PropertiesService.getScriptProperties();
+  props.deleteProperty('PROCESSED_JOB_IDS');
+  console.log("✅ ScriptProperties Cache cleared successfully!");
+}
+
+/**
+ * Utility to clear the Google Sheet tracking data (excluding headers).
+ */
+function clearGoogleSheetsTracking() {
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  const files = outputFolder.getFilesByName(TRACKING_SHEET_NAME);
+  if (files.hasNext()) {
+    const sheetFile = SpreadsheetApp.openById(files.next().getId());
+    const sheet = sheetFile.getSheets()[0];
+    const lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.deleteRows(2, lastRow - 1);
+      console.log(`[CLEANUP] Deleted ${lastRow - 1} rows from tracking sheet.`);
+    } else {
+      console.log("[CLEANUP] Tracking sheet is already empty.");
+    }
+  } else {
+    console.log("[CLEANUP] Tracking sheet not found.");
+  }
+}
+
+/**
+ * Advanced Debug utility to force reprocess old emails (e.g. from a specific date range)
+ * bypasses unread/read rules, bypasses date rules, and runs the evaluation logic.
+ * 
+ * Example query: 'after:2026/05/20 before:2026/05/22 subject:"LinkedIn"'
+ */
+function forceProcessEmailsQuery(query) {
+  if (!query) {
+    console.error("Please provide a search query! E.g. 'after:2026/05/20 before:2026/05/22 \"LinkedIn\"'");
+    return;
+  }
+  
+  console.log(`[FORCE] Querying Gmail for: "${query}"`);
+  const threads = GmailApp.search(query, 0, 15);
+  console.log(`[FORCE] Found ${threads.length} threads.`);
+  
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
+  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
+  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
+
+  if (!masterCV) {
+    console.error("[ERROR] Master CV not found. Aborting.");
+    return;
+  }
+
+  let generationCount = 0;
+
+  for (const thread of threads) {
+    const messages = thread.getMessages();
+    for (const message of messages) {
+      const subject = message.getSubject();
+      const body = message.getPlainBody();
+      const jobUrls = extractJobUrls(body);
+      
+      console.log(`[FORCE] Analysing email: "${subject}"`);
+
+      for (let rawUrl of jobUrls) {
+        let decodedUrl = decodeHelloworkTrackingUrl(rawUrl);
+        let url = cleanUrl(decodedUrl);
+        
+        // Resolve click-tracking redirections for HelloWork
+        if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
+          console.log(`[RESOLVING] Resolving redirect for: ${url}`);
+          const resolved = resolveRedirects(url);
+          if (!resolved || resolved === url || !resolved.includes('/emplois/')) {
+            continue;
+          }
+          url = cleanUrl(resolved);
+        }
+        
+        const isRealLinkedInJob = url.includes('linkedin.com/jobs/view/') || url.includes('linkedin.com/view/');
+        const isRealHelloWorkJob = url.includes('hellowork.com/') && (url.includes('/emplois/') || url.includes('/offre-'));
+        
+        if (!isRealLinkedInJob && !isRealHelloWorkJob) continue;
+        
+        const jobId = getJobId(url);
+        console.log(`[FORCE RUN] Processing ${jobId} - ${url}`);
+        
+        try {
+          let description = fetchJobDescription(url);
+          let context = description;
+          let isFallback = false;
+          
+          if (!description || description === "authWall") {
+            console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
+            context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
+            isFallback = true;
+          }
+
+          const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
+          if (analysis) {
+            analysis.url = url;
+            analysis.originalUrl = rawUrl;
+            analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
+            analysis.raw_description = context;
+            analysis.isEmailFallback = isFallback;
+            
+            if (analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE) {
+              processJob(inputFolder, outputFolder, analysis);
+              generationCount++;
+              console.log(`[GENERATION] Candidature générée (${generationCount}) pour ${analysis.company}`);
+            } else {
+              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision})`);
+              logToSheet(outputFolder, analysis, "", "", "");
+            }
+            
+            // Mark job as processed in script properties cache
+            markJobProcessed(jobId);
+          }
+          Utilities.sleep(2000);
+        } catch (e) {
+          console.error(`[ERROR] ${url}: ${e.message}`);
+        }
+      }
+    }
+  }
+  console.log(`[FORCE] Completed! Generated ${generationCount} applications.`);
+}
