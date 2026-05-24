@@ -291,3 +291,25 @@ function forceProcessEmailsQuery(query) {
   }
   console.log(`[FORCE] Completed! Generated ${generationCount} applications.`);
 }
+
+/**
+ * Complete reset to re-run tests from a specific past date.
+ * 1. Clears the processed jobs cache.
+ * 2. Clears the Google Sheets tracking log.
+ * 3. Sets the last run timestamp to May 20th, 2026, forcing the main() engine
+ *    to scan and process all emails received since then.
+ */
+function prepareForRetests() {
+  // 1. Clear cache
+  resetPropertiesCache();
+  
+  // 2. Clear Google Sheet
+  clearGoogleSheetsTracking();
+  
+  // 3. Set last run timestamp to May 20th, 2026
+  const props = PropertiesService.getScriptProperties();
+  const testDate = new Date("2026-05-20T00:00:00Z");
+  props.setProperty('LAST_RUN_TIMESTAMP', testDate.toISOString());
+  console.log(`[RESET] Set LAST_RUN_TIMESTAMP to: ${testDate.toLocaleString()}`);
+  console.log("✅ Ready! The next run of main() will scan and process all emails from May 20th, 2026 onwards.");
+}
