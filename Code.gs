@@ -469,15 +469,39 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     // --- JS Post-Analysis Filters ---
     const workplaceSetting = (result.workplace_setting || "").toLowerCase();
     const locationStr = (result.location || "").toLowerCase();
-    const isPresentiel = workplaceSetting.includes("présentiel") || workplaceSetting.includes("on-site") || workplaceSetting.includes("on site") || workplaceSetting.includes("office");
+    const isLinkedIn = originalUrl.includes('linkedin.com');
+    const isHelloWork = originalUrl.includes('hellowork.com');
+    const inMorbihan = isMorbihan(locationStr);
     
-    if (isPresentiel && !isMorbihan(locationStr)) {
-      console.log(`[FILTER] Rejected ${result.company} because it is presentiel but location "${result.location}" is not in Morbihan.`);
+    // 1. Contract Type Filter (CDI only)
+    const contractType = (result.contract_type || "").toUpperCase();
+    if (contractType !== "CDI") {
+      console.log(`[FILTER] Rejected ${result.company} because contract type is "${result.contract_type}" instead of CDI.`);
       result.decision = "Ignorer";
       result.score = 0;
-      result.reasoning = `Offre en présentiel hors Morbihan: ${result.location}. ${result.reasoning}`;
+      result.reasoning = `Contrat autre que CDI (${result.contract_type}). ${result.reasoning}`;
     }
     
+    // 2. HelloWork Location Filter (Morbihan only)
+    if (isHelloWork && !inMorbihan) {
+      console.log(`[FILTER] Rejected ${result.company} (HelloWork) because location "${result.location}" is not in Morbihan.`);
+      result.decision = "Ignorer";
+      result.score = 0;
+      result.reasoning = `Offre HelloWork hors Morbihan: ${result.location}. ${result.reasoning}`;
+    }
+    
+    // 3. LinkedIn Location & Workplace Setting Filter
+    if (isLinkedIn) {
+      const isFullRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
+      if (!inMorbihan && !isFullRemote) {
+        console.log(`[FILTER] Rejected ${result.company} (LinkedIn) because it is outside Morbihan ("${result.location}") and not Full Remote (Setting: "${result.workplace_setting}").`);
+        result.decision = "Ignorer";
+        result.score = 0;
+        result.reasoning = `Offre LinkedIn hors Morbihan et non Full Remote: ${result.location} (${result.workplace_setting}). ${result.reasoning}`;
+      }
+    }
+    
+    // 4. Salary Filter (>= 50k€)
     if (isSalaryBelow50k(result.salary)) {
       console.log(`[FILTER] Rejected ${result.company} because salary "${result.salary}" is explicitly below 50k€.`);
       result.decision = "Ignorer";

@@ -387,11 +387,13 @@ function processLinkedInRemoteOneShot() {
             analysis.isEmailFallback = isFallback;
             
             const workplaceSetting = (analysis.workplace_setting || "").toLowerCase();
+            const locationStr = (analysis.location || "").toLowerCase();
             const isRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
+            const inMorbihan = isMorbihan(locationStr);
             
-            // STRICT REMOTE CHECK
-            if (!isRemote) {
-              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} is not a Full Remote position (Setting: ${analysis.workplace_setting}). Skipping.`);
+            // LinkedIn Filter: either in Morbihan OR (outside Morbihan AND full remote)
+            if (!inMorbihan && !isRemote) {
+              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} is outside Morbihan ("${analysis.location}") and not a Full Remote position. Skipping.`);
               continue;
             }
             
