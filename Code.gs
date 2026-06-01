@@ -81,6 +81,7 @@ function main() {
     'subject:"nouvelles offres" "HelloWork"',
     'subject:"alerte" "LinkedIn"',
     'from:jobalerts-noreply@linkedin.com',
+    'from:jobs-listings@linkedin.com',
     'from:notification@emails.hellowork.com'
   ];
   

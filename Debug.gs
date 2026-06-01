@@ -314,7 +314,7 @@ function prepareForRetests() {
  * even if they are already marked as read, in a one-shot generation flow.
  */
 function processLinkedInRemoteOneShot() {
-  const query = '(from:jobalerts-noreply@linkedin.com OR subject:LinkedIn) newer_than:15d';
+  const query = '(from:jobs-listings@linkedin.com OR from:jobalerts-noreply@linkedin.com OR subject:LinkedIn) newer_than:15d';
   console.log(`[ONE-SHOT] Querying Gmail for LinkedIn emails: "${query}"`);
   
   const threads = GmailApp.search(query, 0, 100); // Retrieve up to 100 threads to cover 15 days
