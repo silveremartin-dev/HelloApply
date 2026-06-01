@@ -273,10 +273,11 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
 
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
-    You will systematically generate THREE distinct documents in the returned JSON object, and extract four precise meta-fields from the job description:
+    You will systematically generate THREE distinct documents in the returned JSON object, and extract five precise meta-fields from the job description:
     - 'contract_type': e.g., "CDI", "CDD", "Freelance", or "?" if you cannot extract the information.
     - 'location': e.g., "Lorient", "Paris", or "?" if you cannot extract the information.
-    - 'workplace_setting': e.g., "Full remote", "Hybride / Télétravail partiel", "Présentiel", or "?" if you cannot extract the information.
+    - 'is_in_morbihan': true or false. Determine if the office/location of the job is situated within the Morbihan department (56) in France (e.g. Lorient, Vannes, Lanester, Ploemeur, Hennebont, Auray, Pontivy, Baud, Sarzeau, etc. are true; Rennes, Nantes, Paris, Brest, Bordeaux, etc. are false).
+    - 'workplace_setting': e.g., "Full remote", "Hybride / Télétravail partiel", "Présentiel", or "?" if you cannot extract the information. CRITICAL: Analyze the entire description text carefully, not just the job title, as remote availability is often mentioned only in the description body.
     - 'salary': e.g., "45 000 €", "55 k€", or "?" if you cannot extract the information.
     
     You will return all of this in the JSON structure at the bottom.
@@ -436,6 +437,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        "decision": "Postuler" or "Ignorer",
        "contract_type": "CDI", // or other type, or "?" if not found
        "location": "Lorient", // or other city, or "?" if not found
+       "is_in_morbihan": true, // or false. Determine if the office/commune is in the Morbihan department (56).
        "workplace_setting": "Full remote", // or "Hybride / Télétravail partiel", "Présentiel", or "?" if not found
        "salary": "Salary string (e.g. 55k€, 45-50 k€) or '?' if not found",
        "job_description_clean": "Cleaned job description in plain text...",
@@ -471,7 +473,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     const locationStr = (result.location || "").toLowerCase();
     const isLinkedIn = originalUrl.includes('linkedin.com');
     const isHelloWork = originalUrl.includes('hellowork.com');
-    const inMorbihan = isMorbihan(locationStr);
+    const inMorbihan = result.is_in_morbihan === true || isMorbihan(locationStr);
     
     // 1. Contract Type Filter (CDI only)
     const contractType = (result.contract_type || "").toUpperCase();
@@ -1506,6 +1508,17 @@ function decodeHelloworkTrackingUrl(url) {
 function cleanUrl(url) {
   if (!url) return "";
   let clean = url.trim();
+  
+  // First, if the URL is completely encoded or has encoded parts, decode it
+  try {
+    const decoded = decodeURIComponent(clean);
+    // If it contains a nested linkedin or hellowork URL, extract it
+    const nestedMatch = decoded.match(/(https?:\/\/(?:www\.)?(?:linkedin\.com|hellowork\.com)[^\s"'<>]+)/i);
+    if (nestedMatch) {
+      clean = nestedMatch[1];
+    }
+  } catch (e) {}
+
   if (clean.includes('linkedin.com/comm/jobs/view/')) {
     clean = clean.replace('linkedin.com/comm/jobs/view/', 'linkedin.com/jobs/view/');
   }
@@ -1706,27 +1719,34 @@ function extractJobUrls(text) {
   const matches = text.match(regex) || [];
   const seen = new Set();
   return matches.filter(url => {
+    let decodedUrl = url;
+    try {
+      decodedUrl = decodeURIComponent(url);
+    } catch (e) {}
+
     // --- LinkedIn job links only ---
-    if (url.includes('linkedin.com/')) {
+    if (url.includes('linkedin.com/') || decodedUrl.includes('linkedin.com/')) {
       // Must contain /jobs/view/ (real job page) - NOT /company/, /in/, /comm/company/
-      if (!url.includes('/jobs/view/') && !url.includes('/comm/jobs/view/')) return false;
+      if (!decodedUrl.includes('/jobs/view/') && !decodedUrl.includes('/comm/jobs/view/')) return false;
       const clean = cleanUrl(url);
+      if (!clean) return false;
       if (seen.has(clean)) return false;
       seen.add(clean);
       return true;
     }
     // --- HelloWork job links only ---
-    if (url.includes('hellowork.com')) {
+    if (url.includes('hellowork.com') || decodedUrl.includes('hellowork.com')) {
       // Must be a click-tracking link OR a real job/search page
-      const isClickTracking = url.includes('emails.hellowork.com/clic/');
-      const isJobPage = url.includes('/emplois/') || url.includes('/offre-');
+      const isClickTracking = decodedUrl.includes('emails.hellowork.com/clic/');
+      const isJobPage = decodedUrl.includes('/emplois/') || decodedUrl.includes('/offre-');
       // /home/redirect is a bare redirect with no path — skip /redirection and all nav pages
-      const isBareRedirect = /\/home\/redirect(\?|$)/.test(url);
+      const isBareRedirect = /\/home\/redirect(\?|$)/.test(decodedUrl);
       if (!isClickTracking && !isJobPage && !isBareRedirect) return false;
       // Exclude navigation / footer / account pages
       const navPatterns = ['/fr-fr/', '/page/', '/candidat/', '/company/', '/entreprise/', 'instagram.com', 'facebook.com'];
-      if (navPatterns.some(p => url.includes(p))) return false;
+      if (navPatterns.some(p => decodedUrl.includes(p))) return false;
       const clean = cleanUrl(url);
+      if (!clean) return false;
       if (seen.has(clean)) return false;
       seen.add(clean);
       return true;
