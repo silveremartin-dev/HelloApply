@@ -268,15 +268,16 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
   const now = new Date();
   const monthsFr = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
   const monthsEn = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dateFr = `Lorient, le ${now.getDate()} ${monthsFr[now.getMonth()]} ${now.getFullYear()}`;
-  const dateEn = `Lorient, ${monthsEn[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+  const dateFr = "Lorient, le " + now.getDate() + " " + monthsFr[now.getMonth()] + " " + now.getFullYear();
+  const dateEn = "Lorient, " + monthsEn[now.getMonth()] + " " + now.getDate() + ", " + now.getFullYear();
 
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
-    You will systematically generate THREE distinct documents in the returned JSON object, and extract three precise meta-fields from the job description:
+    You will systematically generate THREE distinct documents in the returned JSON object, and extract four precise meta-fields from the job description:
     - 'contract_type': e.g., "CDI", "CDD", "Freelance", or "?" if you cannot extract the information.
     - 'location': e.g., "Lorient", "Paris", or "?" if you cannot extract the information.
     - 'workplace_setting': e.g., "Full remote", "Hybride / Télétravail partiel", "Présentiel", or "?" if you cannot extract the information.
+    - 'salary': e.g., "45 000 €", "55 k€", or "?" if you cannot extract the information.
     
     You will return all of this in the JSON structure at the bottom.
 
@@ -298,7 +299,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     ${numericId}
     
     CRITICAL FALLBACK & CONTEXT ALIGNMENT:
-    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL or associated with the EXPECTED JOB ID or NUMERIC ID (matching any links containing the sub-strings '${jobId}' or '${numericId}'). You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to this TARGET JOB URL / EXPECTED JOB ID / NUMERIC ID.
+    If the JOB DESCRIPTION above is a multi-job email body (fallback context), you MUST locate the specific job posting matching the TARGET JOB URL or associated with the EXPECTED JOB ID or NUMERIC ID (matching any links containing the sub-strings '\${jobId}' or '\${numericId}'). You are strictly prohibited from evaluating, scoring, or generating documents for any other job posting in the text. All extracted details (position, company, description, match reasoning) MUST align exclusively with the single job posting linked to this TARGET JOB URL / EXPECTED JOB ID / NUMERIC ID.
     
     MASTER CV / SOURCE KNOWLEDGE (THE ONLY SOURCE OF TRUTH):
     ${masterCV}
@@ -306,7 +307,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
     0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
        - CRITICAL: If the specific Company Name or Job Title cannot be found in the description (e.g. if it's an auth wall, empty, or generic boilerplate), you MUST set Score = 0 and Decision = "Ignorer". DO NOT invent a job title like "Not specified". DO NOT generate documents.
-       - LOCATION FILTER: The candidate is based in Lorient, France. If the job is geographically far from Lorient (e.g. Paris, Lyon, Villeurbanne) and is NOT explicitly marked as "Full Remote" (100% télétravail), Decision = "Ignorer".
+       - LOCATION FILTER: The candidate is based in Lorient, France. If the job is 'Présentiel' (on-site) or 'Hybride' (hybrid), the location/commune MUST be in the Morbihan department (56) (e.g., Lorient, Vannes, Ploemeur, Lanester, Hennebont, Auray, Pontivy, etc.). If the city is NOT in Morbihan (e.g. Paris, Rennes, Nantes, Brest, Villeurbanne), you MUST set Score = 0 and Decision = "Ignorer".
+       - SALARY FILTER: If the annual salary is explicitly mentioned and is strictly below 50k€ (50 000 €) per year, you MUST set Score = 0 and Decision = "Ignorer". If no salary is mentioned, or if it is at or above 50k€ (e.g. 50k€, 55k€, 60k€, etc.), do NOT reject it based on salary.
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        
     1. LANGUAGE DETECTION & CONSISTENCY (ABSOLUTE PRIORITY):
@@ -328,8 +330,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        
     <tone_reference_only_do_not_copy>
     [GOLD STANDARD CV EXAMPLE]:
-    "${CANDIDATE_PROFILE.fullName.toUpperCase()} ${CANDIDATE_PROFILE.location} (Remote) | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email} 
-    LinkedIn: ${CANDIDATE_PROFILE.linkedinRaw} | GitHub: ${CANDIDATE_PROFILE.githubRaw}
+    "\${CANDIDATE_PROFILE.fullName.toUpperCase()} \${CANDIDATE_PROFILE.location} (Remote) | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email} 
+    LinkedIn: \${CANDIDATE_PROFILE.linkedinRaw} | GitHub: \${CANDIDATE_PROFILE.githubRaw}
     ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
     Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
     COMPÉTENCES CLÉS
@@ -368,12 +370,12 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
        - Follow the premium cover letter formatting guidelines from version 4.4.x:
          - Sender block at the absolute top of the letter:
-           ${CANDIDATE_PROFILE.fullName}
+           \${CANDIDATE_PROFILE.fullName}
            [Target Position Title matching the CV]
-           ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-           LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
-           GitHub: ${CANDIDATE_PROFILE.githubUrl}
-         - A blank line, then the ${CANDIDATE_PROFILE.city} date line, matched to the current date.
+           \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
+           LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
+           GitHub: \${CANDIDATE_PROFILE.githubUrl}
+         - A blank line, then the \${CANDIDATE_PROFILE.city} date line, matched to the current date.
          - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]" (or English equivalent).
          - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (or English equivalent) (must be standard black text, no horizontal rules below it).
          - Formal greeting: "Madame, Monsieur," (or English equivalent).
@@ -382,17 +384,17 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
            - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
            - Us: Propose high-value synergy and immediate technical collaboration.
          - Formal closing salutation: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." (or English equivalent).
-         - Sign-off: "${CANDIDATE_PROFILE.fullName}."
+         - Sign-off: "\${CANDIDATE_PROFILE.fullName}."
          
     3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
        - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
        - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, and no subordination formulas ("À l'attention de..."). It must be at the absolute top of the document:
-           ${CANDIDATE_PROFILE.fullName}
+           \${CANDIDATE_PROFILE.fullName}
            [Target Position Title matching the CV]
-           ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-           LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
-           GitHub: ${CANDIDATE_PROFILE.githubUrl}
-       - A blank line, then the ${CANDIDATE_PROFILE.city} date line, positioned right after the header block and before the subject line.
+           \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
+           LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
+           GitHub: \${CANDIDATE_PROFILE.githubUrl}
+       - A blank line, then the \${CANDIDATE_PROFILE.city} date line, positioned right after the header block and before the subject line.
        - Immediately following the date line, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**" (or English equivalent).
        - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
        - The core content of the Memo must feature:
@@ -400,47 +402,48 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
          - **The Proposition:** Propose a high-level architectural posture to solve it.
          - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
          - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." (or English equivalent).
-         - **Sign-off:** "${CANDIDATE_PROFILE.fullName}."
+         - **Sign-off:** "\${CANDIDATE_PROFILE.fullName}."
 
-    4. THE CV AS AN INDEX ('cv_markdown'):
-       - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | ${CANDIDATE_PROFILE.city} | 07/2025 - Présent").
-       - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
-       - Contact info must include exactly these lines without any bullet points:
-         ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-         LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
-         GitHub: ${CANDIDATE_PROFILE.githubUrl}
-       - **MANDATORY SECTIONS**: You MUST include a "## COMPÉTENCES CLÉS" (in French) or "## KEY COMPETENCIES" (in English) section right after the profile summary. Never skip it.
-       - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
-       - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
-       - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
-       - Highlight the capability to govern AI and structure complex logic (not just write code).
-       - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" (in French) or "**Technical Environment:**" (in English) line at the end of every experience are strictly preserved.
-       - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
-       - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
-       - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
-       
-    5. STRICT BANNING OF "JScience" (OR "Jscience"):
-       - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
-       - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
-       - If JScience is found in the "masterCV" source, dynamically translate/rename it to **"Episteme"**.
+     4. THE CV AS AN INDEX ('cv_markdown'):
+        - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | \${CANDIDATE_PROFILE.city} | 07/2025 - Présent").
+        - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
+        - Contact info must include exactly these lines without any bullet points:
+          \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
+          LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
+          GitHub: \${CANDIDATE_PROFILE.githubUrl}
+        - **MANDATORY SECTIONS**: You MUST include a "## COMPÉTENCES CLÉS" (in French) or "## KEY COMPETENCIES" (in English) section right after the profile summary. Never skip it.
+        - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
+        - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
+        - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
+        - Highlight the capability to govern AI and structure complex logic (not just write code).
+        - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" (in French) or "**Technical Environment:**" (in English) line at the end of every experience are strictly preserved.
+        - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
+        - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
+        - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
+        
+     5. STRICT BANNING OF "JScience" (OR "Jscience"):
+        - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
+        - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
+        - If JScience is found in the "masterCV" source, dynamically translate/rename it to **"Episteme"**.
 
-    6. JSON STRUCTURE:
-    Return JSON only:
-    {
-      "company": "Real Company Name",
-      "position": "Exact Job Title",
-      "score": 0-100,
-      "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, Eternity, Antigravity, etc.) solves their architectural problem.",
-      "decision": "Postuler" or "Ignorer",
-      "contract_type": "CDI", // or other type, or "?" if not found
-      "location": "Lorient", // or other city, or "?" if not found
-      "workplace_setting": "Full remote", // or "Hybride / Télétravail partiel", "Présentiel", or "?" if not found
-      "job_description_clean": "Cleaned job description in plain text...",
-      "language": "en" or "fr",
-      "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
-      "letter_markdown": "The traditional Cover Letter following the premium You-Me-Us structure...",
-      "memo_markdown": "The peer-to-peer Technical Architecture Memo..."
-    }
+     6. JSON STRUCTURE:
+     Return JSON only:
+     {
+       "company": "Real Company Name",
+       "position": "Exact Job Title",
+       "score": 0-100,
+       "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, Eternity, Antigravity, etc.) solves their architectural problem.",
+       "decision": "Postuler" or "Ignorer",
+       "contract_type": "CDI", // or other type, or "?" if not found
+       "location": "Lorient", // or other city, or "?" if not found
+       "workplace_setting": "Full remote", // or "Hybride / Télétravail partiel", "Présentiel", or "?" if not found
+       "salary": "Salary string (e.g. 55k€, 45-50 k€) or '?' if not found",
+       "job_description_clean": "Cleaned job description in plain text...",
+       "language": "en" or "fr",
+       "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
+       "letter_markdown": "The traditional Cover Letter following the premium You-Me-Us structure...",
+       "memo_markdown": "The peer-to-peer Technical Architecture Memo..."
+     }
   `;
   
   let result = callGemini(prompt);
@@ -462,10 +465,28 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
         result[field] = result[field].replace(/jscience/gi, "Episteme");
       }
     });
+
+    // --- JS Post-Analysis Filters ---
+    const workplaceSetting = (result.workplace_setting || "").toLowerCase();
+    const locationStr = (result.location || "").toLowerCase();
+    const isPresentiel = workplaceSetting.includes("présentiel") || workplaceSetting.includes("on-site") || workplaceSetting.includes("on site") || workplaceSetting.includes("office");
+    
+    if (isPresentiel && !isMorbihan(locationStr)) {
+      console.log(`[FILTER] Rejected ${result.company} because it is presentiel but location "${result.location}" is not in Morbihan.`);
+      result.decision = "Ignorer";
+      result.score = 0;
+      result.reasoning = `Offre en présentiel hors Morbihan: ${result.location}. ${result.reasoning}`;
+    }
+    
+    if (isSalaryBelow50k(result.salary)) {
+      console.log(`[FILTER] Rejected ${result.company} because salary "${result.salary}" is explicitly below 50k€.`);
+      result.decision = "Ignorer";
+      result.score = 0;
+      result.reasoning = `Salaire inférieur à 50k€: ${result.salary}. ${result.reasoning}`;
+    }
   }
   return result;
 }
-
 /**
  * URL Transformation & Fetching
  * 3-tier extraction strategy:
@@ -678,6 +699,7 @@ function createDraft(job, attachments) {
             <li><strong>Type de contrat :</strong> ${job.contract_type || "?"}</li>
             <li><strong>Lieu :</strong> ${job.location || "?"}</li>
             <li><strong>Cadre de travail :</strong> ${job.workplace_setting || "?"}</li>
+            <li><strong>Salaire :</strong> ${job.salary || "?"}</li>
           </ul>
         </div>
         
@@ -1501,7 +1523,7 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
     status = "Rejetée (sur email, à revoir)";
   }
   
-  const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
+  const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Salaire", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
   
   let sheet;
   if (files.hasNext()) { 
@@ -1518,6 +1540,14 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
       console.log(`[UPGRADE] Dynamically inserted column J (10th column) for 'Lien Mémo (Doc)'.`);
     }
     
+    // Check if we need to insert the "Salaire" column (column 7) dynamically to preserve historical rows
+    const updatedCol = sheet.getLastColumn();
+    const updatedHeaders = updatedCol > 0 ? sheet.getRange(1, 1, 1, Math.max(updatedCol, headers.length)).getValues()[0] : [];
+    if (updatedHeaders[6] === "Lien Offre") {
+      sheet.insertColumnBefore(7);
+      console.log(`[UPGRADE] Dynamically inserted column G (7th column) for 'Salaire'.`);
+    }
+    
     let needsUpdate = false;
     if (sheet.getLastColumn() < headers.length) {
       needsUpdate = true;
@@ -1532,7 +1562,7 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
     }
     if (needsUpdate) {
       sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-      console.log(`[UPDATE] Spreadsheet headers updated successfully to match the 12-column layout.`);
+      console.log(`[UPDATE] Spreadsheet headers updated successfully to match the 13-column layout.`);
     }
   } 
   else {
@@ -1545,7 +1575,7 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   
   const now = new Date();
   const dateTimeStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
-  const rowValues = [dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.url, cvUrl, lmUrl, memoUrl, job.originalUrl || "", job.reasoning];
+  const rowValues = [dateTimeStr, job.source, job.company, job.position, job.score + "%", status, job.salary || "?", job.url, cvUrl, lmUrl, memoUrl, job.originalUrl || "", job.reasoning];
   
   // Try to find if this jobId already has a row to update in-place instead of creating duplicates
   const jobId = getJobId(job.url);
@@ -1553,7 +1583,8 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   if (jobId) {
     const lastRow = sheet.getLastRow();
     if (lastRow >= 2) {
-      const urls = sheet.getRange(2, 7, lastRow - 1, 1).getValues();
+      // Index for Lien Offre is now 8 (1-based index) because we inserted Salaire before it
+      const urls = sheet.getRange(2, 8, lastRow - 1, 1).getValues();
       for (let i = 0; i < urls.length; i++) {
         if (getJobId(urls[i][0]) === jobId) {
           targetRowIndex = i + 2; // 2-based because range starts at row 2
@@ -1700,4 +1731,51 @@ function readAnyFileIn(folder, fileName) {
   } else {
     return file.getBlob().getDataAsString('UTF-8');
   }
+}
+
+/**
+ * Checks if a city/location is inside the Morbihan department.
+ */
+function isMorbihan(location) {
+  if (!location || location === "?") return false;
+  const loc = location.toLowerCase();
+  if (loc.includes('56') || loc.includes('morbihan')) return true;
+  
+  const morbihanCities = [
+    'lorient', 'vannes', 'lanester', 'ploemeur', 'hennebont', 'pontivy', 'auray', 'guidel', 
+    'saint-ave', 'saint-avé', 'ploermel', 'ploërmel', 'sene', 'séné', 'sarzeau', 'larmor-plage', 
+    'queven', 'quéven', 'languidic', 'theix', 'ploeren', 'ploëren', 'brech', 'bréch', 'muzillac', 
+    'kervignac', 'elven', 'carnac', 'baud', 'locmine', 'locminé', 'pluvigner', 'plouay', 
+    'grand-champ', 'questembert', 'caudan', 'nivillac', 'guer', 'ploemel', 'ploëmel', 
+    'aradon', 'arradon', 'plouhinec', 'quiberon', 'port-louis', 'riantec', 'belz', 'nino'
+  ];
+  
+  return morbihanCities.some(city => loc.includes(city));
+}
+
+/**
+ * Parses and verifies if the salary is below 50k annual.
+ */
+function isSalaryBelow50k(salaryStr) {
+  if (!salaryStr || salaryStr === "?") return false;
+  const normalized = salaryStr.toLowerCase().replace(/\s/g, '');
+  const numbers = normalized.match(/\d+/g);
+  if (!numbers) return false;
+  
+  const annualValues = numbers.map(numStr => {
+    let val = parseInt(numStr, 10);
+    if (val < 100) {
+      val = val * 1000;
+    }
+    if (normalized.includes('mois') || normalized.includes('mensuel') || normalized.includes('/m')) {
+      val = val * 12;
+    }
+    return val;
+  });
+  
+  const maxSalary = Math.max(...annualValues);
+  if (maxSalary > 0 && maxSalary < 50000) {
+    return true;
+  }
+  return false;
 }

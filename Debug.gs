@@ -135,26 +135,20 @@ function checkAndSetupTriggers() {
   const triggers = ScriptApp.getProjectTriggers();
   console.log(`[TRIGGER ENGINE] Found ${triggers.length} active trigger(s) in project.`);
   
-  let hasMainTrigger = false;
-  triggers.forEach((trigger, index) => {
-    const handler = trigger.getHandlerFunction();
-    const type = trigger.getEventType();
-    console.log(`  - Trigger #${index + 1}: calls function "${handler}" | Event Type: ${type}`);
-    if (handler === 'main') {
-      hasMainTrigger = true;
+  // Delete all existing triggers for 'main' to avoid duplicates and update frequency
+  triggers.forEach((trigger) => {
+    if (trigger.getHandlerFunction() === 'main') {
+      ScriptApp.deleteTrigger(trigger);
+      console.log("Deleted old 'main' trigger.");
     }
   });
   
-  if (hasMainTrigger) {
-    console.log("✅ Automated execution ('main') is already programmed and active!");
-  } else {
-    console.log("⚠️ No active trigger found for 'main'. Creating a time-driven trigger to run every hour automatically...");
-    ScriptApp.newTrigger('main')
-      .timeBased()
-      .everyHours(1)
-      .create();
-    console.log("✅ Success! Time-driven trigger successfully created. 'main' will run automatically every hour.");
-  }
+  console.log("Creating a time-driven trigger to run every 4 hours automatically...");
+  ScriptApp.newTrigger('main')
+    .timeBased()
+    .everyHours(4)
+    .create();
+  console.log("✅ Success! Time-driven trigger successfully created. 'main' will run automatically every 4 hours.");
 }
 
 /**
@@ -312,4 +306,112 @@ function prepareForRetests() {
   props.setProperty('LAST_RUN_TIMESTAMP', testDate.toISOString());
   console.log(`[RESET] Set LAST_RUN_TIMESTAMP to: ${testDate.toLocaleString()}`);
   console.log("✅ Ready! The next run of main() will scan and process all emails from May 20th, 2026 onwards.");
+}
+
+
+/**
+ * Processes LinkedIn emails from the past 15 days, specifically for full-remote positions,
+ * even if they are already marked as read, in a one-shot generation flow.
+ */
+function processLinkedInRemoteOneShot() {
+  const query = 'from:jobalerts-noreply@linkedin.com newer_than:15d';
+  console.log(`[ONE-SHOT] Querying Gmail for LinkedIn emails: "${query}"`);
+  
+  const threads = GmailApp.search(query, 0, 100); // Retrieve up to 100 threads to cover 15 days
+  console.log(`[ONE-SHOT] Found ${threads.length} threads.`);
+  
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
+  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
+  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
+
+  if (!masterCV) {
+    console.error("[ERROR] Master CV not found. Aborting.");
+    return;
+  }
+
+  let generationCount = 0;
+
+  for (const thread of threads) {
+    const messages = thread.getMessages();
+    for (const message of messages) {
+      const subject = message.getSubject();
+      const body = message.getPlainBody();
+      const jobUrls = extractJobUrls(body);
+      
+      console.log(`[ONE-SHOT] Analysing email: "${subject}"`);
+
+      for (let rawUrl of jobUrls) {
+        let url = cleanUrl(rawUrl);
+        
+        const isRealLinkedInJob = url.includes('linkedin.com/jobs/view/') || url.includes('linkedin.com/view/');
+        if (!isRealLinkedInJob) continue;
+        
+        const jobId = getJobId(url);
+        
+        // Check if already processed
+        if (isJobProcessed(jobId)) {
+          console.log(`[SKIP] Already processed (cache): ${jobId}`);
+          continue;
+        }
+        
+        const previousJob = findJobInSheet(outputFolder, jobId);
+        if (previousJob) {
+          console.log(`[SKIP] Already processed (sheet): ${jobId}`);
+          markJobProcessed(jobId);
+          continue;
+        }
+        
+        console.log(`[ONE-SHOT] Processing ${jobId} - ${url}`);
+        
+        try {
+          let description = fetchJobDescription(url);
+          let context = description;
+          let isFallback = false;
+          
+          if (!description || description === "authWall") {
+            console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
+            context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
+            isFallback = true;
+          }
+
+          const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
+          if (analysis) {
+            analysis.url = url;
+            analysis.originalUrl = rawUrl;
+            analysis.source = 'LinkedIn';
+            analysis.raw_description = context;
+            analysis.isEmailFallback = isFallback;
+            
+            const workplaceSetting = (analysis.workplace_setting || "").toLowerCase();
+            const isRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
+            
+            // STRICT REMOTE CHECK
+            if (!isRemote) {
+              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} is not a Full Remote position (Setting: ${analysis.workplace_setting}). Skipping.`);
+              continue;
+            }
+            
+            if (analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE) {
+              processJob(inputFolder, outputFolder, analysis);
+              generationCount++;
+              console.log(`[GENERATION] Candidature générée (${generationCount}) pour ${analysis.company}`);
+            } else {
+              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision})`);
+              logToSheet(outputFolder, analysis, "", "", "");
+            }
+            
+            markJobProcessed(jobId);
+          }
+          Utilities.sleep(2000);
+        } catch (e) {
+          console.error(`[ERROR] ${url}: ${e.message}`);
+        }
+      }
+    }
+  }
+  console.log(`[ONE-SHOT] Completed! Generated ${generationCount} remote applications.`);
 }
