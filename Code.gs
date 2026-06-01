@@ -476,10 +476,17 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     const isHelloWork = originalUrl.includes('hellowork.com');
     const inMorbihan = result.is_in_morbihan === true || isMorbihan(locationStr);
     
-    // 1. Contract Type Filter (CDI only)
+    // 1. Contract Type Filter (CDI / Permanent / Full-time only)
     const contractType = (result.contract_type || "").toUpperCase();
-    if (contractType !== "CDI") {
-      console.log(`[FILTER] Rejected ${result.company} because contract type is "${result.contract_type}" instead of CDI.`);
+    const isCDIEquivalent = contractType === "CDI" || 
+                            contractType.includes("FULL-TIME") || 
+                            contractType.includes("FULL TIME") || 
+                            contractType.includes("PERMANENT") || 
+                            contractType.includes("TEMPS PLEIN") ||
+                            contractType.includes("TEMPS-PLEIN");
+    
+    if (!isCDIEquivalent) {
+      console.log(`[FILTER] Rejected ${result.company} because contract type is "${result.contract_type}" instead of CDI / Permanent.`);
       result.decision = "Ignorer";
       result.score = 0;
       result.reasoning = `Contrat autre que CDI (${result.contract_type}). ${result.reasoning}`;
