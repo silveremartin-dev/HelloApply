@@ -308,13 +308,26 @@ function prepareForRetests() {
   console.log("✅ Ready! The next run of main() will scan and process all emails from May 20th, 2026 onwards.");
 }
 
+/**
+ * Rewinds the LAST_RUN_TIMESTAMP by 3 days without clearing the Google Sheet tracking log or cache.
+ * This forces the main() script to scan and process all emails received in the last 3 days
+ * that were previously missed, while safely skipping already-processed jobs.
+ */
+function rewindLastRunToThreeDaysAgo() {
+  const props = PropertiesService.getScriptProperties();
+  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+  props.setProperty('LAST_RUN_TIMESTAMP', threeDaysAgo.toISOString());
+  console.log(`[RESET] Rewound LAST_RUN_TIMESTAMP to: ${threeDaysAgo.toLocaleString()}`);
+  console.log("✅ Done! Running main() now will process any recently received emails that were previously missed.");
+}
+
 
 /**
  * Processes LinkedIn emails from the past 15 days, specifically for full-remote positions,
  * even if they are already marked as read, in a one-shot generation flow.
  */
 function processLinkedInRemoteOneShot() {
-  const query = '(from:jobs-listings@linkedin.com OR from:jobalerts-noreply@linkedin.com OR subject:LinkedIn) newer_than:15d';
+  const query = '(from:jobs-listings@linkedin.com OR from:jobalerts-noreply@linkedin.com OR from:jobs-noreply@linkedin.com OR subject:LinkedIn) newer_than:15d';
   console.log(`[ONE-SHOT] Querying Gmail for LinkedIn emails: "${query}"`);
   
   const threads = GmailApp.search(query, 0, 100); // Retrieve up to 100 threads to cover 15 days

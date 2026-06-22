@@ -1,7 +1,11 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 6.2.0 (Resilient Production Safety Shield & Configurable Identity Edition)
- * LAST UPDATED: 23/05/2026 15:10
+ * VERSION: 6.2.1 (Expanded Gmail Sourcing Edition)
+ * LAST UPDATED: 22/06/2026 15:00
+ * 
+ * New in v6.2.1:
+ * - Robust Sourcing Filters: Added 'jobs-noreply@linkedin.com', HelloWork subject/sender alternates, and broad fallback search queries.
+ * - Verbose Search Logging: Logs exact thread counts returned per query and summary of skipped threads to prevent silent exit confusion.
  * 
  * New in v6.2.0:
  * - Centralized Candidate Profile: Isolated all personal identity details (name, email, phone, links, and template names) in a single configuration block at the very top.
@@ -9,7 +13,7 @@
  * 
  * New in v6.1.0:
  * - Anti-Faux Positive Auth Wall: Refined detection to check redirected final URL and strict EXACT page titles, bypassing common page body headers.
- * - Expected Job ID Context Alignment: Injects regex-extracted job ID to perfectly match tracking URLs inside Gmail fallback alerts.
+ * - Expected Job ID Context Alignment: Injets regex-extracted job ID to perfectly match tracking URLs inside Gmail fallback alerts.
  * 
  * New in v6.0.0:
  * - Triple-Document Sourcing Engine: Systematically generates CV, traditional Cover Letter, and peer-to-peer Technical Architecture Memo as 3 separate custom PDFs.
@@ -82,15 +86,23 @@ function main() {
     'subject:"alerte" "LinkedIn"',
     'from:jobalerts-noreply@linkedin.com',
     'from:jobs-listings@linkedin.com',
-    'from:notification@emails.hellowork.com'
+    'from:jobs-noreply@linkedin.com',
+    'from:notification@emails.hellowork.com',
+    'from:offres@emails.hellowork.com',
+    'from:alerte@emails.hellowork.com',
+    'from:nepasrepondre@hellowork.com',
+    'subject:HelloWork',
+    'subject:LinkedIn'
   ];
   
   queries.forEach(q => {
     const result = GmailApp.search(q, 0, TEST_MODE ? 5 : 10);
+    console.log(`  - Query "${q}" found ${result.length} threads.`);
     threads = threads.concat(result);
   });
   
   threads = threads.filter((t, index, self) => index === self.findIndex((th) => t.getId() === th.getId()));
+  console.log(`[SEARCH] Total unique threads found: ${threads.length}`);
 
   const root = getOrCreateFolder(ROOT_FOLDER_NAME);
   const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
@@ -112,6 +124,7 @@ function main() {
   
   let generationCount = 0;
   let exitRequested = false;
+  let skippedCount = 0;
 
   for (const thread of threads) {
     if (exitRequested) break;
@@ -124,7 +137,10 @@ function main() {
       break;
     }
 
-    if (!TEST_MODE && thread.getLastMessageDate() <= lastRun && !thread.isUnread()) continue;
+    if (!TEST_MODE && thread.getLastMessageDate() <= lastRun && !thread.isUnread()) {
+      skippedCount++;
+      continue;
+    }
 
     const messages = thread.getMessages();
     for (const message of messages) {
@@ -258,6 +274,7 @@ function main() {
       console.log(`[MAIL] Marked thread as read: "${thread.getFirstMessageSubject()}"`);
     }
   }
+  console.log(`[END] Scan completed. Checked ${threads.length} threads. Processed ${threads.length - skippedCount} threads, skipped ${skippedCount} older or read threads.`);
   if (!TEST_MODE) props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
 }
 
