@@ -67,9 +67,11 @@ graph TD
 * **Rappels anti-hallucination** : Des balises rigides `<tone_reference_only>` encadrent les CV d'exemples dans le prompt pour empêcher le LLM de recopier des données fictives (dates, noms d'entreprises de démo).
 
 ### Étape 2.4 : Génération & Mise en Page (Rendering Pipeline)
-Si le score de match dépasse le seuil minimal (85% en production, 95% en mode test), la fonction `processJob()` orchestre la génération asymétrique :
-1. **CV personnalisé (1 ou 2 pages)** : restructuré selon les besoins du poste en valorisant les projets open-source phares de l'écosystème de Silvère (**Episteme**, **Eternity**, **Swarm Forge**, **Open Primer**, **Antigravity**).
-2. **Lettre de motivation classique** : structure d'accroche premium et personnalisation fine.
+Si le score de match dépasse le seuil minimal (75% en production, 95% en mode test), la fonction `processJob()` orchestre la génération asymétrique :
+1. **CV personnalisé enrichi (1 ou 2 pages de CV + 2 pages de Note de Réalisation Technique)** :
+   * **Le CV** : restructuré selon les besoins du poste en valorisant les projets open-source phares de l'écosystème de Silvère (**Episteme**, **Eternity**, **Swarm Forge**, **Open Primer**, **Antigravity**).
+   * **La Note de Réalisation Technique (Page distincte)** : ajoutée systématiquement à la suite du CV (en Français ou en Anglais selon la langue de l'offre), présentant en détail les réalisations phares (*OpenPrimer*, *Episteme*), les innovations, les stacks LLMOps/HPC, les preuves d'exécution (dépôts GitHub, Hugging Face, benchmarks) et les compétences transversales.
+2. **Lettre de motivation classique** : structure d'accroche premium et personnalisation fine ("You, Me, Us").
 3. **Mémo d'architecture technique** : document hautement technique, sans formule de subordination, ciblant directement les goulets d'étranglement de l'entreprise cible (mise à l'échelle d'agents IA, parallélisation de solveurs, architecture de systèmes complexes distribués).
 
 ---
@@ -81,13 +83,15 @@ Si le score de match dépasse le seuil minimal (85% en production, 95% en mode t
 * **`fetchJobDescription()`** : Agent HTTP avec usurpation de `User-Agent` moderne et nettoyage regex du DOM.
 * **`resolveRedirects()`** : Résolveur de redirects de tracking robuste avec gestion automatique des erreurs réseau.
 * **`analyzeAndTailor()`** : Interface d'appel à l'API Gemini. Structure la requête en format JSON strict.
+* **`getTechnicalNote(language)`** : Fournit le markdown officiel de la Note de réalisation technique (en FR ou en EN) pour enrichir systématiquement le CV.
 
 ### 3.2 Moteur de Rendu Documentaire (`renderMarkdownToDoc`)
 Le script implémente son propre parseur de Markdown vers Google Docs :
 * **ATS Layout Standard** : Marges réduites (24pt haut/bas, 36pt gauche/droite) pour optimiser l'espace vertical.
+* **Support des sauts de page natifs** : Interprète les balises `---pagebreak---` et `[PAGE_BREAK]` pour séparer proprement les pages du CV et les sections de la Note technique via `body.appendPageBreak()`.
 * **Reset d'héritage de styles** : Nettoie et réinitialise de manière déterministe les attributs de texte (taille de police, graisses, polices, couleurs) à chaque transition de paragraphe ou d'élément de liste pour éviter que les styles de titre ne bavent sur le corps du texte.
-* **Formatage intelligent des liens** : Détecte dynamiquement les liens GitHub, LinkedIn et adresses e-mail pour leur appliquer un style hyperlien premium uniforme (bleu `#2B6CB0`, souligné, cliquable).
-* **Gestion des sauts de page orphelins** : Suppression des sauts de page arbitraires complexes au profit d'un ajustement fin du `SPACING_BEFORE` et de la taille de police pour maximiser la compacité sans introduire de pages blanches artificielles.
+* **Formatage intelligent des liens** : Détecte dynamiquement les URLs complètes (`https://...`), liens GitHub, LinkedIn et adresses e-mail pour leur appliquer un style hyperlien premium uniforme (bleu `#2B6CB0`, souligné, cliquable).
+* **Gestion des puces et listes imbriquées** : Supporte les puces standards (`-`, `*`, `•`), les listes numérotées, et gère automatiquement les niveaux d'indentation (`setNestingLevel`).
 
 ---
 

@@ -102,13 +102,15 @@ function inspectTemplates() {
 }
 
 /**
- * Utility to manually generate tailored CV and Letter PDFs from Markdown text
+ * Utility to manually generate tailored CV (with Technical Realization Note), Letter, and Memo PDFs from Markdown text
  * directly from the Google Apps Script editor.
  * Fill in your markdown text, select this function, and click Run!
  */
-function generateManual() {
+function generateManual(lang) {
   const cvMarkdown = ``;
   const letterMarkdown = ``;
+  const memoMarkdown = ``;
+  const language = lang || 'fr';
   
   const root = getOrCreateFolder(ROOT_FOLDER_NAME);
   const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
@@ -117,14 +119,20 @@ function generateManual() {
   const rand = Math.floor(Math.random() * 900000) + 10000;
   const cvName = `${CANDIDATE_PROFILE.safeName}-CV-Manual-${rand}`;
   const lmName = `${CANDIDATE_PROFILE.safeName}-LM-Manual-${rand}`;
+  const memoName = `${CANDIDATE_PROFILE.safeName}-Memo-Manual-${rand}`;
+  
+  const technicalNote = getTechnicalNote(language);
+  const fullCvMarkdown = (cvMarkdown ? cvMarkdown.trim() + "\n\n---pagebreak---\n\n" : "") + technicalNote;
   
   console.log("Generating manual files...");
-  const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateCvName, cvMarkdown, cvName);
+  const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateCvName, fullCvMarkdown, cvName);
   const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, letterMarkdown, lmName);
+  const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, memoMarkdown, memoName);
   
   console.log("✅ Success!");
-  console.log("CV PDF URL: " + cvResult.docUrl);
+  console.log("CV (with Technical Note) PDF URL: " + cvResult.docUrl);
   console.log("LM PDF URL: " + lmResult.docUrl);
+  console.log("Memo PDF URL: " + memoResult.docUrl);
 }
 
 /**

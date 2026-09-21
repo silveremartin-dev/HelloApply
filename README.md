@@ -1,7 +1,7 @@
-# HelloApply v6.1.0 🤖💼
+# HelloApply v6.3.0 🤖💼
 ### *Agent IA Autonome de Veille Technologique & Candidature Asymétrique*
 
-**HelloApply** est un agent IA autonome conçu sous forme de micro-service résilient pour Google Apps Script. Il surveille votre boîte de réception Gmail en continu, intercepte les alertes de postes en provenance de **LinkedIn** et **HelloWork**, analyse leur pertinence en temps réel avec le LLM **Gemini 3.1 Flash-Lite**, et génère automatiquement un dossier de candidature sur-mesure (CV, Lettre de motivation, et Mémo technique d'architecture) au format PDF sur Google Drive, prêt à l'envoi sous forme de brouillon Gmail.
+**HelloApply** est un agent IA autonome conçu sous forme de micro-service résilient pour Google Apps Script. Il surveille votre boîte de réception Gmail en continu, intercepte les alertes de postes en provenance de **LinkedIn** et **HelloWork**, analyse leur pertinence en temps réel avec le LLM **Gemini 3.1 Flash-Lite**, et génère automatiquement un dossier de candidature sur-mesure (CV enrichi de sa note de réalisation technique, Lettre de motivation, et Mémo technique d'architecture) au format PDF sur Google Drive, prêt à l'envoi sous forme de brouillon Gmail.
 
 ---
 
@@ -10,9 +10,9 @@
 Dans un marché du recrutement hautement concurrentiel et dominé par les filtres ATS (Applicant Tracking Systems), les candidatures génériques ne suffisent plus. L'objectif de **HelloApply** est de renverser le rapport de force en réalisant des **candidatures asymétriques de haute précision** :
 
 1. **Automatisation de la Veille** : L'agent élimine la tâche chronophage de tri manuel en analysant automatiquement chaque offre reçue par e-mail (LinkedIn & HelloWork) à la seconde près.
-2. **Filtrage Intelligent à Haute Sélectivité** : Grâce à une analyse sémantique avancée, l'agent calcule un score d'adéquation (seuil fixé à **97%** en production). Il élimine instantanément les postes juniors, géographiquement incompatibles (hors télétravail/Full Remote depuis Lorient), ou n'offrant pas de défis techniques à la hauteur d'un profil Senior (30+ ans d'expérience).
+2. **Filtrage Intelligent à Haute Sélectivité** : Grâce à une analyse sémantique avancée, l'agent calcule un score d'adéquation (seuil fixé à **75%** en production). Il élimine instantanément les postes juniors, géographiquement incompatibles (hors Morbihan ou hors télétravail/Full Remote depuis Lorient), ou n'offrant pas de défis techniques à la hauteur d'un profil Senior (30+ ans d'expérience).
 3. **Candidature Asymétrique Instantanée** : Pour chaque offre validée, l'agent produit en moins de 60 secondes un dossier d'une qualité technique irréprochable, rédigé dans la langue de l'offre (Français ou Anglais), composé de :
-   * 📄 **Un CV ATS-Compliant** : Restructuré comme un index dynamique de preuves de travail et de projets exécutables (valorisant l'expertise en IA Agentique, architectures distribuées, et la suite haute performance **Episteme** / **Eternity**).
+   * 📄 **Un CV ATS-Compliant enrichi** : Restructuré comme un index dynamique de preuves de travail, suivi systématiquement sur des pages distinctes de la **Note de Réalisation Technique** (en Français ou en Anglais : OpenPrimer, Episteme, benchmarks, dépôts GitHub et liens de démo).
    * ✉️ **Une Lettre de Motivation Premium** : Construite sur une structure narrative captivante de type "You, Me, Us".
    * 💡 **Un Mémo d'Architecture Technique** : Document peer-to-peer rédigé au niveau du CTO/Directeur Technique, analysant et résolvant virtuellement les goulots d'étranglement et la dette technique de l'entreprise ciblée.
 4. **Préparation du Brouillon Gmail** : L'agent compile les documents en PDF, les joint à un brouillon Gmail prêt à être envoyé par l'utilisateur, et consigne la candidature dans un Google Sheet de suivi centralisé.

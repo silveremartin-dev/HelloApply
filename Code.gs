@@ -3,6 +3,11 @@
  * VERSION: 6.2.1 (Expanded Gmail Sourcing Edition)
  * LAST UPDATED: 22/06/2026 15:00
  * 
+ * New in v6.3.0:
+ * - Systematic Technical Realization Note: Automatically appends the Technical Realization Note ("Note de réalisation technique" in French / "Technical Background Brief" in English) on distinct pages directly following the CV.
+ * - Multi-Page PageBreak Support: Added native markdown page break support ('---pagebreak---' / '[PAGE_BREAK]') in DocumentApp renderer.
+ * - Full URL Auto-Linking: Enhanced link formatting engine to convert all standard HTTPS links (OpenPrimer, Episteme, HuggingFace, etc.) into clickable, styled links.
+ * 
  * New in v6.2.1:
  * - Robust Sourcing Filters: Added 'jobs-noreply@linkedin.com', HelloWork subject/sender alternates, and broad fallback search queries.
  * - Verbose Search Logging: Logs exact thread counts returned per query and summary of skipped threads to prevent silent exit confusion.
@@ -29,6 +34,7 @@ const CANDIDATE_PROFILE = {
   location: "Lorient, France",
   city: "Lorient",
   phone: "07 67 81 52 02",
+  phoneInt: "+33 7 67 81 52 02",
   email: "silvere.martin@gmail.com",
   linkedinUrl: "https://www.linkedin.com/in/silvere-martin-michiellot",
   linkedinRaw: "linkedin.com/in/silvere-martin-michiellot/", // Short version for CV formatting
@@ -40,6 +46,131 @@ const CANDIDATE_PROFILE = {
   templateCvName: "SilvereMartinMichiellot-CV-1pageATS-2026",
   templateLetterName: "Lettre de motivation Silvère Martin-Michiellot 2026b"
 };
+
+// --- NOTE DE RÉALISATION TECHNIQUE (FR / EN) ---
+const TECHNICAL_NOTE_FR = `# Silvère MARTIN-MICHIELLOT
+Lorient, France | +33 7 67 81 52 02 | silvere.martin@gmail.com
+LinkedIn https://www.linkedin.com/in/silvere-martin-michiellot/
+GitHub https://github.com/silveremartin-dev
+
+## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGENIÉRIE IA MASSIVE
+À l'attention des Recruteurs et Directeurs Techniques
+Candidat : Silvere Martin-Michiellot – Architecte Logiciel Senior & Lead IA
+Expertise clé : Industrialisation de pipelines LLM, Calcul Haute Performance (HPC), Architectures scalables et auto-correctives.
+
+### 1. OPENPRIMER : Orchestration de Savoir Autonome & IA Générative (2026)
+Conception et déploiement d'une plateforme d'université en ligne générant de manière autonome des cursus universitaires interactifs de niveau académique.
+
+Défis Techniques & Architecture
+- Orchestration Multi-Agents : Développement d'un orchestrateur autonome s'appuyant sur l'API Gemini 2.5 pour la génération massive et structurée de milliers de pages de cours universitaires.
+- Modélisation Multidimensionnelle : Structuration des données selon une taxonomie stricte de 10 niveaux académiques couvrant 42 disciplines scientifiques et humanités.
+- Maturité Multilingue : Pipeline de génération et de localisation dynamique en 5 langues cibles : Anglais (EN), Français (FR), Espagnol (ES), Allemand (DE), et Chinois (ZH).
+- Sécurité & Résilience Cloud Native :
+  - Isolation stricte des données via des politiques Row-Level Security (RLS) avancées sur Supabase.
+  - Implémentation d'un mécanisme de cache auto-correctif réduisant la latence et garantissant l'intégrité des données face aux dérives de génération (hallucinations).
+
+Stack Technique & LLMOps
+- Frontend/Backend : Next.js 15 (App Router, Server Components), Vercel (Déploiement Haute Disponibilité).
+- BaaS / Database : Supabase (PostgreSQL, RLS, Realtime).
+- Moteur d'Inférence : Gemini 2.5 (Google AI Studio / Vertex AI).
+- Optimisation des Coûts : Conception de pipelines de traitement sous forme de graphes orientés acycliques (DAG) pour optimiser les appels d'API et réduire drastiquement les coûts d'inférence (LLMOps).
+
+Preuves Techniques & Liens
+- Plateforme de Production : https://openprimer.app/ code OP-BETA-2026
+- Dépôt Github principal : https://github.com/Open-Primer/
+
+---pagebreak---
+
+### 2. EPISTEME : Calcul Scientifique Haute Performance (HPC) & Industrialisation IA (2025-2026)
+Développement d'une bibliothèque souveraine de calcul scientifique distribué et de simulation multi-agents de masse (450 000+ lignes de code).
+
+Innovations & Paradigmes d'Ingénierie
+- Vibe Coding & Ingénierie Augmentée : Utilisation avancée de la plateforme d'orchestration multi-agents Google Antigravity pour la génération massive de code critique.
+- Cycle de Livraison Optimisé : Automatisation par IA de 80% des tests unitaires et de la documentation technique, entraînant une division par 5 du cycle de release.
+- Performances Brutes : Traitements distribués affichant des benchmarks 10x supérieurs aux bibliothèques standards de la Fondation Apache.
+- Simulation de Masse : Architecture client-serveur hautement optimisée pour l'exécution de simulations multi-agents complexes et massives (systèmes physiques, sociaux et biologiques).
+
+Stack Technique
+- Langage & Runtime : Java (Projet Panama pour l'accès mémoire hors-heap, liaison CUDA).
+- Calcul : Architecture massivement distribuée, optimisation des entrées/sorties et de la topologie réseau.
+
+Preuves Techniques & Liens
+- Dépôt GitHub Principal : https://github.com/Episteme-HPC/Episteme
+- Espace de Démonstration (Hugging Face) : https://huggingface.co/spaces/silveremartin/Episteme
+- Données de Benchmark Officielles : https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results
+- Annonce et Synthèse Industrielle (LinkedIn) : [Lien vers la publication LinkedIn](https://www.linkedin.com/in/silvere-martin-michiellot)
+
+### 3. COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION
+1. Direction Technique & Vision IA : Capacité à piloter un portefeuille de projets d'IA massive (de la simulation à la plateforme d'apprentissage distribuée).
+2. Maîtrise Cloud & Infrastructure : Déploiement d'architectures scalables, résilientes, à haute disponibilité, centrées sur la maîtrise des coûts opérationnels (FinOps/LLMOps).
+3. Souveraineté et Qualité Logicielle : Rigueur méthodologique mathématique appliquée au code (tests automatisés, isolation des données, patterns correctifs).`;
+
+const TECHNICAL_NOTE_EN = `# Silvère MARTIN-MICHIELLOT
+Lorient, France | +33 7 67 81 52 02 | silvere.martin@gmail.com
+LinkedIn https://www.linkedin.com/in/silvere-martin-michiellot/
+GitHub https://github.com/silveremartin-dev
+
+## TECHNICAL BACKGROUND BRIEF: COMPLEX SYSTEMS & LARGE-SCALE AI ENGINEERING
+For the attention of Recruiters and Technical Directors
+Candidate: Silvere Martin-Michiellot – Senior Software Architect & AI Lead
+Core Expertise: LLM Production Pipeline Industrialization, High-Performance Computing (HPC), Scalable & Self-Healing Architectures.
+
+### 1. OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (2026)
+Design and deployment of an online university platform that autonomously generates interactive, academic-grade university curricula.
+
+Technical Challenges & Architecture
+- Multi-Agent Orchestration: Development of an autonomous orchestrator leveraging the Gemini 2.5 API for the massive, structured generation of thousands of academic course pages.
+- Multidimensional Modeling: Data structuring based on a strict 10-level academic taxonomy spanning 42 scientific disciplines and humanities.
+- Multilingual Maturity: Dynamic generation and localization pipeline serving 5 target languages: English (EN), French (FR), Spanish (ES), German (DE), and Chinese (ZH).
+- Cloud-Native Security & Resilience:
+  - Strict data isolation enforced via advanced Row-Level Security (RLS) policies on Supabase.
+  - Implementation of a self-healing cache mechanism to reduce latency and guarantee data integrity against generation drift (hallucinations).
+
+Technical Stack & LLMOps
+- Frontend/Backend: Next.js 15 (App Router, Server Components), Vercel (High-Availability Deployment).
+- BaaS / Database: Supabase (PostgreSQL, RLS, Realtime).
+- Inference Engine: Gemini 2.5 (Google AI Studio / Vertex AI).
+- Cost Optimization: Engineering of processing pipelines structured as Directed Acyclic Graphs (DAG) to optimize API calls and drastically reduce inference overhead (LLMOps).
+
+Technical Proofs & Links
+- Production Platform: https://openprimer.app/ code OP-BETA-2026
+- Primary GitHub Repository: https://github.com/Open-Primer/
+
+---pagebreak---
+
+### 2. EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (2025-2026)
+Development of a sovereign distributed scientific computing and massive multi-agent simulation library (450,000+ lines of code).
+
+Innovations & Engineering Paradigms
+- Vibe Coding & Augmented Engineering: Advanced utilization of the Google Antigravity multi-agent orchestration platform for the mass production of critical code.
+- Optimized Release Cycle: AI-driven automation of 80% of unit tests and technical documentation, resulting in a 5x reduction in the release cycle.
+- Raw Performance: Distributed processing benchmarks delivering throughput 10x higher than standard Apache Foundation libraries.
+- Massive Simulation: Highly optimized client-server architecture built to execute complex, large-scale multi-agent simulations (physical, social, and biological systems).
+
+Technical Stack
+- Language & Runtime: Java (Project Panama for off-heap memory access, CUDA binding).
+- Computing: Massively distributed architecture, rigorous I/O and network topology optimization.
+
+Technical Proofs & Links
+- Primary GitHub Repository: https://github.com/Episteme-HPC/Episteme
+- Showcase Space (Hugging Face): https://huggingface.co/spaces/silveremartin/Episteme
+- Official Benchmark Data: https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results
+- Industry Announcement & Synthesis (LinkedIn): [Link to LinkedIn Publication](https://www.linkedin.com/in/silvere-martin-michiellot)
+
+### 3. CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION
+1. Technical Direction & AI Vision: Proven ability to steer a portfolio of massive AI initiatives (ranging from complex simulations to distributed learning platforms).
+2. Cloud & Infrastructure Mastery: Deployment of scalable, resilient, high-availability architectures with a strong focus on operational cost management (FinOps/LLMOps).
+3. Sovereignty & Software Quality: Mathematical methodological rigor applied to codebase engineering (automated testing, strict data isolation, self-correcting design patterns).`;
+
+/**
+ * Returns the appropriate Technical Realization Note based on the language.
+ */
+function getTechnicalNote(language) {
+  if (language && language.toLowerCase().startsWith('en')) {
+    return TECHNICAL_NOTE_EN;
+  }
+  return TECHNICAL_NOTE_FR;
+}
 
 // --- CONFIGURATION ---
 const TEST_MODE = false; // Set to true to run infinite tests on the latest emails
@@ -702,6 +833,9 @@ function extractStrippedContent(html, url) {
 /**
  * Process Job
  */
+/**
+ * Process Job
+ */
 function processJob(inputFolder, outputFolder, job) {
   let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let attachments = [];
   try {
@@ -710,8 +844,13 @@ function processJob(inputFolder, outputFolder, job) {
     const lmName = `${CANDIDATE_PROFILE.safeName}-LM-2026-${rand}`;
     const memoName = `${CANDIDATE_PROFILE.safeName}-Memo-2026-${rand}`;
     
+    // Systematically append the Technical Realization Note to the CV on distinct pages
+    const lang = (job.language || "fr").toLowerCase();
+    const technicalNote = getTechnicalNote(lang);
+    const fullCvMarkdown = (job.cv_markdown || "").trim() + "\n\n---pagebreak---\n\n" + technicalNote;
+    
     // Process complete generation from Markdown
-    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, job.cv_markdown || "", cvName);
+    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, fullCvMarkdown, cvName);
     cvDocUrl = cvResult.docUrl;
     
     const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.letter_markdown || "", lmName);
@@ -723,7 +862,7 @@ function processJob(inputFolder, outputFolder, job) {
     attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
     
     createDraft(job, attachments);
-    console.log(`[SUCCESS] 3 PDFs created & draft sent for ${job.company} (${job.score}%)`);
+    console.log(`[SUCCESS] 3 PDFs created (CV with Technical Note appended, Letter, Memo) & draft sent for ${job.company} (${job.score}%)`);
   } catch (e) {
     console.error(`[ERROR] Processing ${job.company}: ${e.message}\nStack: ${e.stack || 'N/A'}`);
   }
@@ -739,7 +878,7 @@ function createDraft(job, attachments) {
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
       <p style="font-size: 1.1em; margin-top: 0;">Bonjour Silvère,</p>
       <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">${job.position}</strong> chez <strong style="color: #2c5282;">${job.company}</strong>.</p>
-      <p>Les fichiers PDF adaptés (CV, Lettre de motivation, et Mémo d'architecture) sont déjà joints à ce brouillon.</p>
+      <p>Les fichiers PDF adaptés (CV enrichi de la Note de réalisation technique, Lettre de motivation, et Mémo d'architecture) sont déjà joints à ce brouillon.</p>
       
       <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
         <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
@@ -768,6 +907,7 @@ ${job.job_description_clean || job.raw_description || "Non disponible"}
   `;
   GmailApp.createDraft("", subject, "", { htmlBody: htmlBody, attachments: attachments });
 }
+
 function generateFilesFromTemplate(inputFolder, outputFolder, templateName, markdownText, finalName) {
   const files = inputFolder.getFilesByName(templateName);
   if (!files.hasNext()) throw new Error(`Template ${templateName} introuvable.`);
@@ -826,11 +966,13 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
       console.warn("[WARN] Could not measure page count: " + e.message);
     }
     
-    console.log(`[CV OPTIMIZER] Standard render page count: ${pageCount} pages. Char count: ${markdownText.length}`);
+    console.log(`[CV OPTIMIZER] Standard render total page count: ${pageCount} pages. Char count: ${markdownText.length}`);
     
-    // If standard layout spills slightly onto the 2nd page, try to fit it on exactly 1 page
-    if (pageCount === 2) {
-      console.log("[CV OPTIMIZER] Spills onto 2 pages. Attempting compact render to fit on 1 page...");
+    // Check if CV part spills onto extra page (Total = 4 pages means 2-page CV + 2-page Note; Total = 2 pages without note or 4 pages with note)
+    // Attempt compact layout to compress CV to 1 page if possible (bringing total from 4 to 3 pages, or from 2 to 1 page)
+    if (pageCount === 4 || pageCount === 2) {
+      const targetPageCount = pageCount === 4 ? 3 : 1;
+      console.log(`[CV OPTIMIZER] Total pages: ${pageCount}. Attempting compact render to fit CV on 1 page (target total: ${targetPageCount} pages)...`);
       let compactLayout = {
         bodySize: 9.3,
         h1Size: 14,
@@ -858,7 +1000,7 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
       renderMarkdownToDoc(bodyToReopen, markdownText, templateName, compactLayout);
       docToReopen.saveAndClose();
       
-      let compactPageCount = 2;
+      let compactPageCount = pageCount;
       try {
         const pdfBlobTemp = copy.getAs(MimeType.PDF);
         pdfFile = outputFolder.createFile(pdfBlobTemp.setName(finalName + "_temp.pdf"));
@@ -866,23 +1008,23 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
         pdfFile.setTrashed(true);
       } catch (e) {}
       
-      console.log(`[CV OPTIMIZER] Compact render page count: ${compactPageCount} page(s).`);
+      console.log(`[CV OPTIMIZER] Compact render total page count: ${compactPageCount} page(s).`);
       
-      if (compactPageCount === 1) {
-        console.log(`[CV OPTIMIZER] Success! CV successfully compressed into exactly 1 page.`);
+      if (compactPageCount === targetPageCount) {
+        console.log(`[CV OPTIMIZER] Success! CV portion successfully compressed into exactly 1 page.`);
         // Keep compact version!
       } else {
         // If it still doesn't fit on 1 page, it's a genuine 2-page CV.
-        // We will render it with a comfortable layout to fill the 2 pages beautifully.
-        console.log(`[CV OPTIMIZER] Genuine 2-page CV. Reverting to comfortable standard layout.`);
+        // Revert to comfortable standard layout.
+        console.log(`[CV OPTIMIZER] Genuine 2-page CV portion. Reverting to comfortable standard layout.`);
         const docToReopen2 = DocumentApp.openById(copy.getId());
         const bodyToReopen2 = docToReopen2.getBody();
         renderMarkdownToDoc(bodyToReopen2, markdownText, templateName, layout);
         docToReopen2.saveAndClose();
       }
-    } else if (pageCount > 2) {
-      // If it spills onto page 3, attempt to fit it on 2 pages!
-      console.log("[CV OPTIMIZER] Spills onto 3 pages. Attempting compact render to fit on 2 pages...");
+    } else if (pageCount > 4) {
+      // If it spills onto 5+ pages, attempt compact layout to fit on 4 pages
+      console.log("[CV OPTIMIZER] Spills onto 5+ pages. Attempting compact render to fit on 4 pages...");
       let compactLayout2 = {
         bodySize: 9.3,
         h1Size: 14,
@@ -1009,7 +1151,14 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
   let heading2Count = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i].trim();
+    const rawLine = lines[i];
+    let line = rawLine.trim();
+    
+    // Detect Page Break directive
+    if (line === '---pagebreak---' || line === '[PAGE_BREAK]' || line === '===PAGE_BREAK===' || line === '---') {
+      body.appendPageBreak();
+      continue;
+    }
     
     // Skip empty lines in CV to prevent layout breaking. Keep them in Letter with custom small paragraph height.
     if (!line) {
@@ -1027,9 +1176,11 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
     let isHeading2 = line.startsWith('## ');
     let isHeading3 = line.startsWith('### ');
     
-    // Auto-detect numbered lists and treat them as list items (bullets)
+    // Auto-detect numbered lists and bullets (including unicode bullets •, -, *)
     let isNumberedList = /^\d+\s*\.\s+(.*)/.test(line);
-    let isListItem = line.startsWith('- ') || line.startsWith('* ') || isNumberedList;
+    let isBulletList = /^[-*•]\s+(.*)/.test(line);
+    let isListItem = isBulletList || isNumberedList;
+    let indentLevel = (rawLine.search(/\S/) >= 2) ? 1 : 0;
     
     if (isFirstLine) {
       isFirstLine = false;
@@ -1041,7 +1192,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
         if (isNumberedList) {
           textVal = line.match(/^\d+\s*\.\s+(.*)/)[1].trim() || " ";
         } else {
-          textVal = line.substring(2).trim() || " ";
+          textVal = line.match(/^[-*•]\s+(.*)/)[1].trim() || " ";
         }
         const item = body.appendListItem(textVal);
         
@@ -1056,6 +1207,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets
+        if (indentLevel > 0) item.setNestingLevel(indentLevel);
         
         const txt = item.editAsText();
         txt.setFontSize(cfg.bodySize);
@@ -1074,7 +1226,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
         if (isNumberedList) {
           textVal = line.match(/^\d+\s*\.\s+(.*)/)[1].trim() || " ";
         } else {
-          textVal = line.substring(2).trim() || " ";
+          textVal = line.match(/^[-*•]\s+(.*)/)[1].trim() || " ";
         }
         const item = body.appendListItem(textVal);
         
@@ -1089,6 +1241,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
         item.setAttributes(style);
         item.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
         item.setGlyphType(DocumentApp.GlyphType.BULLET); // Always enforce bullets
+        if (indentLevel > 0) item.setNestingLevel(indentLevel);
         
         const txt = item.editAsText();
         txt.setFontSize(cfg.bodySize);
@@ -1150,7 +1303,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
       }
       
       // Center the CV Title (first Heading 2 in CV, which doesn't contain "objet" or "profil")
-      if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil")) {
+      if (isCV && heading2Count === 1 && !textVal.toLowerCase().includes("objet") && !textVal.toLowerCase().includes("profil") && !textVal.toLowerCase().includes("note de réalisation") && !textVal.toLowerCase().includes("technical background brief")) {
         style[DocumentApp.Attribute.FONT_SIZE] = cfg.h2Size + 1; // Slightly larger for CV main title
         p.setAttributes(style);
         p.setAlignment(DocumentApp.HorizontalAlignment.CENTER);
@@ -1213,9 +1366,10 @@ function formatInlineStyles(element) {
   let text = element.getText();
   let hasBold = text.includes('**');
   let hasMarkdownLink = text.includes('[');
+  let hasUrl = /https?:\/\/[^\s)]+/i.test(text);
   let hasPlainLink = text.toLowerCase().includes('linkedin.com') || text.toLowerCase().includes('github.com');
   let hasEmail = text.includes('@');
-  if (!hasBold && !hasMarkdownLink && !hasPlainLink && !hasEmail) return;
+  if (!hasBold && !hasMarkdownLink && !hasUrl && !hasPlainLink && !hasEmail) return;
   
   const textElement = element.editAsText();
   
@@ -1288,12 +1442,12 @@ function formatInlineStyles(element) {
     }
   }
 
-  // 3. Process Plain LinkedIn & GitHub Links: linkedin.com/in/... or github.com/...
+  // 3. Process Generic URLs & Plain LinkedIn / GitHub Links
   text = element.getText();
-  let plainRegex = /(?:https?:\/\/)?(?:www\.)?(linkedin\.com\/in\/[^\s|]+|github\.com\/[^\s|]+)/gi;
-  let plainMatch;
-  while ((plainMatch = plainRegex.exec(text)) !== null) {
-    const fullMatch = plainMatch[0];
+  let urlRegex = /(?:https?:\/\/[^\s,;)]+|linkedin\.com\/in\/[^\s,|]+|github\.com\/[^\s,|]+)/gi;
+  let urlMatch;
+  while ((urlMatch = urlRegex.exec(text)) !== null) {
+    const fullMatch = urlMatch[0];
     const startIdx = text.indexOf(fullMatch);
     if (startIdx !== -1) {
       const endIdx = startIdx + fullMatch.length - 1;
