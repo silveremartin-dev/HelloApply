@@ -26,14 +26,38 @@ graph TD
     A[Gmail Alert: LinkedIn / HelloWork] --> B[Extraction & Résolution des URL de tracking]
     B --> C[Téléchargement & Nettoyage HTML de la page de l'offre]
     C --> D[Analyse, Scoring & Décision par Gemini 3.1 Flash]
-    D -->|Score < 97% ou Incompatible| E[Journalisation : Rejetée dans Google Sheet]
-    D -->|Score >= 97% & Valide| F[Génération des 3 documents Google Docs via Templates]
+    D -->|Score < Seuil ou Incompatible| E[Journalisation : Rejetée dans Google Sheet]
+    D -->|Score >= Seuil & Valide| F[Génération des 3 documents Google Docs via Templates]
     F --> G[Conversion automatique des Docs en PDF]
     G --> H[Création du Brouillon Gmail avec PDF joints]
     H --> I[Journalisation : Acceptée dans Google Sheet]
 ```
 
 Pour plus de détails techniques sur les diagrammes de séquence et l'architecture, consultez notre **[Document d'Architecture Technique complet](architecture.md)**.
+
+---
+
+## 📸 Aperçu & Exemples de Résultats en Production
+
+Voici des exemples concrets du résultat produit de manière 100% autonome par l'agent lors de la réception d'une alerte de recrutement :
+
+### 1. Brouillon Gmail : Analyse Cognitive & Synthèse d'Adéquation
+L'agent génère un brouillon contenant l'analyse d'impact technique, le score d'adéquation, le type de contrat, le cadre de travail (Remote/Hybride) et le lien direct vers l'offre source :
+
+![Brouillon Gmail - Analyse de l'offre](docs/brouillon_gmail_analyse_offre.png)
+
+### 2. Pièces Jointes PDF : Dossier Complet Généré (CV + LM + Mémo)
+Le brouillon intègre la description épurée du poste ainsi que les 3 pièces jointes PDF sur-mesure prêtes à l'envoi :
+* **CV ATS** (avec la **Note de Réalisation Technique** systématiquement annexée sur des pages distinctes).
+* **Lettre de motivation classique** ("You, Me, Us").
+* **Mémo d'architecture technique** (audit flash peer-to-peer).
+
+![Brouillon Gmail - Pièces jointes PDF](docs/brouillon_gmail_pieces_jointes.png)
+
+### 3. Tableau de Bord de Suivi Centralisé (Google Sheets)
+Toutes les opportunités détectées (acceptées comme rejetées) sont automatiquement consignées avec leur statut, score, salaire, lien vers l'offre et liens directs vers les documents Google Docs générés :
+
+![Tableau de suivi Google Sheets](docs/suivi_candidatures_sheets.png)
 
 ---
 
