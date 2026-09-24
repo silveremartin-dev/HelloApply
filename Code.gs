@@ -1,7 +1,10 @@
 /**
  * HelloApply: Cloud Edition
- * VERSION: 6.2.1 (Expanded Gmail Sourcing Edition)
- * LAST UPDATED: 22/06/2026 15:00
+ * VERSION: 6.3.1 (Configurable Technical Note Edition)
+ * LAST UPDATED: 24/09/2026 15:10
+ * 
+ * New in v6.3.1:
+ * - Optional Technical Note: Added 'includeTechnicalNote: true/false' in CANDIDATE_PROFILE, enabling anyone to toggle the technical note on or off.
  * 
  * New in v6.3.0:
  * - Systematic Technical Realization Note: Automatically appends the Technical Realization Note ("Note de réalisation technique" in French / "Technical Background Brief" in English) on distinct pages directly following the CV.
@@ -40,6 +43,9 @@ const CANDIDATE_PROFILE = {
   linkedinRaw: "linkedin.com/in/silvere-martin-michiellot/", // Short version for CV formatting
   githubUrl: "https://github.com/silveremartin-dev/",
   githubRaw: "github.com/silveremartin-dev", // Short version for CV formatting
+  
+  // Technical Note Configuration (set to true to append the Note de réalisation technique, false for standard CV only)
+  includeTechnicalNote: true,
   
   // Google Drive Reference Files (inside input/ folder)
   masterCvName: "mastercv.md",
@@ -833,9 +839,6 @@ function extractStrippedContent(html, url) {
 /**
  * Process Job
  */
-/**
- * Process Job
- */
 function processJob(inputFolder, outputFolder, job) {
   let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let attachments = [];
   try {
@@ -844,10 +847,17 @@ function processJob(inputFolder, outputFolder, job) {
     const lmName = `${CANDIDATE_PROFILE.safeName}-LM-2026-${rand}`;
     const memoName = `${CANDIDATE_PROFILE.safeName}-Memo-2026-${rand}`;
     
-    // Systematically append the Technical Realization Note to the CV on distinct pages
+    // Assemble CV markdown (optionally append Technical Realization Note on distinct pages)
     const lang = (job.language || "fr").toLowerCase();
-    const technicalNote = getTechnicalNote(lang);
-    const fullCvMarkdown = (job.cv_markdown || "").trim() + "\n\n---pagebreak---\n\n" + technicalNote;
+    let fullCvMarkdown = (job.cv_markdown || "").trim();
+    const shouldIncludeNote = CANDIDATE_PROFILE.includeTechnicalNote !== false;
+    
+    if (shouldIncludeNote) {
+      const technicalNote = getTechnicalNote(lang);
+      if (technicalNote) {
+        fullCvMarkdown += "\n\n---pagebreak---\n\n" + technicalNote;
+      }
+    }
     
     // Process complete generation from Markdown
     const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, fullCvMarkdown, cvName);
@@ -862,7 +872,7 @@ function processJob(inputFolder, outputFolder, job) {
     attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
     
     createDraft(job, attachments);
-    console.log(`[SUCCESS] 3 PDFs created (CV with Technical Note appended, Letter, Memo) & draft sent for ${job.company} (${job.score}%)`);
+    console.log(`[SUCCESS] 3 PDFs created (${shouldIncludeNote ? "CV with Technical Note appended" : "CV standard"}, Letter, Memo) & draft sent for ${job.company} (${job.score}%)`);
   } catch (e) {
     console.error(`[ERROR] Processing ${job.company}: ${e.message}\nStack: ${e.stack || 'N/A'}`);
   }
