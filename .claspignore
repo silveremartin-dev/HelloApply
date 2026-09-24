@@ -3,6 +3,7 @@
 
 # Allow only these specific Apps Script source files
 !Code.gs
+!Profile.gs
 !Secrets.gs
 !Debug.gs
 !appsscript.json

@@ -78,12 +78,26 @@ Si le score de match dépasse le seuil minimal (75% en production, 95% en mode t
 
 ## 🛠️ 3. Architecture Technique des Composants
 
-### 3.1 Orchestration Google Apps Script (`Code.gs`)
-* **`main()`** : Point d'entrée principal. Gère la détection du mode (`TEST_MODE`), la récupération des e-mails, et l'orchestration globale.
-* **`fetchJobDescription()`** : Agent HTTP avec usurpation de `User-Agent` moderne et nettoyage regex du DOM.
-* **`resolveRedirects()`** : Résolveur de redirects de tracking robuste avec gestion automatique des erreurs réseau.
-* **`analyzeAndTailor()`** : Interface d'appel à l'API Gemini. Structure la requête en format JSON strict.
-* **`getTechnicalNote(language)`** : Fournit le markdown officiel de la Note de réalisation technique (en FR ou en EN) pour enrichir systématiquement le CV.
+### 3.1 Architecture Modulaire Découplée
+
+Le projet sépare strictement le moteur d'exécution, le profil candidat, et les secrets :
+
+* **`Profile.gs` (Profil Candidat & Portfolio)** :
+  * `CANDIDATE_PROFILE` : Identité, e-mail, téléphone, profils GitHub/LinkedIn, modèle Drive, et switch `includeTechnicalNote`.
+  * `PREFERENCES` : Critères de mobilité, salaire minimum, zones de recherche autorisées.
+  * `isCandidateLocalArea(location)` : Règles de filtrage géographique adaptables.
+  * `TONE_REFERENCE_CV_EXAMPLE` : Exemples de ton et structure injectés dans le prompt Gemini.
+  * `TECHNICAL_NOTE_FR` / `TECHNICAL_NOTE_EN` & `getTechnicalNote(language)` : Notes de réalisation technique complètes (OpenPrimer, Episteme, benchmarks) en français et anglais.
+* **`Code.gs` (Moteur d'Orchestration & Rendu)** :
+  * `main()` : Point d'entrée principal. Gère la détection du mode (`TEST_MODE`), la récupération des e-mails, et l'orchestration globale.
+  * `fetchJobDescription()` : Agent HTTP avec usurpation de `User-Agent` moderne et nettoyage regex du DOM.
+  * `resolveRedirects()` : Résolveur de redirects de tracking robuste avec gestion automatique des erreurs réseau.
+  * `analyzeAndTailor()` : Interface d'appel à l'API Gemini. Structure la requête en format JSON strict.
+  * `processJob()` : Pipeline de génération asymétrique (CV, Lettre, Mémo, PDF, Brouillon Gmail, Journalisation Sheet).
+* **`Secrets.gs` (Sécurité & Clés Privées - Ignoré par Git)** :
+  * `GEMINI_API_KEY` : Clé d'API privée pour l'accès aux modèles Google AI.
+* **`Debug.gs` (Outils de Diagnostic)** :
+  * Fonctions de test unitaire et de diagnostic indépendantes.
 
 ### 3.2 Moteur de Rendu Documentaire (`renderMarkdownToDoc`)
 Le script implémente son propre parseur de Markdown vers Google Docs :
@@ -107,7 +121,10 @@ Les documents générés respectent rigoureusement les contraintes de parsing de
 
 ## 🔧 5. Maintenance & Variables de Contrôle
 
-Toutes les configurations clés se trouvent au sommet de `Code.gs` :
-* `TEST_MODE` : Activé par défaut pour limiter le traitement à **1 LinkedIn + 1 HelloWork** hautement qualifiés (seuil strict à 95%) pour les tests de robustesse sans surconsommer le quota d'API.
-* `MIN_MATCH_SCORE` : Seuil de pertinence de postulation automatique en production (85%).
-* `PREFERENCES` : Domiciliation physique de référence et rayon géographique de déplacement.
+* **Contrôles du Moteur (`Code.gs`)** :
+  * `TEST_MODE` : Activé par défaut pour limiter le traitement à **1 LinkedIn + 1 HelloWork** hautement qualifiés (seuil strict à 95%) pour les tests de robustesse sans surconsommer le quota d'API.
+  * `MIN_MATCH_SCORE` : Seuil de pertinence de postulation automatique en production (75%).
+  * `MAX_GENERATIONS_PER_RUN` : Plafond de candidatures générées par exécution (3).
+* **Contrôles du Profil & Mobilité (`Profile.gs`)** :
+  * `CANDIDATE_PROFILE.includeTechnicalNote` : Active (`true`) ou désactive (`false`) l'annexion automatique de la Note de Réalisation Technique au CV.
+  * `PREFERENCES` : Critères de mobilité (Lorient, télétravail, salaire minimal).

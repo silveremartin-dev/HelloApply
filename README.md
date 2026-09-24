@@ -1,4 +1,4 @@
-# HelloApply v6.3.0 🤖💼
+# HelloApply v6.4.0 🤖💼
 ### *Agent IA Autonome de Veille Technologique & Candidature Asymétrique*
 
 **HelloApply** est un agent IA autonome conçu sous forme de micro-service résilient pour Google Apps Script. Il surveille votre boîte de réception Gmail en continu, intercepte les alertes de postes en provenance de **LinkedIn** et **HelloWork**, analyse leur pertinence en temps réel avec le LLM **Gemini 3.1 Flash-Lite**, et génère automatiquement un dossier de candidature sur-mesure (CV enrichi de sa note de réalisation technique, Lettre de motivation, et Mémo technique d'architecture) au format PDF sur Google Drive, prêt à l'envoi sous forme de brouillon Gmail.
@@ -12,7 +12,7 @@ Dans un marché du recrutement hautement concurrentiel et dominé par les filtre
 1. **Automatisation de la Veille** : L'agent élimine la tâche chronophage de tri manuel en analysant automatiquement chaque offre reçue par e-mail (LinkedIn & HelloWork) à la seconde près.
 2. **Filtrage Intelligent à Haute Sélectivité** : Grâce à une analyse sémantique avancée, l'agent calcule un score d'adéquation (seuil fixé à **75%** en production). Il élimine instantanément les postes juniors, géographiquement incompatibles (hors Morbihan ou hors télétravail/Full Remote depuis Lorient), ou n'offrant pas de défis techniques à la hauteur d'un profil Senior (30+ ans d'expérience).
 3. **Candidature Asymétrique Instantanée** : Pour chaque offre validée, l'agent produit en moins de 60 secondes un dossier d'une qualité technique irréprochable, rédigé dans la langue de l'offre (Français ou Anglais), composé de :
-   * 📄 **Un CV ATS-Compliant enrichi** : Restructuré comme un index dynamique de preuves de travail, suivi systématiquement sur des pages distinctes de la **Note de Réalisation Technique** (en Français ou en Anglais : OpenPrimer, Episteme, benchmarks, dépôts GitHub et liens de démo).
+   * 📄 **Un CV ATS-Compliant enrichi** : Restructuré comme un index dynamique de preuves de travail, suivi de manière optionnelle ou activée par défaut (`includeTechnicalNote`) de la **Note de Réalisation Technique** sur des pages distinctes (en Français ou en Anglais : OpenPrimer, Episteme, benchmarks, dépôts GitHub et liens de démo).
    * ✉️ **Une Lettre de Motivation Premium** : Construite sur une structure narrative captivante de type "You, Me, Us".
    * 💡 **Un Mémo d'Architecture Technique** : Document peer-to-peer rédigé au niveau du CTO/Directeur Technique, analysant et résolvant virtuellement les goulots d'étranglement et la dette technique de l'entreprise ciblée.
 4. **Préparation du Brouillon Gmail** : L'agent compile les documents en PDF, les joint à un brouillon Gmail prêt à être envoyé par l'utilisateur, et consigne la candidature dans un Google Sheet de suivi centralisé.
@@ -48,7 +48,7 @@ L'agent génère un brouillon contenant l'analyse d'impact technique, le score d
 
 ### 2. Pièces Jointes PDF : Dossier Complet Généré (CV + LM + Mémo)
 Le brouillon intègre la description épurée du poste ainsi que les 3 pièces jointes PDF sur-mesure prêtes à l'envoi :
-* **CV ATS** (avec la **Note de Réalisation Technique** systématiquement annexée sur des pages distinctes).
+* **CV ATS** (avec la **Note de Réalisation Technique** optionnelle annexée sur des pages distinctes).
 * **Lettre de motivation classique** ("You, Me, Us").
 * **Mémo d'architecture technique** (audit flash peer-to-peer).
 
@@ -70,9 +70,9 @@ Avant d'installer le script, vous devez préparer vos dossiers et modèles sur G
    * `input` : Contiendra vos documents de référence et modèles.
    * `output` : Le script y générera les dossiers de candidatures, les fichiers PDF et le tableur de suivi.
 3. **Importer vos Modèles (dans le dossier `input/`)** :
-   * **Le CV Source (Texte Complet)** : Importez un document Google Docs nommé `SilvereMartinMichiellot-CV-full`. Il doit contenir l'intégralité de vos expériences et compétences (votre base de connaissances).
-   * **Le Modèle de CV (Mise en Page)** : Importez un document Google Docs nommé `SilvereMartinMichiellot-CV-1pageATS-2026` contenant votre structure de mise en page de CV vierge (styles, couleurs, polices calibrées pour l'ATS).
-   * **Le Modèle de Lettre & Mémo** : Importez un document Google Docs nommé `Lettre de motivation Silvère Martin-Michiellot 2026b` servant de base graphique pour les lettres et mémos techniques.
+   * **Le CV Source (Texte Complet)** : Importez un document Google Docs nommé `mastercv.md` (ou votre fichier de référence). Il doit contenir l'intégralité de vos expériences et compétences (votre base de connaissances).
+   * **Le Modèle de CV (Mise en Page)** : Importez un document Google Docs modèle contenant votre structure de mise en page de CV vierge (styles, couleurs, polices calibrées pour l'ATS).
+   * **Le Modèle de Lettre & Mémo** : Importez un document Google Docs modèle servant de base graphique pour les lettres et mémos techniques.
 
 ---
 
@@ -107,7 +107,14 @@ Assurez-vous que le fichier `.clasp.json` à la racine contient le bon identifia
 }
 ```
 
-### Étape 4 : Configuration des Secrets
+### Étape 4 : Configuration du Profil Candidat (`Profile.gs`)
+Le projet adopte une **architecture modulaire découplée**. Toutes les données personnelles, préférences de mobilité et éléments de portfolio sont isolés dans **`Profile.gs`** :
+* Modifiez `CANDIDATE_PROFILE` pour renseigner votre identité, coordonnées (téléphone, e-mail, LinkedIn, GitHub) et noms de modèles Drive.
+* Configurez `includeTechnicalNote` (`true` ou `false`) selon que vous souhaitez ou non joindre systématiquement une note de réalisations techniques / portfolio à la suite de votre CV.
+* Ajustez `PREFERENCES` et la fonction `isCandidateLocalArea` pour définir vos critères géographiques de mobilité (villes cibles, rayon, télétravail).
+* Personnalisez au besoin les exemples de ton (`TONE_REFERENCE_CV_EXAMPLE`) et les notes de réalisations (`TECHNICAL_NOTE_FR` / `TECHNICAL_NOTE_EN`).
+
+### Étape 5 : Configuration des Secrets (`Secrets.gs`)
 Créez un fichier nommé **`Secrets.gs`** à la racine de votre projet local. Ce fichier contiendra vos clés privées et ne sera jamais poussé sur Git (exclu par `.gitignore`) :
 
 ```javascript
@@ -115,8 +122,8 @@ Créez un fichier nommé **`Secrets.gs`** à la racine de votre projet local. Ce
 const GEMINI_API_KEY = "VOTRE_CLE_API_GEMINI_ICI";
 ```
 
-### Étape 5 : Déploiement via Clasp
-Grâce au fichier de configuration `.claspignore` déjà configuré à la racine, clasp ne poussera **que** les fichiers nécessaires à la production (`Code.gs`, `Secrets.gs`, `Debug.gs`, `appsscript.json`) et ignorera automatiquement vos scripts de tests locaux Node.js ou Python :
+### Étape 6 : Déploiement via Clasp
+Grâce au fichier de configuration `.claspignore` déjà configuré à la racine, clasp ne poussera **que** les fichiers nécessaires à la production (`Code.gs`, `Profile.gs`, `Secrets.gs`, `Debug.gs`, `appsscript.json`) :
 
 ```bash
 clasp push
