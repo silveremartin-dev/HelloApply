@@ -1791,3 +1791,60 @@ function isSalaryBelow50k(salaryStr) {
   }
   return false;
 }
+
+// --- AUTOMATION TRIGGERS & MAINTENANCE UTILITIES ---
+
+/**
+ * Configures the automated hourly background trigger for main().
+ * Removes any old/duplicate triggers for 'main' and creates a fresh 1-hour time-driven trigger.
+ */
+function setupTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let deletedCount = 0;
+  triggers.forEach((trigger) => {
+    if (trigger.getHandlerFunction() === 'main') {
+      ScriptApp.deleteTrigger(trigger);
+      deletedCount++;
+    }
+  });
+  console.log(`[TRIGGERS] Supprimé ${deletedCount} ancien(s) déclencheur(s) pour 'main'.`);
+  
+  ScriptApp.newTrigger('main')
+    .timeBased()
+    .everyHours(1)
+    .create();
+  console.log("✅ [TRIGGERS] Déclencheur horaire automatique configuré avec succès ! 'main' s'exécutera désormais toutes les heures en arrière-plan.");
+}
+
+/**
+ * Alias for backward compatibility with documentation
+ */
+function setupTrigger() {
+  setupTriggers();
+}
+
+/**
+ * Diagnostic tool to check active triggers, execution status, and last run timestamp.
+ */
+function getTriggerStatus() {
+  const triggers = ScriptApp.getProjectTriggers();
+  console.log(`=== STATUT DES DÉCLENCHEURS (Triggers) ===`);
+  console.log(`Nombre total de déclencheurs actifs : ${triggers.length}`);
+  triggers.forEach((t, i) => {
+    console.log(`  [${i + 1}] Fonction: ${t.getHandlerFunction()} | Type: ${t.getEventType()} | ID: ${t.getUniqueId()}`);
+  });
+  
+  const props = PropertiesService.getScriptProperties();
+  const lastRunStr = props.getProperty('LAST_RUN_TIMESTAMP');
+  console.log(`Dernière exécution enregistrée (LAST_RUN_TIMESTAMP) : ${lastRunStr || 'Aucune (première exécution ou réinitialisé)'}`);
+}
+
+/**
+ * Resets LAST_RUN_TIMESTAMP and processed cache to force HelloApply to re-scan the last 48 hours of emails.
+ */
+function forceResetAndRescan() {
+  const props = PropertiesService.getScriptProperties();
+  props.deleteProperty('LAST_RUN_TIMESTAMP');
+  props.deleteProperty('PROCESSED_JOB_IDS');
+  console.log("✅ [RESET] Cache et timestamp réinitialisés avec succès. L'exécution de 'main()' scannera à nouveau les offres reçues.");
+}

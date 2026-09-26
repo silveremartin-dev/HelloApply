@@ -146,23 +146,7 @@ function generateManual(lang, includeNote) {
  * Run this function manually in the Google Apps Script editor to ensure automation is active!
  */
 function checkAndSetupTriggers() {
-  const triggers = ScriptApp.getProjectTriggers();
-  console.log(`[TRIGGER ENGINE] Found ${triggers.length} active trigger(s) in project.`);
-  
-  // Delete all existing triggers for 'main' to avoid duplicates and update frequency
-  triggers.forEach((trigger) => {
-    if (trigger.getHandlerFunction() === 'main') {
-      ScriptApp.deleteTrigger(trigger);
-      console.log("Deleted old 'main' trigger.");
-    }
-  });
-  
-  console.log("Creating a time-driven trigger to run every 4 hours automatically...");
-  ScriptApp.newTrigger('main')
-    .timeBased()
-    .everyHours(4)
-    .create();
-  console.log("✅ Success! Time-driven trigger successfully created. 'main' will run automatically every 4 hours.");
+  setupTriggers();
 }
 
 /**
