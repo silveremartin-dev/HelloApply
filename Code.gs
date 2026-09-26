@@ -24,10 +24,6 @@ const ROOT_FOLDER_NAME = "Candidature Express";
 const INPUT_FOLDER_NAME = "input";
 const OUTPUT_FOLDER_NAME = "output";
 
-const MASTER_CV_NAME = CANDIDATE_PROFILE.masterCvName; 
-const TEMPLATE_CV_NAME = CANDIDATE_PROFILE.templateCvName;
-const TEMPLATE_LETTER_NAME = CANDIDATE_PROFILE.templateLetterName;
-
 const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
 const MIN_MATCH_SCORE = 75; 
 const MAX_GENERATIONS_PER_RUN = 3; // Prevent timeout & API exhaustion by processing at most 3 jobs in a single run
@@ -75,9 +71,9 @@ function main() {
   const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
   const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
   
-  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
-  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
-  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
+  const masterCV = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.masterCvName);
+  const cvTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateCvName);
+  const letterTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateLetterName);
 
   if (!masterCV) {
     console.error("[ERROR] Master CV not found. Aborting.");
@@ -659,13 +655,13 @@ function processJob(inputFolder, outputFolder, job) {
     }
     
     // Process complete generation from Markdown
-    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_CV_NAME, fullCvMarkdown, cvName);
+    const cvResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateCvName, fullCvMarkdown, cvName);
     cvDocUrl = cvResult.docUrl;
     
-    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.letter_markdown || "", lmName);
+    const lmResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, job.letter_markdown || "", lmName);
     lmDocUrl = lmResult.docUrl;
     
-    const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, TEMPLATE_LETTER_NAME, job.memo_markdown || "", memoName);
+    const memoResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, job.memo_markdown || "", memoName);
     memoDocUrl = memoResult.docUrl;
     
     attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
