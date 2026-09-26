@@ -960,7 +960,7 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
     let line = rawLine.trim();
     
     // Detect Page Break directive
-    if (line === '---pagebreak---' || line === '[PAGE_BREAK]' || line === '===PAGE_BREAK===' || line === '---') {
+    if (line === '---pagebreak---' || line === '[PAGE_BREAK]' || line === '===PAGE_BREAK===') {
       body.appendPageBreak();
       continue;
     }

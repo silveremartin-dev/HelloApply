@@ -108,65 +108,34 @@ Méthodes : Agile (Scrum/Lean), TDD, Design Patterns, UML."`;
 // --- 5. NOTE DE RÉALISATION TECHNIQUE (FR / EN) ---
 const TECHNICAL_NOTE_FR = `# ${CANDIDATE_PROFILE.fullName.toUpperCase()}
 ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-LinkedIn ${CANDIDATE_PROFILE.linkedinUrl}
-GitHub ${CANDIDATE_PROFILE.githubUrl}
+LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
 
-## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGENIÉRIE IA MASSIVE
+## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGÉNIERIE IA MASSIVE
 À l'attention des Recruteurs et Directeurs Techniques
 Candidat : ${CANDIDATE_PROFILE.fullName} – Architecte Logiciel Senior & Lead IA
 Expertise clé : Industrialisation de pipelines LLM, Calcul Haute Performance (HPC), Architectures scalables et auto-correctives.
 
 ### 1. OPENPRIMER : Orchestration de Savoir Autonome & IA Générative (2026)
 Conception et déploiement d'une plateforme d'université en ligne générant de manière autonome des cursus universitaires interactifs de niveau académique.
-
-Défis Techniques & Architecture
-- Orchestration Multi-Agents : Développement d'un orchestrateur autonome s'appuyant sur l'API Gemini 2.5 pour la génération massive et structurée de milliers de pages de cours universitaires.
-- Modélisation Multidimensionnelle : Structuration des données selon une taxonomie stricte de 10 niveaux académiques couvrant 42 disciplines scientifiques et humanités.
-- Maturité Multilingue : Pipeline de génération et de localisation dynamique en 5 langues cibles : Anglais (EN), Français (FR), Espagnol (ES), Allemand (DE), et Chinois (ZH).
-- Sécurité & Résilience Cloud Native :
-  - Isolation stricte des données via des politiques Row-Level Security (RLS) avancées sur Supabase.
-  - Implémentation d'un mécanisme de cache auto-correctif réduisant la latence et garantissant l'intégrité des données face aux dérives de génération (hallucinations).
-
-Stack Technique & LLMOps
-- Frontend/Backend : Next.js 15 (App Router, Server Components), Vercel (Déploiement Haute Disponibilité).
-- BaaS / Database : Supabase (PostgreSQL, RLS, Realtime).
-- Moteur d'Inférence : Gemini 2.5 (Google AI Studio / Vertex AI).
-- Optimisation des Coûts : Conception de pipelines de traitement sous forme de graphes orientés acycliques (DAG) pour optimiser les appels d'API et réduire drastiquement les coûts d'inférence (LLMOps).
-
-Preuves Techniques & Liens
-- Plateforme de Production : https://openprimer.app/ code OP-BETA-2026
-- Dépôt Github principal : https://github.com/Open-Primer/
-
----pagebreak---
+- **Défis Techniques & Architecture** : Orchestrateur autonome multi-agents (Gemini 2.5 API), modélisation sur taxonomie de 10 niveaux (42 disciplines), pipeline de génération multilingue dynamique (EN, FR, ES, DE, ZH).
+- **Sécurité & Résilience Cloud-Native** : Isolation stricte des données via Row-Level Security (RLS) sur Supabase, cache auto-correctif anti-hallucination réduisant la latence et garantissant l'intégrité des contenus.
+- **Stack Technique & LLMOps** : Next.js 15 (App Router, Server Components), Vercel (HA), Supabase (PostgreSQL, Realtime), Gemini 2.5, optimisation DAG des coûts d'inférence.
+- **Preuves & Liens** : Plateforme en production : https://openprimer.app/ (code OP-BETA-2026) | Dépôt GitHub : https://github.com/Open-Primer/
 
 ### 2. EPISTEME : Calcul Scientifique Haute Performance (HPC) & Industrialisation IA (2025-2026)
-Développement d'une bibliothèque souveraine de calcul scientifique distribué et de simulation multi-agents de masse (450 000+ lignes de code).
-
-Innovations & Paradigmes d'Ingénierie
-- Vibe Coding & Ingénierie Augmentée : Utilisation avancée de la plateforme d'orchestration multi-agents Google Antigravity pour la génération massive de code critique.
-- Cycle de Livraison Optimisé : Automatisation par IA de 80% des tests unitaires et de la documentation technique, entraînant une division par 5 du cycle de release.
-- Performances Brutes : Traitements distribués affichant des benchmarks 10x supérieurs aux bibliothèques standards de la Fondation Apache.
-- Simulation de Masse : Architecture client-serveur hautement optimisée pour l'exécution de simulations multi-agents complexes et massives (systèmes physiques, sociaux et biologiques).
-
-Stack Technique
-- Langage & Runtime : Java (Projet Panama pour l'accès mémoire hors-heap, liaison CUDA).
-- Calcul : Architecture massivement distribuée, optimisation des entrées/sorties et de la topologie réseau.
-
-Preuves Techniques & Liens
-- Dépôt GitHub Principal : https://github.com/Episteme-HPC/Episteme
-- Espace de Démonstration (Hugging Face) : https://huggingface.co/spaces/silveremartin/Episteme
-- Données de Benchmark Officielles : https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results
-- Annonce et Synthèse Industrielle (LinkedIn) : [Lien vers la publication LinkedIn](${CANDIDATE_PROFILE.linkedinUrl})
+Développement d'une bibliothèque souveraine de calcul scientifique distribué et de simulation multi-agents de masse (450 000+ lignes de code Java).
+- **Innovations & Paradigmes** : Vibe Coding & Ingénierie augmentée via Google Antigravity, automatisation de 80% des tests et de la documentation (cycle de release divisé par 5), benchmarks 10x supérieurs aux standards Apache.
+- **Simulation de Masse & HPC** : Architecture client-serveur ultra-performante pour simulations multi-agents complexes, Java 25 (Project Panama pour accès mémoire hors-heap, binding CUDA), optimisation réseau et E/S.
+- **Preuves & Liens** : Dépôt GitHub : https://github.com/Episteme-HPC/Episteme | Démo Hugging Face : https://huggingface.co/spaces/silveremartin/Episteme | Benchmarks : https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results | Publication LinkedIn : ${CANDIDATE_PROFILE.linkedinUrl}
 
 ### 3. COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION
-1. Direction Technique & Vision IA : Capacité à piloter un portefeuille de projets d'IA massive (de la simulation à la plateforme d'apprentissage distribuée).
-2. Maîtrise Cloud & Infrastructure : Déploiement d'architectures scalables, résilientes, à haute disponibilité, centrées sur la maîtrise des coûts opérationnels (FinOps/LLMOps).
-3. Souveraineté et Qualité Logicielle : Rigueur méthodologique mathématique appliquée au code (tests automatisés, isolation des données, patterns correctifs).`;
+- **Direction Technique & Vision IA** : Pilotage stratégique de portefeuilles de projets d'IA massive (simulations complexes, plateformes d'apprentissage distribuées).
+- **Maîtrise Cloud & Infrastructure** : Architectures scalables, résilientes et haute disponibilité, gouvernance stricte des coûts d'inférence et d'infrastructure (FinOps/LLMOps).
+- **Souveraineté & Rigueur Logicielle** : Rigueur méthodologique mathématique appliquée au code (tests automatisés, isolation des données, patterns auto-correctifs).`;
 
 const TECHNICAL_NOTE_EN = `# ${CANDIDATE_PROFILE.fullName.toUpperCase()}
 ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-LinkedIn ${CANDIDATE_PROFILE.linkedinUrl}
-GitHub ${CANDIDATE_PROFILE.githubUrl}
+LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
 
 ## TECHNICAL BACKGROUND BRIEF: COMPLEX SYSTEMS & LARGE-SCALE AI ENGINEERING
 For the attention of Recruiters and Technical Directors
@@ -175,50 +144,21 @@ Core Expertise: LLM Production Pipeline Industrialization, High-Performance Comp
 
 ### 1. OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (2026)
 Design and deployment of an online university platform that autonomously generates interactive, academic-grade university curricula.
-
-Technical Challenges & Architecture
-- Multi-Agent Orchestration: Development of an autonomous orchestrator leveraging the Gemini 2.5 API for the massive, structured generation of thousands of academic course pages.
-- Multidimensional Modeling: Data structuring based on a strict 10-level academic taxonomy spanning 42 scientific disciplines and humanities.
-- Multilingual Maturity: Dynamic generation and localization pipeline serving 5 target languages: English (EN), French (FR), Spanish (ES), German (DE), and Chinese (ZH).
-- Cloud-Native Security & Resilience:
-  - Strict data isolation enforced via advanced Row-Level Security (RLS) policies on Supabase.
-  - Implementation of a self-healing cache mechanism to reduce latency and guarantee data integrity against generation drift (hallucinations).
-
-Technical Stack & LLMOps
-- Frontend/Backend: Next.js 15 (App Router, Server Components), Vercel (High-Availability Deployment).
-- BaaS / Database: Supabase (PostgreSQL, RLS, Realtime).
-- Inference Engine: Gemini 2.5 (Google AI Studio / Vertex AI).
-- Cost Optimization: Engineering of processing pipelines structured as Directed Acyclic Graphs (DAG) to optimize API calls and drastically reduce inference overhead (LLMOps).
-
-Technical Proofs & Links
-- Production Platform: https://openprimer.app/ code OP-BETA-2026
-- Primary GitHub Repository: https://github.com/Open-Primer/
-
----pagebreak---
+- **Technical Challenges & Architecture**: Autonomous multi-agent orchestrator leveraging Gemini 2.5 API for mass generation, 10-level academic taxonomy (42 disciplines), dynamic multilingual pipeline (EN, FR, ES, DE, ZH).
+- **Cloud-Native Security & Resilience**: Strict data isolation via Row-Level Security (RLS) on Supabase, self-healing cache mechanism reducing latency and preventing hallucination drift.
+- **Technical Stack & LLMOps**: Next.js 15 (App Router, Server Components), Vercel (High-Availability), Supabase (PostgreSQL, Realtime), Gemini 2.5, DAG-based pipeline inference cost optimization.
+- **Technical Proofs & Links**: Production Platform: https://openprimer.app/ (code OP-BETA-2026) | Primary GitHub Repository: https://github.com/Open-Primer/
 
 ### 2. EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (2025-2026)
-Development of a sovereign distributed scientific computing and massive multi-agent simulation library (450,000+ lines of code).
-
-Innovations & Engineering Paradigms
-- Vibe Coding & Augmented Engineering: Advanced utilization of the Google Antigravity multi-agent orchestration platform for the mass production of critical code.
-- Optimized Release Cycle: AI-driven automation of 80% of unit tests and technical documentation, resulting in a 5x reduction in the release cycle.
-- Raw Performance: Distributed processing benchmarks delivering throughput 10x higher than standard Apache Foundation libraries.
-- Massive Simulation: Highly optimized client-server architecture built to execute complex, large-scale multi-agent simulations (physical, social, and biological systems).
-
-Technical Stack
-- Language & Runtime: Java (Project Panama for off-heap memory access, CUDA binding).
-- Computing: Massively distributed architecture, rigorous I/O and network topology optimization.
-
-Technical Proofs & Links
-- Primary GitHub Repository: https://github.com/Episteme-HPC/Episteme
-- Showcase Space (Hugging Face): https://huggingface.co/spaces/silveremartin/Episteme
-- Official Benchmark Data: https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results
-- Industry Announcement & Synthesis (LinkedIn): [Link to LinkedIn Publication](${CANDIDATE_PROFILE.linkedinUrl})
+Development of a sovereign distributed scientific computing and massive multi-agent simulation library (450,000+ lines of Java code).
+- **Innovations & Engineering Paradigms**: Vibe Coding & Augmented Engineering via Google Antigravity, AI-driven automation of 80% of unit tests and documentation (5x release acceleration), benchmarks 10x higher than Apache Foundation libraries.
+- **Massive Simulation & HPC Stack**: Client-server architecture built for complex multi-agent simulations, Java 25 (Project Panama for off-heap memory, CUDA binding), I/O and network topology optimization.
+- **Technical Proofs & Links**: Primary GitHub Repository: https://github.com/Episteme-HPC/Episteme | Showcase Space (Hugging Face): https://huggingface.co/spaces/silveremartin/Episteme | Official Benchmark Data: https://github.com/Episteme-HPC/Episteme/tree/main/docs/benchmark-results | LinkedIn Publication: ${CANDIDATE_PROFILE.linkedinUrl}
 
 ### 3. CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION
-1. Technical Direction & AI Vision: Proven ability to steer a portfolio of massive AI initiatives (ranging from complex simulations to distributed learning platforms).
-2. Cloud & Infrastructure Mastery: Deployment of scalable, resilient, high-availability architectures with a strong focus on operational cost management (FinOps/LLMOps).
-3. Sovereignty & Software Quality: Mathematical methodological rigor applied to codebase engineering (automated testing, strict data isolation, self-correcting design patterns).`;
+- **Technical Direction & AI Vision**: Proven ability to steer a portfolio of massive AI initiatives (ranging from complex simulations to distributed learning platforms).
+- **Cloud & Infrastructure Mastery**: Deployment of scalable, resilient, high-availability architectures with a strong focus on operational cost management (FinOps/LLMOps).
+- **Sovereignty & Software Quality**: Mathematical methodological rigor applied to codebase engineering (automated testing, strict data isolation, self-correcting design patterns).`;
 
 /**
  * Returns the appropriate Technical Realization Note based on the language.
