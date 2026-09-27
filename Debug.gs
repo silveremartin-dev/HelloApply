@@ -1,21 +1,21 @@
 /**
  * HelloApply: Cloud Edition - Diagnostics & Utilities
- * VERSION: 6.2.0 (Configurable Identity Edition)
- * LAST UPDATED: 23/05/2026 15:15
+ * VERSION: 6.5.0
  * 
  * Part of the HelloApply autonomous agent suite. Contains manual diagnostics, 
- * template auditing, and direct manual document generation.
+ * template auditing, direct URL runner, and cache cleanup utilities.
  */
 
+/**
+ * Diagnostic tool to test Gemini API connectivity across versions and models.
+ */
 function testModels() {
   const models = [
     "gemini-3.1-flash-lite",
     "gemini-2.5-flash",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-8b",
-    "gemini-1.5-pro"
+    "gemini-1.5-flash"
   ];
   const versions = ["v1", "v1beta"];
   
@@ -33,7 +33,7 @@ function testModels() {
         });
         const code = response.getResponseCode();
         console.log(`[TEST] ${ver} | ${model} => Code ${code}`);
-        if (code === 200) console.info(`✅ SUCCÈS : Utilisez ce modèle !`);
+        if (code === 200) console.info(`✅ SUCCÈS : Modèle ${model} opérationnel.`);
       } catch (e) {
         console.error(`[ERROR] ${ver} | ${model} => ${e.message}`);
       }
@@ -42,12 +42,12 @@ function testModels() {
 }
 
 /**
- * Inspects templates and writes their structure/placeholders to Drive
+ * Inspects templates and writes their structure/placeholders to Drive.
  */
 function inspectTemplates() {
-  const root = DriveApp.getRootFolder().getFoldersByName("Candidature Express").next();
-  const inputFolder = root.getFoldersByName("input").next();
-  const outputFolder = root.getFoldersByName("output").next();
+  const root = DriveApp.getRootFolder().getFoldersByName(ROOT_FOLDER_NAME).next();
+  const inputFolder = root.getFoldersByName(INPUT_FOLDER_NAME).next();
+  const outputFolder = root.getFoldersByName(OUTPUT_FOLDER_NAME).next();
   
   let log = "=== TEMPLATE INSPECTION LOG ===\n\n";
   
@@ -102,9 +102,7 @@ function inspectTemplates() {
 }
 
 /**
- * Utility to manually generate tailored CV (with optional Technical Realization Note), Letter, and Memo PDFs from Markdown text
- * directly from the Google Apps Script editor.
- * Fill in your markdown text, select this function, and click Run!
+ * Utility to manually generate tailored CV, Letter, and Memo PDFs from Markdown text directly.
  */
 function generateManual(lang, includeNote) {
   const cvMarkdown = ``;
@@ -142,11 +140,77 @@ function generateManual(lang, includeNote) {
 }
 
 /**
- * Diagnostic tool to check active triggers and configure automated hourly execution.
- * Run this function manually in the Google Apps Script editor to ensure automation is active!
+ * Utility to process a list of job URLs directly from the Apps Script editor.
+ * Accepts one or multiple URLs (HelloWork, LinkedIn, etc.) and generates tailored candidatures.
+ * 
+ * @param {string|Array<string>} urls - URL or array of URLs to process.
+ * @param {boolean} forceApply - If true (default), forces generation and creates Gmail drafts.
  */
-function checkAndSetupTriggers() {
-  setupTriggers();
+function processManualUrls(urls, forceApply) {
+  const urlList = Array.isArray(urls) ? urls : [urls];
+  const shouldForce = forceApply !== undefined ? forceApply : true;
+  
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const masterCV = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.masterCvName);
+  const cvTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateCvName);
+  const letterTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateLetterName);
+
+  if (!masterCV) {
+    console.error("[ERROR] Master CV introuvable dans input/.");
+    return;
+  }
+  
+  console.log(`[MANUAL RUN] Lancement du traitement de ${urlList.length} URL(s)...`);
+  
+  urlList.forEach((rawUrl, idx) => {
+    if (!rawUrl || typeof rawUrl !== 'string' || !rawUrl.trim()) return;
+    console.log(`\n--- [${idx + 1}/${urlList.length}] Traitement de : ${rawUrl} ---`);
+    
+    try {
+      const res = processSingleJobUrl(rawUrl.trim(), {
+        forceApply: shouldForce,
+        inputFolder: inputFolder,
+        outputFolder: outputFolder,
+        masterCV: masterCV,
+        cvTemplateText: cvTemplateText,
+        letterTemplateText: letterTemplateText
+      });
+      
+      if (res.success) {
+        console.log(`✅ SUCCÈS pour ${res.analysis.company} (${res.analysis.score}%) :`);
+        console.log(`   - CV Doc : ${res.docUrls.cvDocUrl}`);
+        console.log(`   - LM Doc : ${res.docUrls.lmDocUrl}`);
+        console.log(`   - Memo Doc : ${res.docUrls.memoDocUrl}`);
+        console.log(`   - Brouillon Gmail créé et prêt dans votre boîte Gmail !`);
+      } else if (res.analysis) {
+        console.warn(`⚠️ REJETÉ : Score ${res.analysis.score}% (< ${MIN_MATCH_SCORE}%). Pour forcer, utilisez forceApply: true.`);
+      } else {
+        console.error(`❌ ÉCHEC : ${res.error}`);
+      }
+      Utilities.sleep(2000);
+    } catch (e) {
+      console.error(`❌ ERREUR pour ${rawUrl} : ${e.message}`);
+    }
+  });
+  console.log("\n[MANUAL RUN] Fin du traitement.");
+}
+
+/**
+ * Exemple prêt à l'emploi : collez vos URLs ici et cliquez sur 'Exécuter' !
+ */
+function runManualUrlsExample() {
+  const myUrls = [
+    // "https://www.hellowork.com/fr-fr/emplois/12345678.html",
+    // "https://www.linkedin.com/jobs/view/1234567890/"
+  ];
+  if (myUrls.length === 0) {
+    console.log("ℹ️ Ajoutez une ou plusieurs URLs dans 'myUrls' avant de lancer cette fonction.");
+    return;
+  }
+  processManualUrls(myUrls, true);
 }
 
 /**
@@ -156,7 +220,7 @@ function checkAndSetupTriggers() {
 function resetPropertiesCache() {
   const props = PropertiesService.getScriptProperties();
   props.deleteProperty('PROCESSED_JOB_IDS');
-  console.log("✅ ScriptProperties Cache cleared successfully!");
+  console.log("✅ Cache des IDs traités (ScriptProperties) réinitialisé !");
 }
 
 /**
@@ -172,259 +236,11 @@ function clearGoogleSheetsTracking() {
     const lastRow = sheet.getLastRow();
     if (lastRow > 1) {
       sheet.deleteRows(2, lastRow - 1);
-      console.log(`[CLEANUP] Deleted ${lastRow - 1} rows from tracking sheet.`);
+      console.log(`[CLEANUP] Supprimé ${lastRow - 1} ligne(s) de la feuille de suivi.`);
     } else {
-      console.log("[CLEANUP] Tracking sheet is already empty.");
+      console.log("[CLEANUP] La feuille de suivi est déjà vide.");
     }
   } else {
-    console.log("[CLEANUP] Tracking sheet not found.");
+    console.log("[CLEANUP] Feuille de suivi introuvable.");
   }
-}
-
-/**
- * Advanced Debug utility to force reprocess old emails (e.g. from a specific date range)
- * bypasses unread/read rules, bypasses date rules, and runs the evaluation logic.
- * 
- * Example query: 'after:2026/05/20 before:2026/05/22 subject:"LinkedIn"'
- */
-function forceProcessEmailsQuery(query) {
-  if (!query) {
-    console.error("Please provide a search query! E.g. 'after:2026/05/20 before:2026/05/22 \"LinkedIn\"'");
-    return;
-  }
-  
-  console.log(`[FORCE] Querying Gmail for: "${query}"`);
-  const threads = GmailApp.search(query, 0, 15);
-  console.log(`[FORCE] Found ${threads.length} threads.`);
-  
-  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
-  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
-  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
-  
-  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
-  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
-  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
-
-  if (!masterCV) {
-    console.error("[ERROR] Master CV not found. Aborting.");
-    return;
-  }
-
-  let generationCount = 0;
-
-  for (const thread of threads) {
-    const messages = thread.getMessages();
-    for (const message of messages) {
-      const subject = message.getSubject();
-      const body = message.getPlainBody();
-      const jobUrls = extractJobUrls(body);
-      
-      console.log(`[FORCE] Analysing email: "${subject}"`);
-
-      for (let rawUrl of jobUrls) {
-        let decodedUrl = decodeHelloworkTrackingUrl(rawUrl);
-        let url = cleanUrl(decodedUrl);
-        
-        // Resolve click-tracking redirections for HelloWork
-        if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
-          console.log(`[RESOLVING] Resolving redirect for: ${url}`);
-          const resolved = resolveRedirects(url);
-          if (!resolved || resolved === url || !resolved.includes('/emplois/')) {
-            continue;
-          }
-          url = cleanUrl(resolved);
-        }
-        
-        const isRealLinkedInJob = url.includes('linkedin.com/jobs/view/') || url.includes('linkedin.com/view/');
-        const isRealHelloWorkJob = url.includes('hellowork.com/') && (url.includes('/emplois/') || url.includes('/offre-'));
-        
-        if (!isRealLinkedInJob && !isRealHelloWorkJob) continue;
-        
-        const jobId = getJobId(url);
-        console.log(`[FORCE RUN] Processing ${jobId} - ${url}`);
-        
-        try {
-          let description = fetchJobDescription(url);
-          let context = description;
-          let isFallback = false;
-          
-          if (!description || description === "authWall") {
-            console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
-            context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
-            isFallback = true;
-          }
-
-          const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
-          if (analysis) {
-            analysis.url = url;
-            analysis.originalUrl = rawUrl;
-            analysis.source = url.includes('linkedin.com') ? 'LinkedIn' : 'HelloWork';
-            analysis.raw_description = context;
-            analysis.isEmailFallback = isFallback;
-            
-            if (analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE) {
-              processJob(inputFolder, outputFolder, analysis);
-              generationCount++;
-              console.log(`[GENERATION] Candidature générée (${generationCount}) pour ${analysis.company}`);
-            } else {
-              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision})`);
-              logToSheet(outputFolder, analysis, "", "", "");
-            }
-            
-            // Mark job as processed in script properties cache
-            markJobProcessed(jobId);
-          }
-          Utilities.sleep(2000);
-        } catch (e) {
-          console.error(`[ERROR] ${url}: ${e.message}`);
-        }
-      }
-    }
-  }
-  console.log(`[FORCE] Completed! Generated ${generationCount} applications.`);
-}
-
-/**
- * Complete reset to re-run tests from a specific past date.
- * 1. Clears the processed jobs cache.
- * 2. Clears the Google Sheets tracking log.
- * 3. Sets the last run timestamp to May 20th, 2026, forcing the main() engine
- *    to scan and process all emails received since then.
- */
-function prepareForRetests() {
-  // 1. Clear cache
-  resetPropertiesCache();
-  
-  // 2. Clear Google Sheet
-  clearGoogleSheetsTracking();
-  
-  // 3. Set last run timestamp to May 20th, 2026
-  const props = PropertiesService.getScriptProperties();
-  const testDate = new Date("2026-05-20T00:00:00Z");
-  props.setProperty('LAST_RUN_TIMESTAMP', testDate.toISOString());
-  console.log(`[RESET] Set LAST_RUN_TIMESTAMP to: ${testDate.toLocaleString()}`);
-  console.log("✅ Ready! The next run of main() will scan and process all emails from May 20th, 2026 onwards.");
-}
-
-/**
- * Rewinds the LAST_RUN_TIMESTAMP by 3 days without clearing the Google Sheet tracking log or cache.
- * This forces the main() script to scan and process all emails received in the last 3 days
- * that were previously missed, while safely skipping already-processed jobs.
- */
-function rewindLastRunToThreeDaysAgo() {
-  const props = PropertiesService.getScriptProperties();
-  const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
-  props.setProperty('LAST_RUN_TIMESTAMP', threeDaysAgo.toISOString());
-  console.log(`[RESET] Rewound LAST_RUN_TIMESTAMP to: ${threeDaysAgo.toLocaleString()}`);
-  console.log("✅ Done! Running main() now will process any recently received emails that were previously missed.");
-}
-
-
-/**
- * Processes LinkedIn emails from the past 15 days, specifically for full-remote positions,
- * even if they are already marked as read, in a one-shot generation flow.
- */
-function processLinkedInRemoteOneShot() {
-  const query = '(from:jobs-listings@linkedin.com OR from:jobalerts-noreply@linkedin.com OR from:jobs-noreply@linkedin.com OR subject:LinkedIn) newer_than:15d';
-  console.log(`[ONE-SHOT] Querying Gmail for LinkedIn emails: "${query}"`);
-  
-  const threads = GmailApp.search(query, 0, 100); // Retrieve up to 100 threads to cover 15 days
-  console.log(`[ONE-SHOT] Found ${threads.length} threads.`);
-  
-  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
-  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
-  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
-  
-  const masterCV = readAnyFileIn(inputFolder, MASTER_CV_NAME);
-  const cvTemplateText = readAnyFileIn(inputFolder, TEMPLATE_CV_NAME);
-  const letterTemplateText = readAnyFileIn(inputFolder, TEMPLATE_LETTER_NAME);
-
-  if (!masterCV) {
-    console.error("[ERROR] Master CV not found. Aborting.");
-    return;
-  }
-
-  let generationCount = 0;
-
-  for (const thread of threads) {
-    const messages = thread.getMessages();
-    for (const message of messages) {
-      const subject = message.getSubject();
-      const body = message.getPlainBody();
-      const jobUrls = extractJobUrls(body);
-      
-      console.log(`[ONE-SHOT] Analysing email: "${subject}"`);
-
-      for (let rawUrl of jobUrls) {
-        let url = cleanUrl(rawUrl);
-        
-        const isRealLinkedInJob = url.includes('linkedin.com/jobs/view/') || url.includes('linkedin.com/view/');
-        if (!isRealLinkedInJob) continue;
-        
-        const jobId = getJobId(url);
-        
-        // Check if already processed
-        if (isJobProcessed(jobId)) {
-          console.log(`[SKIP] Already processed (cache): ${jobId}`);
-          continue;
-        }
-        
-        const previousJob = findJobInSheet(outputFolder, jobId);
-        if (previousJob) {
-          console.log(`[SKIP] Already processed (sheet): ${jobId}`);
-          markJobProcessed(jobId);
-          continue;
-        }
-        
-        console.log(`[ONE-SHOT] Processing ${jobId} - ${url}`);
-        
-        try {
-          let description = fetchJobDescription(url);
-          let context = description;
-          let isFallback = false;
-          
-          if (!description || description === "authWall") {
-            console.warn(`[WARN] Login wall detected for ${url}. Using email content as fallback.`);
-            context = `[URL: ${url}]\n[EMAIL SUBJECT: ${subject}]\n[EMAIL BODY: ${body}]`;
-            isFallback = true;
-          }
-
-          const analysis = analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, url);
-          if (analysis) {
-            analysis.url = url;
-            analysis.originalUrl = rawUrl;
-            analysis.source = 'LinkedIn';
-            analysis.raw_description = context;
-            analysis.isEmailFallback = isFallback;
-            
-            const workplaceSetting = (analysis.workplace_setting || "").toLowerCase();
-            const locationStr = (analysis.location || "").toLowerCase();
-            const isRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
-            const inMorbihan = isMorbihan(locationStr);
-            
-            // LinkedIn Filter: either in Morbihan OR (outside Morbihan AND full remote)
-            if (!inMorbihan && !isRemote) {
-              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} is outside Morbihan ("${analysis.location}") and not a Full Remote position. Skipping.`);
-              continue;
-            }
-            
-            if (analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE) {
-              processJob(inputFolder, outputFolder, analysis);
-              generationCount++;
-              console.log(`[GENERATION] Candidature générée (${generationCount}) pour ${analysis.company}`);
-            } else {
-              console.log(`[IGNORED] ${analysis.position} at ${analysis.company} (Score: ${analysis.score}%, Decision: ${analysis.decision})`);
-              logToSheet(outputFolder, analysis, "", "", "");
-            }
-            
-            markJobProcessed(jobId);
-          }
-          Utilities.sleep(2000);
-        } catch (e) {
-          console.error(`[ERROR] ${url}: ${e.message}`);
-        }
-      }
-    }
-  }
-  console.log(`[ONE-SHOT] Completed! Generated ${generationCount} remote applications.`);
 }

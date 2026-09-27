@@ -25,6 +25,8 @@ const INPUT_FOLDER_NAME = "input";
 const OUTPUT_FOLDER_NAME = "output";
 
 const TRACKING_SHEET_NAME = 'Suivi_Candidatures';
+const TRACKING_TAB_NAME = 'Suivi candidatures';
+const MANUAL_JOBS_SHEET_NAME = 'Offres Manuelles';
 const MIN_MATCH_SCORE = 75; 
 const MAX_GENERATIONS_PER_RUN = 3; // Prevent timeout & API exhaustion by processing at most 3 jobs in a single run
 
@@ -78,6 +80,13 @@ function main() {
   if (!masterCV) {
     console.error("[ERROR] Master CV not found. Aborting.");
     return;
+  }
+
+  // Check and process any pending manual URLs in 'Offres Manuelles' tab
+  try {
+    processManualJobsFromSheet();
+  } catch (manualErr) {
+    console.warn(`[MANUAL] Note lors de la vérification des offres manuelles : ${manualErr.message}`);
   }
 
   // Production & Test mode quotas
@@ -241,7 +250,7 @@ function main() {
   if (!TEST_MODE) props.setProperty('LAST_RUN_TIMESTAMP', new Date().toISOString());
 }
 
-function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl) {
+function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText, originalUrl, forceApply = false) {
   const jobId = getJobId(originalUrl);
   const numericId = jobId.replace(/^(HW_|LI_)/, "");
   
@@ -287,11 +296,15 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     ${masterCV}
     
     CRITICAL INSTRUCTIONS FOR TRIPLE-DOCUMENT WRITING:
-    0. INPUT VALIDATION & RESTRICTIVENESS (STRICT SHIELD):
+    0. INPUT VALIDATION & RESTRICTIVENESS:
+       ${forceApply ? `
+       - CRITICAL MANDATORY INSTRUCTION: The candidate has manually requested to apply for this job. You MUST set decision = "Postuler", calculate an adequation score (0-100), and ALWAYS generate all THREE complete tailored documents ('cv_markdown', 'letter_markdown', 'memo_markdown') highlighting the candidate's strongest transferable skills and assets for this target role. DO NOT skip document generation.
+       ` : `
        - CRITICAL: If the specific Company Name or Job Title cannot be found in the description (e.g. if it's an auth wall, empty, or generic boilerplate), you MUST set Score = 0 and Decision = "Ignorer". DO NOT invent a job title like "Not specified". DO NOT generate documents.
        - LOCATION FILTER: The candidate is based in ${CANDIDATE_PROFILE.location}. If the job is 'Présentiel' (on-site) or 'Hybride' (hybrid), the location/commune MUST be in the candidate's home region/department (${CANDIDATE_PROFILE.department || "56"}). If the city is NOT in this department (e.g. Paris, Rennes, Nantes, Brest, Villeurbanne), you MUST set Score = 0 and Decision = "Ignorer".
        - SALARY FILTER: If the annual salary is explicitly mentioned and is strictly below 50k€ (50 000 €) per year, you MUST set Score = 0 and Decision = "Ignorer". If no salary is mentioned, or if it is at or above 50k€ (e.g. 50k€, 55k€, 60k€, etc.), do NOT reject it based on salary.
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
+       `}
        
     1. LANGUAGE DETECTION & CONSISTENCY (ABSOLUTE PRIORITY):
         - Detect the native language of the job description (usually English or French).
@@ -418,54 +431,59 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
       }
     });
 
-    // --- JS Post-Analysis Filters ---
-    const workplaceSetting = (result.workplace_setting || "").toLowerCase();
-    const locationStr = (result.location || "").toLowerCase();
-    const isLinkedIn = originalUrl.includes('linkedin.com');
-    const isHelloWork = originalUrl.includes('hellowork.com');
-    const inMorbihan = result.is_in_morbihan === true || isMorbihan(locationStr);
-    
-    // 1. Contract Type Filter (CDI / Permanent / Full-time only)
-    const contractType = (result.contract_type || "").toUpperCase();
-    const isCDIEquivalent = contractType === "CDI" || 
-                            contractType.includes("FULL-TIME") || 
-                            contractType.includes("FULL TIME") || 
-                            contractType.includes("PERMANENT") || 
-                            contractType.includes("TEMPS PLEIN") ||
-                            contractType.includes("TEMPS-PLEIN");
-    
-    if (!isCDIEquivalent) {
-      console.log(`[FILTER] Rejected ${result.company} because contract type is "${result.contract_type}" instead of CDI / Permanent.`);
-      result.decision = "Ignorer";
-      result.score = 0;
-      result.reasoning = `Contrat autre que CDI (${result.contract_type}). ${result.reasoning}`;
-    }
-    
-    // 2. HelloWork Location Filter (Morbihan only)
-    if (isHelloWork && !inMorbihan) {
-      console.log(`[FILTER] Rejected ${result.company} (HelloWork) because location "${result.location}" is not in Morbihan.`);
-      result.decision = "Ignorer";
-      result.score = 0;
-      result.reasoning = `Offre HelloWork hors Morbihan: ${result.location}. ${result.reasoning}`;
-    }
-    
-    // 3. LinkedIn Location & Workplace Setting Filter
-    if (isLinkedIn) {
-      const isFullRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
-      if (!inMorbihan && !isFullRemote) {
-        console.log(`[FILTER] Rejected ${result.company} (LinkedIn) because it is outside Morbihan ("${result.location}") and not Full Remote (Setting: "${result.workplace_setting}").`);
+    // --- JS Post-Analysis Filters (applied only in automated scanning mode) ---
+    if (!forceApply) {
+      const workplaceSetting = (result.workplace_setting || "").toLowerCase();
+      const locationStr = (result.location || "").toLowerCase();
+      const isLinkedIn = originalUrl.includes('linkedin.com');
+      const isHelloWork = originalUrl.includes('hellowork.com');
+      const inMorbihan = result.is_in_morbihan === true || isMorbihan(locationStr);
+      
+      // 1. Contract Type Filter (CDI / Permanent / Full-time only)
+      const contractType = (result.contract_type || "").toUpperCase();
+      const isCDIEquivalent = contractType === "CDI" || 
+                              contractType.includes("FULL-TIME") || 
+                              contractType.includes("FULL TIME") || 
+                              contractType.includes("PERMANENT") || 
+                              contractType.includes("TEMPS PLEIN") ||
+                              contractType.includes("TEMPS-PLEIN");
+      
+      if (!isCDIEquivalent) {
+        console.log(`[FILTER] Rejected ${result.company} because contract type is "${result.contract_type}" instead of CDI / Permanent.`);
         result.decision = "Ignorer";
         result.score = 0;
-        result.reasoning = `Offre LinkedIn hors Morbihan et non Full Remote: ${result.location} (${result.workplace_setting}). ${result.reasoning}`;
+        result.reasoning = `Contrat autre que CDI (${result.contract_type}). ${result.reasoning}`;
       }
-    }
-    
-    // 4. Salary Filter (>= 50k€)
-    if (isSalaryBelow50k(result.salary)) {
-      console.log(`[FILTER] Rejected ${result.company} because salary "${result.salary}" is explicitly below 50k€.`);
-      result.decision = "Ignorer";
-      result.score = 0;
-      result.reasoning = `Salaire inférieur à 50k€: ${result.salary}. ${result.reasoning}`;
+      
+      // 2. HelloWork Location Filter (Morbihan only)
+      if (isHelloWork && !inMorbihan) {
+        console.log(`[FILTER] Rejected ${result.company} (HelloWork) because location "${result.location}" is not in Morbihan.`);
+        result.decision = "Ignorer";
+        result.score = 0;
+        result.reasoning = `Offre HelloWork hors Morbihan: ${result.location}. ${result.reasoning}`;
+      }
+      
+      // 3. LinkedIn Location & Workplace Setting Filter
+      if (isLinkedIn) {
+        const isFullRemote = workplaceSetting.includes("remote") || workplaceSetting.includes("télétravail") || workplaceSetting.includes("distance");
+        if (!inMorbihan && !isFullRemote) {
+          console.log(`[FILTER] Rejected ${result.company} (LinkedIn) because it is outside Morbihan ("${result.location}") and not Full Remote (Setting: "${result.workplace_setting}").`);
+          result.decision = "Ignorer";
+          result.score = 0;
+          result.reasoning = `Offre LinkedIn hors Morbihan et non Full Remote: ${result.location} (${result.workplace_setting}). ${result.reasoning}`;
+        }
+      }
+      
+      // 4. Salary Filter (>= 50k€)
+      if (isSalaryBelow50k(result.salary)) {
+        console.log(`[FILTER] Rejected ${result.company} because salary "${result.salary}" is explicitly below 50k€.`);
+        result.decision = "Ignorer";
+        result.score = 0;
+        result.reasoning = `Salaire inférieur à 50k€: ${result.salary}. ${result.reasoning}`;
+      }
+    } else {
+      // In manual mode: enforce Postuler
+      result.decision = "Postuler";
     }
   }
   return result;
@@ -490,17 +508,30 @@ function fetchJobDescription(url) {
         'Pragma': 'no-cache'
       }
     };
+    
+    // For LinkedIn: attempt the public guest API if jobId is present
+    if (url.includes('linkedin.com')) {
+      const liIdMatch = url.match(/(?:\/view\/|currentJobId=)(\d+)/);
+      if (liIdMatch) {
+        try {
+          const guestUrl = `https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/${liIdMatch[1]}`;
+          const guestResp = UrlFetchApp.fetch(guestUrl, options);
+          if (guestResp.getResponseCode() === 200) {
+            const guestHtml = guestResp.getContentText();
+            const guestStripped = extractStrippedContent(guestHtml, url);
+            if (guestStripped && guestStripped.length > 150) {
+              console.log(`[FETCH] ✅ LinkedIn Guest API extracted (${guestStripped.length} chars)`);
+              return guestStripped;
+            }
+          }
+        } catch (e) {
+          console.warn(`[FETCH] LinkedIn Guest API fallback error: ${e.message}`);
+        }
+      }
+    }
+
     const response = UrlFetchApp.fetch(url, options);
     const html = response.getContentText();
-    const htmlLower = html.toLowerCase();
-
-    // --- TRUE auth wall: response code indicates unauthorized or page title confirms login page ---
-    const code = response.getResponseCode();
-    const titleIsLogin = /<title[^>]*>\s*(sign in|connexion|se connecter|authwall|login)\s*<\/title>/i.test(html);
-    if (code === 401 || code === 403 || titleIsLogin) {
-      console.warn(`[AUTH WALL] Login page detected (Code: ${code}, Title: ${titleIsLogin})`);
-      return 'authWall';
-    }
 
     // --- Tier 1: JSON-LD JobPosting (best quality, works even with overlays) ---
     const jsonLd = extractJsonLdJobPosting(html);
@@ -523,10 +554,15 @@ function fetchJobDescription(url) {
       return og;
     }
 
-    // Nothing useful found at all
-    console.warn(`[FETCH] ❌ No usable content found for ${url}`);
-    return 'authWall';
+    // Check for explicit auth wall code
+    const code = response.getResponseCode();
+    if (code === 401 || code === 403) {
+      console.warn(`[AUTH WALL] Login page code ${code} for ${url}`);
+      return 'authWall';
+    }
 
+    console.warn(`[FETCH] ❌ No usable content found for ${url}`);
+    return null;
   } catch (e) {
     console.error(`[FETCH ERROR] ${url}: ${e.message}`);
     return null;
@@ -672,6 +708,12 @@ function processJob(inputFolder, outputFolder, job) {
     console.error(`[ERROR] Processing ${job.company}: ${e.message}\nStack: ${e.stack || 'N/A'}`);
   }
   logToSheet(outputFolder, job, cvDocUrl, lmDocUrl, memoDocUrl);
+  return {
+    success: !!(cvDocUrl && lmDocUrl && memoDocUrl),
+    cvDocUrl: cvDocUrl,
+    lmDocUrl: lmDocUrl,
+    memoDocUrl: memoDocUrl
+  };
 }
 
 /**
@@ -1287,51 +1329,6 @@ function formatInlineStyles(element) {
 }
 
 /**
- * Detailed Template Diagnostics to scan all files inside the input folder
- */
-function getTemplatesDiagnostic() {
-  let log = "=== FILES IN INPUT FOLDER ===\n";
-  try {
-    const root = DriveApp.getRootFolder().getFoldersByName("Candidature Express").next();
-    const inputFolder = root.getFoldersByName("input").next();
-    
-    const files = inputFolder.getFiles();
-    if (!files.hasNext()) {
-      log += "No files found in 'input' folder.\n";
-    }
-    
-    while (files.hasNext()) {
-      const file = files.next();
-      log += `\nFile Name: "${file.getName()}"\n`;
-      log += `  - MIME Type: ${file.getMimeType()}\n`;
-      log += `  - ID: ${file.getId()}\n`;
-      
-      if (file.getMimeType() === MimeType.GOOGLE_DOCS) {
-        try {
-          const doc = DocumentApp.openById(file.getId());
-          const body = doc.getBody();
-          const text = body.getText();
-          
-          const matches = text.match(/\{[^}]+\}/g) || [];
-          const brackets = text.match(/\[[^\]]+\]/g) || [];
-          
-          log += `  - Found Braces Placeholders: ${JSON.stringify([...new Set(matches)])}\n`;
-          log += `  - Found Brackets Placeholders: ${JSON.stringify([...new Set(brackets)])}\n`;
-          log += `  - Plain Text Snippet (first 150 chars): "${text.substring(0, 150).replace(/\n/g, " ")}..."\n`;
-        } catch (e) {
-          log += `  - [ERROR READING CONTENT]: ${e.message}\n`;
-        }
-      } else {
-        log += "  - [NON-GOOGLE-DOC] (cannot inspect inline text)\n";
-      }
-    }
-  } catch (e) {
-    log += `[DIAGNOSTIC ERROR] ${e.message}\n`;
-  }
-  return log;
-}
-
-/**
  * Rolling Job Processed Properties
  */
 function isJobProcessed(jobId) {
@@ -1411,15 +1408,6 @@ function markJobProcessed(jobId) {
     if (processed.length > 300) processed.shift();
     props.setProperty('PROCESSED_JOB_IDS', JSON.stringify(processed));
   }
-}
-
-/**
- * Utility: Reset the list of processed job IDs so they can be re-tried.
- * Run this function manually from the Apps Script editor before re-testing.
- */
-function resetProcessedJobs() {
-  PropertiesService.getScriptProperties().deleteProperty('PROCESSED_JOB_IDS');
-  console.log('[RESET] PROCESSED_JOB_IDS cleared. All jobs will be re-processed on next run.');
 }
 
 /**
@@ -1550,6 +1538,9 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
   if (files.hasNext()) { 
     sheetFile = SpreadsheetApp.openById(files.next().getId()); 
     sheet = sheetFile.getSheets()[0];
+    if (sheet.getName() !== TRACKING_TAB_NAME) {
+      sheet.setName(TRACKING_TAB_NAME);
+    }
     
     // Auto-update spreadsheet headers in-place if they don't match the new layout
     const lastCol = sheet.getLastColumn();
@@ -1591,7 +1582,9 @@ function logToSheet(folder, job, cvUrl, lmUrl, memoUrl) {
     folder.addFile(DriveApp.getFileById(sheetFile.getId()));
     DriveApp.getRootFolder().removeFile(DriveApp.getFileById(sheetFile.getId()));
     sheet = sheetFile.getSheets()[0];
+    sheet.setName(TRACKING_TAB_NAME);
     sheet.appendRow(headers);
+    getOrCreateManualJobsSheet(sheetFile);
   }
   
   const now = new Date();
@@ -1788,35 +1781,375 @@ function isSalaryBelow50k(salaryStr) {
   return false;
 }
 
+// --- GOOGLE SHEETS MANUAL JOBS PIPELINE & MENU ---
+
+/**
+ * Ensures the 'Offres Manuelles' tab exists with proper headers, formatting and guidance.
+ */
+function getOrCreateManualJobsSheet(sheetFile) {
+  let manualSheet = sheetFile.getSheetByName(MANUAL_JOBS_SHEET_NAME);
+  const headers = [
+    "URL de l'offre",
+    "Forcer (Oui/Non)",
+    "Statut",
+    "Score",
+    "Entreprise",
+    "Poste",
+    "Lien CV (Doc)",
+    "Lien Lettre (Doc)",
+    "Lien Mémo (Doc)",
+    "Date Traitement",
+    "Remarques / Erreurs"
+  ];
+  
+  if (!manualSheet) {
+    manualSheet = sheetFile.insertSheet(MANUAL_JOBS_SHEET_NAME);
+    manualSheet.appendRow(headers);
+    
+    // Style headers
+    const headerRange = manualSheet.getRange(1, 1, 1, headers.length);
+    headerRange.setBackground("#1a365d");
+    headerRange.setFontColor("#ffffff");
+    headerRange.setFontWeight("bold");
+    headerRange.setHorizontalAlignment("center");
+    
+    manualSheet.setFrozenRows(1);
+    
+    // Column widths
+    manualSheet.setColumnWidth(1, 350); // URL
+    manualSheet.setColumnWidth(2, 130); // Forcer
+    manualSheet.setColumnWidth(3, 200); // Statut
+    manualSheet.setColumnWidth(4, 75);  // Score
+    manualSheet.setColumnWidth(5, 170); // Entreprise
+    manualSheet.setColumnWidth(6, 230); // Poste
+    manualSheet.setColumnWidth(7, 180); // Lien CV
+    manualSheet.setColumnWidth(8, 180); // Lien LM
+    manualSheet.setColumnWidth(9, 180); // Lien Memo
+    manualSheet.setColumnWidth(10, 150); // Date
+    manualSheet.setColumnWidth(11, 280); // Remarques
+    
+    // Helper example row
+    manualSheet.appendRow([
+      "https://www.hellowork.com/fr-fr/emplois/exemple.html",
+      "Oui",
+      "💡 Exemple (remplacez par vos URLs)",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "Collez vos URLs en colonne A, puis cliquez sur HelloApply > Traiter les URLs"
+    ]);
+    manualSheet.getRange(2, 1, 1, headers.length).setFontStyle("italic").setFontColor("#718096");
+    console.log(`[MANUAL] Onglet '${MANUAL_JOBS_SHEET_NAME}' créé avec succès.`);
+  }
+  return manualSheet;
+}
+
+/**
+ * Initialises or verifies the Google Sheets tracking tabs and menu.
+ * Renames the first tab to 'Suivi candidatures' and creates 'Offres Manuelles'.
+ */
+function initManualJobsTab() {
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  let files = outputFolder.getFilesByName(TRACKING_SHEET_NAME);
+  let sheetFile;
+  
+  const headers = ["Date", "Source", "Entreprise", "Poste", "Score", "Statut", "Salaire", "Lien Offre", "Lien CV (Doc)", "Lien Lettre (Doc)", "Lien Mémo (Doc)", "Lien Origine", "Analyse"];
+  
+  if (!files.hasNext()) {
+    console.log("[MANUAL] Création du tableur de suivi 'Suivi_Candidatures'...");
+    sheetFile = SpreadsheetApp.create(TRACKING_SHEET_NAME);
+    outputFolder.addFile(DriveApp.getFileById(sheetFile.getId()));
+    DriveApp.getRootFolder().removeFile(DriveApp.getFileById(sheetFile.getId()));
+    const firstSheet = sheetFile.getSheets()[0];
+    firstSheet.setName(TRACKING_TAB_NAME);
+    firstSheet.appendRow(headers);
+  } else {
+    sheetFile = SpreadsheetApp.openById(files.next().getId());
+    const firstSheet = sheetFile.getSheets()[0];
+    if (firstSheet.getName() !== TRACKING_TAB_NAME) {
+      firstSheet.setName(TRACKING_TAB_NAME);
+    }
+  }
+  
+  getOrCreateManualJobsSheet(sheetFile);
+  
+  // Install custom menu trigger for the spreadsheet if not already present
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    let triggerExists = false;
+    triggers.forEach(t => {
+      if (t.getHandlerFunction() === 'onSpreadsheetOpen' && t.getTriggerSourceId() === sheetFile.getId()) {
+        triggerExists = true;
+      }
+    });
+    if (!triggerExists) {
+      ScriptApp.newTrigger('onSpreadsheetOpen')
+        .forSpreadsheet(sheetFile)
+        .onOpen()
+        .create();
+    }
+  } catch (e) {
+    console.warn(`[TRIGGER NOTE] ${e.message}`);
+  }
+  
+  console.log(`✅ [MANUAL] Tableur initialisé avec succès ! Onglet 1: '${TRACKING_TAB_NAME}', Onglet 2: '${MANUAL_JOBS_SHEET_NAME}'.`);
+}
+
+/**
+ * Menu hook when opening the spreadsheet (works with container-bound or installable trigger).
+ */
+function onSpreadsheetOpen() {
+  try {
+    const ui = SpreadsheetApp.getUi();
+    ui.createMenu('🤖 HelloApply')
+      .addItem('▶️ Traiter les URLs manuelles', 'processManualJobsFromSheet')
+      .addSeparator()
+      .addItem('🔄 Initialiser / Vérifier les onglets', 'initManualJobsTab')
+      .addToUi();
+  } catch (e) {
+    console.warn(`[UI MENU] Note: ${e.message}`);
+  }
+}
+
+/**
+ * Native spreadsheet onOpen hook.
+ */
+function onOpen(e) {
+  onSpreadsheetOpen();
+}
+
+/**
+ * Processes a single job URL through the full HelloApply pipeline.
+ * @param {string} rawUrl - The job offer URL (HelloWork, LinkedIn, or any web URL).
+ * @param {Object} options - Options including forceApply, folders, templates.
+ */
+function processSingleJobUrl(rawUrl, options) {
+  const forceApply = options.forceApply !== false;
+  const inputFolder = options.inputFolder;
+  const outputFolder = options.outputFolder;
+  const masterCV = options.masterCV;
+  const cvTemplateText = options.cvTemplateText;
+  const letterTemplateText = options.letterTemplateText;
+  
+  let decodedUrl = decodeHelloworkTrackingUrl(rawUrl);
+  let url = cleanUrl(decodedUrl);
+  
+  // Resolve click-tracking redirections for HelloWork
+  if (url.includes('emails.hellowork.com/clic') || url.includes('hellowork.com/redirect')) {
+    console.log(`[RESOLVING] Resolving redirect for: ${url}`);
+    const resolved = resolveRedirects(url);
+    if (resolved && resolved !== url) {
+      url = cleanUrl(resolved);
+    }
+  }
+  
+  let source = "Web";
+  if (url.includes("hellowork.com")) source = "HelloWork";
+  else if (url.includes("linkedin.com")) source = "LinkedIn";
+  else if (url.includes("welcometothejungle.com")) source = "WTTJ";
+  else if (url.includes("apec.fr")) source = "APEC";
+  else if (url.includes("francetravail.fr")) source = "FranceTravail";
+
+  const jobId = getJobId(url);
+  console.log(`[PROCESS URL] Source: ${source} | Job ID: ${jobId} | URL: ${url}`);
+  
+  let description = fetchJobDescription(url);
+  if (!description || description === "authWall") {
+    console.warn(`[WARN] Could not fetch clean page for ${url}`);
+    return { success: false, error: "Page protégée par login wall ou contenu inaccessible." };
+  }
+  
+  // Pass forceApply to analyzeAndTailor to ensure complete documents are generated
+  const analysis = analyzeAndTailor(description, masterCV, cvTemplateText, letterTemplateText, url, forceApply);
+  if (!analysis) {
+    return { success: false, error: "Échec de l'analyse IA Gemini." };
+  }
+  
+  analysis.url = url;
+  analysis.originalUrl = rawUrl;
+  analysis.source = source;
+  analysis.raw_description = description;
+  analysis.isEmailFallback = false;
+  
+  const isMatch = analysis.decision === "Postuler" && analysis.score >= MIN_MATCH_SCORE;
+  
+  if (forceApply || isMatch) {
+    const docUrls = processJob(inputFolder, outputFolder, analysis);
+    markJobProcessed(jobId);
+    return {
+      success: true,
+      analysis: analysis,
+      docUrls: docUrls
+    };
+  } else {
+    logToSheet(outputFolder, analysis, "", "", "");
+    markJobProcessed(jobId);
+    return {
+      success: false,
+      analysis: analysis,
+      error: `Score insuffisant (${analysis.score}% < ${MIN_MATCH_SCORE}%)`
+    };
+  }
+}
+
+/**
+ * Scans the 'Offres Manuelles' tab of Suivi_Candidatures, processes all pending URLs,
+ * generates tailored CV/LM/Memo + Gmail drafts, and updates the spreadsheet with live links.
+ */
+function processManualJobsFromSheet() {
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const files = outputFolder.getFilesByName(TRACKING_SHEET_NAME);
+  if (!files.hasNext()) {
+    console.log("[MANUAL] Aucune feuille de suivi trouvée.");
+    return { success: false, message: "Feuille de suivi non trouvée." };
+  }
+  
+  const sheetFile = SpreadsheetApp.openById(files.next().getId());
+  const manualSheet = getOrCreateManualJobsSheet(sheetFile);
+  
+  const masterCV = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.masterCvName);
+  const cvTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateCvName);
+  const letterTemplateText = readAnyFileIn(inputFolder, CANDIDATE_PROFILE.templateLetterName);
+
+  if (!masterCV) {
+    console.error("[ERROR] Master CV introuvable dans input/.");
+    return { success: false, message: "Master CV introuvable." };
+  }
+  
+  const lastRow = manualSheet.getLastRow();
+  if (lastRow < 2) {
+    console.log("[MANUAL] Aucune ligne à traiter dans 'Offres Manuelles'.");
+    return { success: true, count: 0 };
+  }
+  
+  const data = manualSheet.getRange(2, 1, lastRow - 1, 11).getValues();
+  let processedCount = 0;
+  
+  for (let i = 0; i < data.length; i++) {
+    const rowNum = i + 2;
+    const rawUrl = (data[i][0] || "").toString().trim();
+    const forceStr = (data[i][1] || "").toString().trim().toLowerCase();
+    const status = (data[i][2] || "").toString().trim();
+    
+    // Skip empty URLs, placeholder comments, or already completed rows
+    if (!rawUrl || rawUrl.startsWith("💡") || rawUrl.startsWith("#") || status.startsWith("✅")) {
+      continue;
+    }
+    
+    const forceApply = forceStr !== "non" && forceStr !== "no" && forceStr !== "false";
+    
+    console.log(`[MANUAL] Ligne ${rowNum} : Traitement de ${rawUrl} (Forcer: ${forceApply})`);
+    manualSheet.getRange(rowNum, 3).setValue("⏳ Traitement en cours...").setFontStyle("italic");
+    SpreadsheetApp.flush();
+    
+    try {
+      const res = processSingleJobUrl(rawUrl, {
+        forceApply: forceApply,
+        inputFolder: inputFolder,
+        outputFolder: outputFolder,
+        masterCV: masterCV,
+        cvTemplateText: cvTemplateText,
+        letterTemplateText: letterTemplateText
+      });
+      
+      const now = new Date();
+      const dateStr = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+      
+      if (res.success) {
+        const analysis = res.analysis;
+        manualSheet.getRange(rowNum, 3, 1, 9).setValues([[
+          `✅ Candidature générée`,
+          analysis.score + "%",
+          analysis.company,
+          analysis.position,
+          res.docUrls.cvDocUrl || "",
+          res.docUrls.lmDocUrl || "",
+          res.docUrls.memoDocUrl || "",
+          dateStr,
+          analysis.reasoning ? analysis.reasoning.substring(0, 300) : ""
+        ]]).setFontStyle("normal").setFontColor("#000000");
+        processedCount++;
+      } else if (res.analysis) {
+        const analysis = res.analysis;
+        manualSheet.getRange(rowNum, 3, 1, 9).setValues([[
+          `⚠️ Rejeté (${analysis.score}%)`,
+          analysis.score + "%",
+          analysis.company,
+          analysis.position,
+          "",
+          "",
+          "",
+          dateStr,
+          `Score insuffisant (${analysis.score}% < ${MIN_MATCH_SCORE}%). Indiquez 'Oui' en colonne B pour forcer la candidature.`
+        ]]).setFontStyle("normal").setFontColor("#000000");
+      } else {
+        manualSheet.getRange(rowNum, 3).setValue("❌ Erreur").setFontStyle("normal");
+        manualSheet.getRange(rowNum, 11).setValue(res.error || "Impossible d'extraire le contenu de l'offre");
+      }
+      SpreadsheetApp.flush();
+      Utilities.sleep(1500); // Throttling
+    } catch (err) {
+      console.error(`[MANUAL ERROR] Ligne ${rowNum}: ${err.message}`);
+      manualSheet.getRange(rowNum, 3).setValue("❌ Erreur").setFontStyle("normal");
+      manualSheet.getRange(rowNum, 11).setValue(err.message);
+      SpreadsheetApp.flush();
+    }
+  }
+  
+  console.log(`[MANUAL] Terminé ! ${processedCount} offre(s) traitée(s).`);
+  return { success: true, count: processedCount };
+}
+
 // --- AUTOMATION TRIGGERS & MAINTENANCE UTILITIES ---
 
 /**
- * Configures the automated hourly background trigger for main().
- * Removes any old/duplicate triggers for 'main' and creates a fresh 1-hour time-driven trigger.
+ * Configures the automated hourly background trigger for main() and installs the spreadsheet menu trigger.
  */
 function setupTriggers() {
   const triggers = ScriptApp.getProjectTriggers();
   let deletedCount = 0;
   triggers.forEach((trigger) => {
-    if (trigger.getHandlerFunction() === 'main') {
+    const fn = trigger.getHandlerFunction();
+    if (fn === 'main' || fn === 'onSpreadsheetOpen') {
       ScriptApp.deleteTrigger(trigger);
       deletedCount++;
     }
   });
-  console.log(`[TRIGGERS] Supprimé ${deletedCount} ancien(s) déclencheur(s) pour 'main'.`);
+  console.log(`[TRIGGERS] Supprimé ${deletedCount} ancien(s) déclencheur(s).`);
   
+  // 1. Hourly time-driven trigger for email scanning & manual jobs
   ScriptApp.newTrigger('main')
     .timeBased()
     .everyHours(1)
     .create();
   console.log("✅ [TRIGGERS] Déclencheur horaire automatique configuré avec succès ! 'main' s'exécutera désormais toutes les heures en arrière-plan.");
-}
 
-/**
- * Alias for backward compatibility with documentation
- */
-function setupTrigger() {
-  setupTriggers();
+  // 2. Open trigger for Spreadsheet custom menu
+  try {
+    const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+    const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+    const files = outputFolder.getFilesByName(TRACKING_SHEET_NAME);
+    if (files.hasNext()) {
+      const ssFile = files.next();
+      const ss = SpreadsheetApp.openById(ssFile.getId());
+      getOrCreateManualJobsSheet(ss);
+      ScriptApp.newTrigger('onSpreadsheetOpen')
+        .forSpreadsheet(ss)
+        .onOpen()
+        .create();
+      console.log("✅ [TRIGGERS] Déclencheur de menu pour la feuille Google Sheets 'Suivi_Candidatures' installé !");
+    }
+  } catch (e) {
+    console.warn(`[TRIGGERS] Menu Sheets non installé (feuille non encore créée ou permissions) : ${e.message}`);
+  }
 }
 
 /**
@@ -1844,3 +2177,4 @@ function forceResetAndRescan() {
   props.deleteProperty('PROCESSED_JOB_IDS');
   console.log("✅ [RESET] Cache et timestamp réinitialisés avec succès. L'exécution de 'main()' scannera à nouveau les offres reçues.");
 }
+

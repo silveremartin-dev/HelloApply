@@ -149,13 +149,43 @@ Pour que l'agent travaille en arrière-plan de manière totalement autonome sans
 
 ---
 
+---
+
+## 📋 Mode Candidature Manuelle sur URLs (Nouveau v6.5.0)
+
+En plus de la veille automatique par e-mail, vous pouvez soumettre manuellement une ou plusieurs offres d'emploi (HelloWork, LinkedIn, Welcome to the Jungle, APEC, France Travail, ou pages carrières d'entreprises) :
+
+### Méthode 1 : Depuis le tableau de bord Google Sheets (Recommandé)
+1. Ouvrez votre fichier de suivi Google Sheets **`Suivi_Candidatures`** (dans le dossier Drive `Candidature Express/output/`).
+2. Rendez-vous sur l'onglet **`Offres Manuelles`** (créé automatiquement).
+3. Collez vos URLs en colonne A (**URL de l'offre**).
+4. Indiquez `Oui` (ou laissez vide) en colonne B si vous souhaitez forcer la génération du dossier complet même si le score calculé est en-dessous du seuil automatique de 75%.
+5. Cliquez sur le menu supérieur : **`🤖 HelloApply ➔ ▶️ Traiter les URLs manuelles`**.
+6. Le script traite les lignes, met à jour le statut en temps réel, génère les Docs/PDFs et les brouillons Gmail, et renseigne les liens directs vers les documents !
+
+> [!TIP]
+> Si vous ne lancez pas le menu manuellement, pas de panique : le passage automatique horaire (`main()`) vérifie aussi l'onglet **`Offres Manuelles`** et traite les offres en attente.
+
+### Méthode 2 : Depuis l'éditeur Apps Script
+Dans `Debug.gs`, vous pouvez également appeler directement la fonction `processManualUrls` :
+```javascript
+function maListeOffres() {
+  processManualUrls([
+    "https://www.hellowork.com/fr-fr/emplois/12345678.html",
+    "https://www.linkedin.com/jobs/view/1234567890/"
+  ], true); // true = forcer la génération
+}
+```
+
+---
+
 ## 🛡️ Le Bouclier de Production Anti-Saturation
 
 Le script intègre un système de protection multi-niveaux pour garantir un fonctionnement stable et gratuit en production sans jamais dépasser les quotas de Google ou de l'API Gemini :
 
-* 🎯 **Haute Sélectivité (`MIN_MATCH_SCORE = 97`)** : L'agent cible uniquement l'excellence. Seuls les profils d'offres quasi-parfaits déclenchent la génération lourde.
+* 🎯 **Haute Sélectivité (`MIN_MATCH_SCORE = 75`)** : L'agent cible uniquement la pertinence confirmée en mode automatique.
 * 🛑 **Cap de Génération Strict (`MAX_GENERATIONS_PER_RUN = 3`)** : Le script ne génère jamais plus de 3 candidatures complètes par passage horaire pour éviter la saturation réseau ou de l'API. Les offres en attente seront traitées au passage suivant grâce au suivi de déduplication permanent.
-* ⏱️ **Régulation du Débit (Throttling)** : Une pause de sécurité de 2 secondes est observée après le traitement de chaque offre pour lisser la charge.
+* ⏱️ **Régulation du Débit (Throttling)** : Une pause de sécurité de 1,5 à 2 secondes est observée après le traitement de chaque offre pour lisser la charge.
 * 🔄 **Retry avec Exponential Backoff** : La fonction `callGemini` gère intelligemment les erreurs de surcharge temporaire de l'API (HTTP 503/429) en retentant l'appel automatiquement jusqu'à 3 fois avec un temps d'attente exponentiel.
 * ⚡ **Coupe-Circuit Temporel (`exitRequested`)** : Si le script approche de la limite de temps Apps Script de 6 minutes, il s'interrompt proprement en sauvegardant l'état pour reprendre sans erreur au prochain passage.
 
@@ -164,3 +194,4 @@ Le script intègre un système de protection multi-niveaux pour garantir un fonc
 ## 🔒 Sécurité & Confidentialité
 * Le fichier `.claspignore` empêche la fuite accidentelle de clés d'API ou de scripts de débogage locaux.
 * Le script ne marque pas vos e-mails comme "lus" et ne supprime rien. Les brouillons Gmail générés restent à l'état de brouillon, vous laissant le contrôle final absolu avant envoi.
+
