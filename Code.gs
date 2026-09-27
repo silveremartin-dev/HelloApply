@@ -339,7 +339,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
            \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
            LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
            GitHub: \${CANDIDATE_PROFILE.githubUrl}
-         - A blank line, then the \${CANDIDATE_PROFILE.city} date line, matched to the current date.
+         - A blank line, then the exact current date line: "${dateFr}" (if French) or "${dateEn}" (if English).
          - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]" (or English equivalent).
          - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (or English equivalent) (must be standard black text, no horizontal rules below it).
          - Formal greeting: "Madame, Monsieur," (or English equivalent).
@@ -358,7 +358,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
            \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
            LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
            GitHub: \${CANDIDATE_PROFILE.githubUrl}
-       - A blank line, then the \${CANDIDATE_PROFILE.city} date line, positioned right after the header block and before the subject line.
+       - A blank line, then the exact current date line: "${dateFr}" (if French) or "${dateEn}" (if English), positioned right after the header block and before the subject line.
        - Immediately following the date line, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**" (or English equivalent).
        - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
        - The core content of the Memo must feature:
@@ -428,6 +428,18 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
       if (result[field]) {
         // Robust programmatic shield to replace JScience with Episteme (case-insensitive)
         result[field] = result[field].replace(/jscience/gi, "Episteme");
+      }
+    });
+
+    // Programmatic shield: Guarantee exact dynamic date on Cover Letter and Memo (FR / EN)
+    const isEnDoc = result.language && result.language.toLowerCase().startsWith('en');
+    const dynamicCurrentDate = isEnDoc ? dateEn : dateFr;
+    const dateLineRegex = new RegExp(`^(${CANDIDATE_PROFILE.city || "Lorient"}|[A-Za-z\\u00C0-\\u017F\\s-]+),\\s*(?:le\\s+)?(?:\\d{1,2}\\s+[A-Za-z\\u00C0-\\u017F]+|[A-Za-z\\u00C0-\\u017F]+\\s+\\d{1,2},?)\\s+\\d{4}$`, 'm');
+    ['letter_markdown', 'memo_markdown'].forEach(docField => {
+      if (result[docField]) {
+        if (dateLineRegex.test(result[docField])) {
+          result[docField] = result[docField].replace(dateLineRegex, dynamicCurrentDate);
+        }
       }
     });
 
@@ -1197,8 +1209,14 @@ function renderMarkdownToDoc(body, markdownText, templateName, layout) {
       txt.setBold(false);
       txt.setForegroundColor('#2D3748');
       
-      // Right-align date line in cover letter
-      if (textVal.startsWith("Lorient, le ") || textVal.startsWith("Lorient, ")) {
+      // Right-align date line in cover letter & memo (FR & EN)
+      const targetCity = (typeof CANDIDATE_PROFILE !== 'undefined' && CANDIDATE_PROFILE.city) ? CANDIDATE_PROFILE.city : "Lorient";
+      const isDateLine = textVal.startsWith(`${targetCity}, le `) || 
+                         textVal.startsWith(`${targetCity}, `) || 
+                         textVal.startsWith("Lorient, le ") || 
+                         textVal.startsWith("Lorient, ") ||
+                         /^(?:[A-Za-z\u00C0-\u017F\s-]+),\s*(?:le\s+\d{1,2}\s+[a-z\u00C0-\u017F]+|[a-z\u00C0-\u017F]+\s+\d{1,2},?)\s+\d{4}$/i.test(textVal);
+      if (isDateLine) {
         p.setAlignment(DocumentApp.HorizontalAlignment.RIGHT);
       } else {
         p.setAlignment(DocumentApp.HorizontalAlignment.JUSTIFY);
