@@ -263,7 +263,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
 
   const prompt = `
     TASK: You are an expert AI sourcing agent and technical ghostwriter. Your objective is to perform an asymmetric application for a highly senior profile.
-    You will systematically generate THREE distinct documents in the returned JSON object, and extract five precise meta-fields from the job description:
+    You will systematically generate FOUR distinct documents in the returned JSON object, and extract five precise meta-fields from the job description:
     - 'contract_type': e.g., "CDI", "CDD", "Freelance", or "?" if you cannot extract the information.
     - 'location': e.g., "${CANDIDATE_PROFILE.city}", "Paris", or "?" if you cannot extract the information.
     - 'is_in_morbihan': true or false. Determine if the office/location of the job is situated within the candidate's home region/department (${CANDIDATE_PROFILE.department || "56"}) in France.
@@ -272,10 +272,11 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
     
     You will return all of this in the JSON structure at the bottom.
 
-    You will systematically generate THREE distinct documents in the returned JSON object:
+    You will systematically generate FOUR distinct documents in the returned JSON object:
     1. A tailored dynamic CV ('cv_markdown') positioned as an "Index of Executable Proofs of Work".
     2. A traditional, premium Cover Letter ('letter_markdown') following the "You, Me, Us" narrative structure and formal styling.
     3. A peer-to-peer Technical Architecture Memo ('memo_markdown') targeting the company's core bottlenecks.
+    4. A tailored Technical Realization Note ('technical_note_markdown') acting as a specialized technical brief selecting 1 or 2 (maximum 3) relevant projects from the candidate's portfolio.
 
     JOB DESCRIPTION:
     ${context}
@@ -385,12 +386,50 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
         - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
         - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
         
-     5. STRICT BANNING OF "JScience" (OR "Jscience"):
-        - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, or Memo.
+     5. THE TAILORED TECHNICAL REALIZATION NOTE ('technical_note_markdown'):
+        - Candidate Technical Portfolio (Knowledge Repository of Flagship Projects):
+          * OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (Gemini 2.5 API multi-agent, 10-level academic taxonomy, Next.js 15, Vercel, Supabase RLS, LLMOps).
+          * EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (450k+ lines Java 25, Project Panama off-heap, CUDA bindings, benchmarks 10x Apache, Antigravity AI engineering).
+          * ETHER: Distributed Cliodynamics & Macro-Historical Simulation Engine (multi-node cluster, Uber H3 hexagonal spatial indexing, ClusterClockBarrier deterministic sync, Java 21 Virtual Threads / Vector API SIMD, Rust zero-cost FFI, non-equilibrium thermodynamics & biophysical N-P-K cycles, PostGIS, JavaFX Archon).
+          * SWARMFORGE: Distributed Massive Multi-Agent Simulation Platform & 3D Ecosystems (10^5+ agents, eusocial colonies & trophic networks, BDI / neural nets / fuzzy logic, swarmforge-compute, gRPC/FlatBuffers, Kubernetes/Helm, Redis, jMonkeyEngine 3D, React/Vite).
+          * ETERNITY II: Massive Distributed Combinatorial Solver & GPU Acceleration (Java 25, NP-complete 10^600 states, TornadoVM OpenCL/PTX GPU kernels, 64-bit zero-heap primitives, MCTS / UCT, 21M eval/sec/core).
+          * JROBOTICS: Modular Universal Robotics Framework & API for Java 21+ (14 modules, ~25k LOC, FastSLAM 2.0, EKF sensor fusion, Deep Learning DJL YOLO, DQN/PPO reinforcement learning, ROS 2 bridge, Swarm Boids).
+          * JGAME: Distributed Modular Multiplayer Gaming Platform & AI (Java 25, Javalin 6 REST, WebSockets, JavaFX & Web, Minimax AI alpha-beta pruning, concurrent lobbies, ELO, BCrypt/JWT).
+
+        - CRITICAL SELECTION RULE (DO NOT DUMP ALL PROJECTS):
+          The candidate maintains a portfolio of 7 major deep-tech projects. You MUST NOT include all projects systematically!
+          Instead, analyze the job requirements, required tech stack, and target industry, and select precisely the ONE or TWO (at most THREE if highly relevant) projects that offer the strongest, most convincing Proof-of-Work for this specific position:
+          * Web Platforms / GenAI / LLMOps / SaaS / Modern Fullstack -> Prioritize OpenPrimer (+ SwarmForge or JGame)
+          * HPC / Low-Level / Java 21-25 / GPU acceleration / Math / Algorithms -> Prioritize Episteme (+ Eternity)
+          * Distributed Systems / Macro-Systems / Spatial-GIS / Biophysics / Rust-Java -> Prioritize Ether (+ SwarmForge or Episteme)
+          * Multi-Agents / Massive Simulation / Kubernetes / Real-time 3D / Networks -> Prioritize SwarmForge (+ JRobotics or OpenPrimer)
+          * Robotics / Autonomous Systems / Hardware / SLAM / Computer Vision -> Prioritize JRobotics (+ SwarmForge or Episteme)
+          * Combinatorial Optimization / Heuristics / GPU kernels / Search algorithms -> Prioritize Eternity (+ Episteme)
+          * Gaming / Turn-based Systems / Real-time Lobbies / WebSockets -> Prioritize JGame (+ SwarmForge)
+
+        - Markdown Structure for 'technical_note_markdown':
+          # ${CANDIDATE_PROFILE.fullName.toUpperCase()}
+          ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+          LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
+
+          ## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGÉNIERIE LOGICIELLE
+          (or in English: ## TECHNICAL BACKGROUND BRIEF: COMPLEX SYSTEMS & LARGE-SCALE SOFTWARE ENGINEERING)
+          À l'attention des Recruteurs et Directeurs Techniques (or English equivalent)
+          Candidat : ${CANDIDATE_PROFILE.fullName} – [Target Position Title]
+          Expertise clé : [Tailored summary sentence linking selected projects to target role requirements]
+
+          [Detailed sections for each of the 1 to 2 (or 3) selected projects, including technical challenges, architecture, stack, and verification links]
+
+          ### COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION
+          (or in English: ### CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION)
+          [2 to 3 high-impact bullet points demonstrating technical leadership, performance, and software rigor]
+
+     6. STRICT BANNING OF "JScience" (OR "Jscience"):
+        - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, Memo, or Technical Note.
         - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
         - If JScience is found in the "masterCV" source, dynamically translate/rename it to **"Episteme"**.
 
-     6. JSON STRUCTURE:
+     7. JSON STRUCTURE:
      Return JSON only:
      {
        "company": "Real Company Name",
@@ -407,7 +446,8 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        "language": "en" or "fr",
        "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
        "letter_markdown": "The traditional Cover Letter following the premium You-Me-Us structure...",
-       "memo_markdown": "The peer-to-peer Technical Architecture Memo..."
+       "memo_markdown": "The peer-to-peer Technical Architecture Memo...",
+       "technical_note_markdown": "The tailored Technical Realization Note with 1 to 2 (or 3) selected projects..."
      }
   `;
   
@@ -423,7 +463,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
         }
       }
     }
-    const fields = ['cv_markdown', 'letter_markdown', 'memo_markdown'];
+    const fields = ['cv_markdown', 'letter_markdown', 'memo_markdown', 'technical_note_markdown'];
     fields.forEach(field => {
       if (result[field]) {
         // Robust programmatic shield to replace JScience with Episteme (case-insensitive)
@@ -683,22 +723,34 @@ function extractStrippedContent(html, url) {
  * Process Job
  */
 function processJob(inputFolder, outputFolder, job) {
-  let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let attachments = [];
+  let cvDocUrl = ""; let lmDocUrl = ""; let memoDocUrl = ""; let noteDocUrl = ""; let attachments = [];
   try {
     const rand = Math.floor(Math.random() * 900000) + 10000;
     const cvName = `${CANDIDATE_PROFILE.safeName}-CV-2026-${rand}`;
     const lmName = `${CANDIDATE_PROFILE.safeName}-LM-2026-${rand}`;
     const memoName = `${CANDIDATE_PROFILE.safeName}-Memo-2026-${rand}`;
+    const noteName = `${CANDIDATE_PROFILE.safeName}-NoteTechnique-2026-${rand}`;
     
-    // Assemble CV markdown (optionally append Technical Realization Note on distinct pages)
+    // Technical Realization Note Handling
     const lang = (job.language || "fr").toLowerCase();
+    let technicalNoteMarkdown = (job.technical_note_markdown || "").trim();
+    if (!technicalNoteMarkdown) {
+      // Fallback: build dynamically from Profile.gs
+      technicalNoteMarkdown = getTechnicalNote(lang);
+    }
+    
     let fullCvMarkdown = (job.cv_markdown || "").trim();
     const shouldIncludeNote = CANDIDATE_PROFILE.includeTechnicalNote !== false;
+    const noteMode = (CANDIDATE_PROFILE.technicalNoteMode || "appended").toLowerCase();
     
-    if (shouldIncludeNote) {
-      const technicalNote = getTechnicalNote(lang);
-      if (technicalNote) {
-        fullCvMarkdown += "\n\n---pagebreak---\n\n" + technicalNote;
+    let noteResult = null;
+    if (shouldIncludeNote && technicalNoteMarkdown) {
+      if (noteMode === "appended" || noteMode === "both") {
+        fullCvMarkdown += "\n\n---pagebreak---\n\n" + technicalNoteMarkdown;
+      }
+      if (noteMode === "standalone" || noteMode === "both") {
+        noteResult = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, technicalNoteMarkdown, noteName);
+        noteDocUrl = noteResult.docUrl;
       }
     }
     
@@ -713,9 +765,12 @@ function processJob(inputFolder, outputFolder, job) {
     memoDocUrl = memoResult.docUrl;
     
     attachments = [cvResult.pdfBlob, lmResult.pdfBlob, memoResult.pdfBlob];
+    if (noteResult && noteResult.pdfBlob) {
+      attachments.push(noteResult.pdfBlob);
+    }
     
-    createDraft(job, attachments);
-    console.log(`[SUCCESS] 3 PDFs created (${shouldIncludeNote ? "CV with Technical Note appended" : "CV standard"}, Letter, Memo) & draft sent for ${job.company} (${job.score}%)`);
+    createDraft(job, attachments, noteMode, shouldIncludeNote);
+    console.log(`[SUCCESS] ${attachments.length} PDFs created (${shouldIncludeNote ? (noteMode === "standalone" ? "CV standard + Note Standalone" : "CV with Technical Note appended" + (noteMode === "both" ? " + Note Standalone" : "")) : "CV standard"}, Letter, Memo) & draft sent for ${job.company} (${job.score}%)`);
   } catch (e) {
     console.error(`[ERROR] Processing ${job.company}: ${e.message}\nStack: ${e.stack || 'N/A'}`);
   }
@@ -724,20 +779,52 @@ function processJob(inputFolder, outputFolder, job) {
     success: !!(cvDocUrl && lmDocUrl && memoDocUrl),
     cvDocUrl: cvDocUrl,
     lmDocUrl: lmDocUrl,
-    memoDocUrl: memoDocUrl
+    memoDocUrl: memoDocUrl,
+    noteDocUrl: noteDocUrl
   };
+}
+
+/**
+ * Utility function to generate a standalone Technical Realization Note on Google Drive on the fly.
+ * Can be run manually from the Apps Script editor or called programmatically.
+ * 
+ * @param {string} lang "fr" or "en"
+ * @param {string[]} projectKeys Optional array of keys: ['openprimer', 'episteme', 'ether', 'swarmforge', 'eternity', 'jrobotics', 'jgame']. If null, selects 3 flagship projects.
+ * @param {string} customTitle Optional target title
+ * @param {string} customExpertise Optional target expertise phrase
+ * @returns {Object} { docUrl, pdfBlob }
+ */
+function generateStandaloneTechnicalNote(lang = "fr", projectKeys = null, customTitle = null, customExpertise = null) {
+  const root = getOrCreateFolder(ROOT_FOLDER_NAME);
+  const inputFolder = getOrCreateFolderIn(root, INPUT_FOLDER_NAME);
+  const outputFolder = getOrCreateFolderIn(root, OUTPUT_FOLDER_NAME);
+  
+  const noteMarkdown = buildTailoredTechnicalNote(projectKeys, lang, customTitle, customExpertise);
+  const rand = Math.floor(Math.random() * 900000) + 10000;
+  const isEn = (lang || "").toLowerCase().startsWith("en");
+  const fileName = `${CANDIDATE_PROFILE.safeName}-${isEn ? "TechnicalBrief" : "NoteTechnique"}-2026-${rand}`;
+  
+  const result = generateFilesFromTemplate(inputFolder, outputFolder, CANDIDATE_PROFILE.templateLetterName, noteMarkdown, fileName);
+  console.log(`[STANDALONE NOTE] Created successfully: ${result.docUrl}`);
+  return result;
 }
 
 /**
  * Create Gmail Draft (Embeds a beautifully cleaned & structured job description copy)
  */
-function createDraft(job, attachments) {
+function createDraft(job, attachments, noteMode = "appended", shouldIncludeNote = true) {
   const subject = `[Candidature ${job.source}] - ${job.position} - ${job.company} (${job.score}%)`;
+  const isAppended = shouldIncludeNote && (noteMode === "appended" || noteMode === "both");
+  const isStandalone = shouldIncludeNote && (noteMode === "standalone" || noteMode === "both");
+  let docsDescription = `CV${isAppended ? " enrichi de la Note de réalisation technique" : ""}, Lettre de motivation, et Mémo d'architecture`;
+  if (isStandalone) {
+    docsDescription += ", ainsi que la Note de réalisation technique (PDF autonome)";
+  }
   const htmlBody = `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; border: 1px solid #e2e8f0; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
       <p style="font-size: 1.1em; margin-top: 0;">Bonjour ${CANDIDATE_PROFILE.firstName || "Silvère"},</p>
       <p>Voici ta candidature personnalisée prête à l'envoi pour le poste de <strong style="color: #2c5282;">${job.position}</strong> chez <strong style="color: #2c5282;">${job.company}</strong>.</p>
-      <p>Les fichiers PDF adaptés (CV${CANDIDATE_PROFILE.includeTechnicalNote ? " enrichi de la Note de réalisation technique" : ""}, Lettre de motivation, et Mémo d'architecture) sont déjà joints à ce brouillon.</p>
+      <p>Les fichiers PDF adaptés (${docsDescription}) sont déjà joints à ce brouillon.</p>
       
       <div style="background: #ebf8ff; padding: 20px; border-left: 5px solid #3182ce; margin: 25px 0; border-radius: 4px;">
         <h3 style="margin-top: 0; color: #2b6cb0; font-size: 1.15em;">[Analyse de l'offre - Match : ${job.score}%]</h3>
