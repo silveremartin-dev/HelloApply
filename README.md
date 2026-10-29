@@ -15,7 +15,7 @@ Dans un marché du recrutement hautement concurrentiel et dominé par les filtre
    * 📄 **Un CV ATS-Compliant enrichi** : Restructuré comme un index dynamique de preuves de travail, pouvant intégrer la **Note de Réalisation Technique** sur des pages distinctes (`technicalNoteMode: 'appended'`).
    * ✉️ **Une Lettre de Motivation Premium** : Construite sur une structure narrative captivante de type "You, Me, Us".
    * 💡 **Un Mémo d'Architecture Technique** : Document peer-to-peer rédigé au niveau du CTO/Directeur Technique, analysant et résolvant virtuellement les goulots d'étranglement et la dette technique de l'entreprise ciblée.
-   * 🛠️ **Une Note de Réalisation Technique sur-mesure générée à la volée** : Sélection intelligente par l'IA de 1 ou 2 projets parmi le catalogue maître (OpenPrimer, Episteme, Ether, SwarmForge, Eternity II, JRobotics, JGame), pouvant être collée au CV, générée en PDF autonome (`standalone`), ou les deux (`both`).
+   * 🛠️ **Une Note de Réalisation Technique sur-mesure générée à la volée** : Sélection intelligente par l'IA de 1 ou 2 projets parmi le catalogue maître de 18 projets majeurs (Episteme, Ether, SwarmForge, Praxis, Volumen, OpenPrimer, VoynichDuctus, ArtStylometry, Nisaba, Eternity II, NexusLayer, JRobotics, JGame, AutoInsta, HelloApply, Univerlan, Lumina, Lembas), pouvant être collée au CV, générée en PDF autonome (`standalone`), ou les deux (`both`).
 4. **Préparation du Brouillon Gmail** : L'agent compile les documents en PDF (3 à 4 pièces jointes selon le mode configuré), les joint à un brouillon Gmail prêt à être envoyé par l'utilisateur, et consigne la candidature dans un Google Sheet de suivi centralisé.
 
 ---
@@ -112,7 +112,7 @@ Assurez-vous que le fichier `.clasp.json` à la racine contient le bon identifia
 Le projet adopte une **architecture modulaire découplée**. Toutes les données personnelles, préférences de mobilité et éléments de portfolio sont isolés dans **`Profile.gs`** :
 * Modifiez `CANDIDATE_PROFILE` pour renseigner votre identité, coordonnées (téléphone, e-mail, LinkedIn, GitHub) et noms de modèles Drive.
 * Configurez `includeTechnicalNote` (`true` ou `false`) et `technicalNoteMode` (`"appended"`, `"standalone"`, ou `"both"`) selon le format de diffusion souhaité.
-* Le dictionnaire **`MASTER_TECHNICAL_PROJECTS`** contient le catalogue exhaustif de vos projets majeurs (*OpenPrimer*, *Episteme*, *Ether*, *SwarmForge*, *Eternity II*, *JRobotics*, *JGame*). L'IA sélectionne automatiquement 1 ou 2 projets ultra-pertinents par offre d'emploi.
+* Le dictionnaire **`MASTER_TECHNICAL_PROJECTS`** contient le catalogue exhaustif de vos 18 projets majeurs (*Episteme*, *Ether*, *SwarmForge*, *Praxis*, *Volumen*, *OpenPrimer*, *VoynichDuctus*, *ArtStylometry*, *Nisaba*, *Eternity II*, *NexusLayer*, *JRobotics*, *JGame*, *AutoInsta*, *HelloApply*, *Univerlan*, *Lumina*, *Lembas*). L'IA sélectionne automatiquement 1 ou 2 projets ultra-pertinents par offre d'emploi selon le domaine ciblé.
 * Vous pouvez également appeler manuellement `generateStandaloneTechnicalNote(lang, projectKeys)` pour exporter une note technique standalone sur Google Drive à la volée.
 * Ajustez `PREFERENCES` et la fonction `isCandidateLocalArea` pour définir vos critères géographiques de mobilité (villes cibles, rayon, télétravail).
 * Personnalisez au besoin les exemples de ton (`TONE_REFERENCE_CV_EXAMPLE`) et les notes de réalisations (`TECHNICAL_NOTE_FR` / `TECHNICAL_NOTE_EN`).

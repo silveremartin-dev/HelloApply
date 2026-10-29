@@ -69,8 +69,8 @@ graph TD
 ### Étape 2.4 : Génération & Mise en Page (Rendering Pipeline)
 Si le score de match dépasse le seuil minimal (75% en production, 95% en mode test), la fonction `processJob()` orchestre la génération asymétrique :
 1. **CV personnalisé enrichi (1 ou 2 pages de CV + 2 pages de Note de Réalisation Technique)** :
-   * **Le CV** : restructuré selon les besoins du poste en valorisant les projets open-source phares de l'écosystème de Silvère (**Episteme**, **Eternity**, **Swarm Forge**, **Open Primer**, **Antigravity**).
-   * **La Note de Réalisation Technique (Page distincte)** : ajoutée systématiquement à la suite du CV (en Français ou en Anglais selon la langue de l'offre), présentant en détail les réalisations phares (*OpenPrimer*, *Episteme*), les innovations, les stacks LLMOps/HPC, les preuves d'exécution (dépôts GitHub, Hugging Face, benchmarks) et les compétences transversales.
+   * **Le CV** : restructuré selon les besoins du poste en valorisant les projets open-source phares de l'écosystème de Silvère (**Episteme**, **Ether**, **SwarmForge**, **Praxis**, **Volumen**, **OpenPrimer**, **Antigravity**).
+   * **La Note de Réalisation Technique (Page distincte)** : ajoutée systématiquement à la suite du CV (en Français ou en Anglais selon la langue de l'offre), présentant en détail les réalisations phares ciblées parmi les 18 projets du catalogue, les innovations, les stacks LLMOps/HPC/Vision/Robotique, les preuves d'exécution (dépôts GitHub, Hugging Face, benchmarks) et les compétences transversales.
 2. **Lettre de motivation classique** : structure d'accroche premium et personnalisation fine ("You, Me, Us").
 3. **Mémo d'architecture technique** : document hautement technique, sans formule de subordination, ciblant directement les goulets d'étranglement de l'entreprise cible (mise à l'échelle d'agents IA, parallélisation de solveurs, architecture de systèmes complexes distribués).
 
@@ -87,7 +87,8 @@ Le projet sépare strictement le moteur d'exécution, le profil candidat, et les
   * `PREFERENCES` : Critères de mobilité, salaire minimum, zones de recherche autorisées.
   * `isCandidateLocalArea(location)` : Règles de filtrage géographique adaptables.
   * `TONE_REFERENCE_CV_EXAMPLE` : Exemples de ton et structure injectés dans le prompt Gemini.
-  * `TECHNICAL_NOTE_FR` / `TECHNICAL_NOTE_EN` & `getTechnicalNote(language)` : Notes de réalisation technique complètes (OpenPrimer, Episteme, benchmarks) en français et anglais.
+  * `MASTER_TECHNICAL_PROJECTS` : Catalogue exhaustif des 18 projets techniques majeurs, avec titres, résumés, détails denses (3-4 lignes max) et liens vérifiables.
+  * `TECHNICAL_NOTE_FR` / `TECHNICAL_NOTE_EN` & `getTechnicalNote(language)` : Notes de réalisation technique ciblées assemblées dynamiquement en français et anglais.
 * **`Code.gs` (Moteur d'Orchestration & Rendu)** :
   * `main()` : Point d'entrée principal. Gère la détection du mode (`TEST_MODE`), la récupération des e-mails, et l'orchestration globale.
   * `fetchJobDescription()` : Agent HTTP avec usurpation de `User-Agent` moderne et nettoyage regex du DOM.

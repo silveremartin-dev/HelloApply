@@ -346,7 +346,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
          - Formal greeting: "Madame, Monsieur," (or English equivalent).
          - Narrative: Clean "You, Me, Us" narrative structure (written entirely in the target language):
            - You: Show deep understanding of their business context, technical environment, and structural challenges.
-           - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
+           - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, OpenPrimer, SwarmForge, Ether, Praxis, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
            - Us: Propose high-value synergy and immediate technical collaboration.
          - Formal closing salutation: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." (or English equivalent).
          - Sign-off: "\${CANDIDATE_PROFILE.fullName}."
@@ -365,7 +365,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - The core content of the Memo must feature:
          - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
          - **The Proposition:** Propose a high-level architectural posture to solve it.
-         - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, Open Primer, Swarm Forge, Ether, or Google Antigravity).
+         - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, OpenPrimer, SwarmForge, Ether, Praxis, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
          - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." (or English equivalent).
          - **Sign-off:** "\${CANDIDATE_PROFILE.fullName}."
 
@@ -387,25 +387,44 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
         - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
         
      5. THE TAILORED TECHNICAL REALIZATION NOTE ('technical_note_markdown'):
-        - Candidate Technical Portfolio (Knowledge Repository of Flagship Projects):
-          * OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (Gemini 2.5 API multi-agent, 10-level academic taxonomy, Next.js 15, Vercel, Supabase RLS, LLMOps).
-          * EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (450k+ lines Java 25, Project Panama off-heap, CUDA bindings, benchmarks 10x Apache, Antigravity AI engineering).
-          * ETHER: Distributed Cliodynamics & Macro-Historical Simulation Engine (multi-node cluster, Uber H3 hexagonal spatial indexing, ClusterClockBarrier deterministic sync, Java 21 Virtual Threads / Vector API SIMD, Rust zero-cost FFI, non-equilibrium thermodynamics & biophysical N-P-K cycles, PostGIS, JavaFX Archon).
-          * SWARMFORGE: Distributed Massive Multi-Agent Simulation Platform & 3D Ecosystems (10^5+ agents, eusocial colonies & trophic networks, BDI / neural nets / fuzzy logic, swarmforge-compute, gRPC/FlatBuffers, Kubernetes/Helm, Redis, jMonkeyEngine 3D, React/Vite).
+        - Candidate Technical Portfolio (Knowledge Repository of 18 Flagship Projects):
+          * EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (450k+ lines Java 25, Project Panama FFM off-heap, Vector API SIMD, native Rust Rayon, CUDA, autotuning backends, 15x Apache).
+          * ETHER: Distributed Cliodynamics & Biophysical Simulation Engine (multi-node cluster, Uber H3 hexagonal spatial indexing, ClusterClockBarrier deterministic sync, Java 21 Virtual Threads, Rust zero-cost FFI, PostGIS).
+          * SWARMFORGE: Distributed Massive Multi-Agent Simulation Platform & 3D Ecosystems (2M agents, Artemis-odb ECS, Rust SIMD, BDI / ONNX DRL, TornadoVM OpenCL GPU, jMonkeyEngine 3.6, React/Vite).
+          * PRAXIS: Video-to-Physical-Digital-Twin (V2PDT) for Humanoid Robotics (YouTube monocular to 3D twin, Unitree H1/Optimus/ALOHA retargeting, SDF collision avoidance, MuJoCo 3.x, LeRobot Parquet).
+          * VOLUMEN: High-Performance Rust Virtual Unwrapping & Volumetric Streaming (Vesuvius Challenge Herculaneum scrolls, 5-10 TB OME-Zarr, Archimedean spiral unrolling, Rayon/SIMD, ScrollPrize villa).
+          * OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (Gemini 2.5 API multi-agent, 10-level academic taxonomy, Next.js 15, Vercel, Supabase RLS, WebLLM, EdTech SaaS).
+          * VOYNICHDUCTUS: Objective Scribal Kinematics & Computational Paleography (40? beveled quill mechanics, EDT distance ridges, 5 vision paradigms, DINOv2, HDBSCAN, information-theoretic diagnostics).
+          * ARTSTYLOMETRY: Computational Stylometry & Quantitative Connoisseurship (12,300+ paintings, IIIF gigapixel APIs, DINOv2 / Gram matrices, Mahalanobis attribution heatmaps, 3D manifold).
+          * NISABA: High-Performance Computational Engine for Sumerian Epigraphy (135k tablets, DuckDB / Apache Parquet columnar pipeline, prosopography graph networks, Ur III accounting).
           * ETERNITY II: Massive Distributed Combinatorial Solver & GPU Acceleration (Java 25, NP-complete 10^600 states, TornadoVM OpenCL/PTX GPU kernels, 64-bit zero-heap primitives, MCTS / UCT, 21M eval/sec/core).
-          * JROBOTICS: Modular Universal Robotics Framework & API for Java 21+ (14 modules, ~25k LOC, FastSLAM 2.0, EKF sensor fusion, Deep Learning DJL YOLO, DQN/PPO reinforcement learning, ROS 2 bridge, Swarm Boids).
+          * NEXUSLAYER: Modern Client-Server Database Schema Editor & Visual Designer (Java 21, Spring Boot 3.2, JavaFX 21 desktop client, PostgreSQL 16, Docker Compose, JWT/BCrypt, OpenAPI 3.0).
+          * JROBOTICS: Modular Universal Robotics Framework & API for Java 21+ (14 modules, ~25k LOC, FastSLAM 2.0, EKF sensor fusion, Deep Learning DJL YOLO, ROS 2 bridge, Swarm Boids).
           * JGAME: Distributed Modular Multiplayer Gaming Platform & AI (Java 25, Javalin 6 REST, WebSockets, JavaFX & Web, Minimax AI alpha-beta pruning, concurrent lobbies, ELO, BCrypt/JWT).
+          * AUTOINSTA: Zero-Cost Egocentric Lifelogging & Multi-Sensor Agent (Gemini 1.5 Flash multimodal VLM, sensor fusion GPS/motion/light/heart-rate, zero-tolerance privacy shield, FastAPI).
+          * HELLOAPPLY: Autonomous Sourcing & Asymmetric Application AI Agent (Google Apps Script microservice, Gmail alert interception, Gemini cognitive scoring, automated PDF dossier generation).
+          * UNIVERLAN: Rationalized Interstellar Conlang Engine & Bilingual Web Studio (29 phonemes 1:1, zero irregular verbs, Wilkins ontology, symmetric 4-mode translation, STT/TTS, bilingual reader).
+          * LUMINA: Universal Logical Language, C1V1C2V2 Semantic Matrix & Speech Engine (Morphological analyzer, IPA transcription, formant WAV TTS, bidirectional translation, Web Studio).
+          * LEMBAS: Gamified Tolkien Elvish Learning Platform & Tengwar Calligraphy (Quenya/Sindarin translator, Duolingo-style XP/streak progression, Tengwar Annatar, Web Speech audio).
 
         - CRITICAL SELECTION RULE (DO NOT DUMP ALL PROJECTS):
-          The candidate maintains a portfolio of 7 major deep-tech projects. You MUST NOT include all projects systematically!
+          The candidate maintains a portfolio of 18 major deep-tech and scientific projects. You MUST NOT include all projects systematically!
           Instead, analyze the job requirements, required tech stack, and target industry, and select precisely the ONE or TWO (at most THREE if highly relevant) projects that offer the strongest, most convincing Proof-of-Work for this specific position:
-          * Web Platforms / GenAI / LLMOps / SaaS / Modern Fullstack -> Prioritize OpenPrimer (+ SwarmForge or JGame)
-          * HPC / Low-Level / Java 21-25 / GPU acceleration / Math / Algorithms -> Prioritize Episteme (+ Eternity)
-          * Distributed Systems / Macro-Systems / Spatial-GIS / Biophysics / Rust-Java -> Prioritize Ether (+ SwarmForge or Episteme)
-          * Multi-Agents / Massive Simulation / Kubernetes / Real-time 3D / Networks -> Prioritize SwarmForge (+ JRobotics or OpenPrimer)
-          * Robotics / Autonomous Systems / Hardware / SLAM / Computer Vision -> Prioritize JRobotics (+ SwarmForge or Episteme)
-          * Combinatorial Optimization / Heuristics / GPU kernels / Search algorithms -> Prioritize Eternity (+ Episteme)
+          * Web Platforms / GenAI / LLMOps / SaaS / Modern Fullstack -> Prioritize OpenPrimer (+ SwarmForge or HelloApply)
+          * HPC / Low-Level / Java 21-25 / GPU acceleration / Math / Algorithms -> Prioritize Episteme (+ Eternity or SwarmForge)
+          * Rust / Systems Programming / High-Throughput / Out-of-Core -> Prioritize Volumen (+ Ether or Episteme)
+          * Computer Vision / Robotics / Humanoid Manipulation / Digital Twins -> Prioritize Praxis (+ JRobotics)
+          * Distributed Systems / Macro-Systems / Spatial-GIS / Biophysics -> Prioritize Ether (+ SwarmForge or Episteme)
+          * Multi-Agents / Massive Simulation / Kubernetes / Real-time 3D -> Prioritize SwarmForge (+ Ether or JRobotics)
+          * Robotics / Autonomous Systems / Hardware / SLAM / Embedded AI -> Prioritize JRobotics (+ Praxis)
+          * Big Data / Data Engineering / Columnar DB / Graphs -> Prioritize Nisaba (+ NexusLayer)
+          * Database Architecture / Schema Design / Java Client-Server -> Prioritize NexusLayer (+ Nisaba or JGame)
+          * AI Vision / Art / Digital Humanities / Information Theory -> Prioritize ArtStylometry (+ VoynichDuctus)
+          * Paleography / Handwriting Derendering / Computational Linguistics -> Prioritize VoynichDuctus (+ ArtStylometry or Nisaba)
+          * Mobile / Sensor Fusion / Multimodal Agents / Automation -> Prioritize AutoInsta (+ HelloApply)
+          * Autonomous Workflow / Cloud Automation / Micro-Services -> Prioritize HelloApply (+ AutoInsta)
           * Gaming / Turn-based Systems / Real-time Lobbies / WebSockets -> Prioritize JGame (+ SwarmForge)
+          * Linguistics / Conlangs / Educational Gamification / Audio-TTS -> Prioritize Univerlan (+ Lumina or Lembas)
 
         - Markdown Structure for 'technical_note_markdown':
           # ${CANDIDATE_PROFILE.fullName.toUpperCase()}
