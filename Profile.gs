@@ -72,40 +72,165 @@ function isMorbihan(location) {
   return isCandidateLocalArea(location);
 }
 
-// --- 4. PROMPT TONE REFERENCE (GOLD STANDARD CV TEMPLATE) ---
-const TONE_REFERENCE_CV_EXAMPLE = `"${CANDIDATE_PROFILE.fullName.toUpperCase()} ${CANDIDATE_PROFILE.location} (Remote) | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email} 
+// --- 4. PROMPT TONE REFERENCE (GOLD STANDARD CV TEMPLATE - 2 FULL PAGES) ---
+const TONE_REFERENCE_CV_EXAMPLE = `"# ${CANDIDATE_PROFILE.fullName.toUpperCase()}
+${CANDIDATE_PROFILE.location} (Mobilité régionale & Remote) | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
 LinkedIn: ${CANDIDATE_PROFILE.linkedinRaw} | GitHub: ${CANDIDATE_PROFILE.githubRaw}
-ARCHITECTE SENIOR IA AGENTIQUE & SYSTÈMES DISTRIBUÉS (ICOE)
-Architecte et Principal Engineer avec plus de 30 ans d'expertise dans le pilotage et la refonte de systèmes d'information complexes. Pionnier de l'ingénierie logicielle augmentée par IA (Expert Google Antigravity), alliant un double cursus scientifique en neurosciences et intelligence artificielle à une capacité d'exécution hors norme : division par 5 des cycles de livraison et automatisation de 80% du cycle de vie des applications (tests, documentation). Expert de la modernisation de legacy critique et de la conception d'architectures distribuées multi-cloud hautes performances.
-COMPÉTENCES CLÉS
-Architectures IA & Frameworks Agentiques : Orchestration multi-agents, frameworks autonomes et semi-autonomes (Google Antigravity, architectures de type LangChain/AutoGen), LLMs, Prompt Engineering, patterns RAG, et bases de données vectorielles.
-Ingénierie Logicielle & Systèmes Distribués : Expertise Java (J2SE 1.0 à 25+), Python, C#, Micro-services, architectures orientées événements, API REST/MCP, calcul scientifique distribué haute performance.
-Modernisation de Legacy & Delivery Lifecycle : Audit et refactoring de codes patrimoniaux critiques, automatisation end-to-end des phases d'analyse, build, test (TDD), documentation et déploiement via agents IA.
-Environnements Cloud & MLOps/DevOps : Maîtrise multi-cloud (GCP, AWS, architectures hybrides), conteneurisation (Docker, Kubernetes), CI/CD, observabilité, et gouvernance/sécurité des données (RGPD, chiffrement).
-Leadership Technique & Advisory : Direction d'équipes d'ingénierie (jusqu'à 8 développeurs en environnement Agile/Scrum), relation client stratégique (AMOA), vulgarisation de concepts IA complexes auprès d'audiences techniques et exécutives. EXPÉRIENCES PROFESSIONNELLES
-Lead Architecte & Développeur Open Source | Mécénat GitHub | Lorient (Remote) | 07/2025 – Présent
-Conception d'un écosystème de 18 architectures deep-tech open-source (Java 25, Rust, Python) cumulant plus de 1M de lignes de code.
-Création d'Episteme (calcul scientifique 450k LOC, 15x plus rapide qu'Apache), de SwarmForge (simulation multi-agents 2M entités, ECS, Rust SIMD) et de Praxis (jumeaux numériques 3D et retargeting pour robots humanoïdes).
-Développement du moteur de déroulement virtuel Volumen (Vesuvius Challenge, streaming out-of-core OME-Zarr 10 To) et de la plateforme SaaS EdTech OpenPrimer.
-Automatisation de 80% des tests unitaires et de la documentation via l'ingénierie augmentée par agents IA (Google Antigravity).
-Spécialiste Support Informatique Senior | Techteam (Fives Syleps) | Lorient | 06/2024 – 07/2025
-Résolution d'incidents critiques 24/7 (Niveaux 1, 2, 3) sur plateformes logistiques robotisées (WMS/WCS).
-Réorganisation de l'accès VPN et de la gestion des machines virtuelles, réduisant le temps de connexion de l'équipe de 35%.
-Responsable IT / Chef de Projet AMOA | Equitive (Groupe Deloitte) | Lorient | 10/2012 – 11/2023
-Accompagnement technique stratégique ayant généré une hausse de 400% du chiffre d'affaires client en 7 ans.
-Déploiement de solutions de dématérialisation (facturation, paie) pour le Ministère de la Culture.
-Coordination de 8 développeurs en environnements Agiles et DevOps.
-Migration d'infrastructure vers une architecture hybride de plus de 80 machines virtuelles sécurisées.
-FORMATION & LANGUES
-Certificat de Neurosciences Cognitives & DESS Psychologie Expérimentale : Université de Genève (1998).
-DEA Sciences Cognitives (Intelligence Artificielle) : INPG Grenoble (1994).
-Maîtrise d'Informatique : Université Joseph Fourier, Grenoble (1993).
-Langues : Anglais C2 (TOEFL 267/300), Espagnol B2, Italien B1.
-ENVIRONNEMENT TECHNIQUE
-Langages : Java (Expert), Rust, Python, C#, Javascript, SQL, C++, LISP, PHP, Powershell.
-Outils IA : Google Antigravity, TensorFlow, Keras, Gemini 3, ChatGPT, HuggingFace, LeRobot, MuJoCo, N8N
-Frameworks & Data : SpringBoot, DuckDB, Apache Parquet, OME-Zarr, Hibernate, Spark, Kafka, Tornado VM, Three.js, Redis, Oracle, PostgreSQL.
-Méthodes : Agile (Scrum/Lean), TDD, Design Patterns, UML."`;
+
+## MANAGER EN TRANSFORMATION DIGITALE | ARCHITECTE SYSTÈMES & IA | LEAD DÉVELOPPEUR
+
+Plus de 25 ans d'expérience combinant le pilotage stratégique de la transformation numérique (AMOA, direction de projets, urbanisation du SI, modernisation de legacy critique) et une expertise d'architecture logicielle distribuée et d'ingénierie augmentée par IA. Capacité démontrée à dialoguer avec les directions générales et métiers pour aligner l'IT sur la création de valeur (+400% de CA client consolidé chez Deloitte/Equitive), tout en conservant une pratique "hands-on" de haut niveau capable de concevoir, auditer et délivrer des architectures microservices, cloud-native et haute performance.
+
+## PILIERS D'EXPERTISE & COMPÉTENCES CLÉS
+- **Direction & Transformation :** AMOA & Cadrage Stratégique (alignement SI/Métier, ROI), Modernisation Legacy (audit, refonte, flux ETL, RPA), Gouvernance & Méthodes (Agile/Scrum, Cycle en V), Conformité & Risques (RGPD, cybersécurité, RH).
+- **Architecture Systèmes & IA :** Systèmes Distribués (microservices, Kafka, gRPC, REST APIs), IA Agentique & LLMs (multi-agents Google Antigravity, RAG), Cloud & Hybride (GCP, AWS, Kubernetes, Docker, HA), Calcul Intensif (HPC, bas-niveau, GPU CUDA).
+- **Ingénierie & Delivery :** Langages (Java 1.0 à 25+, Rust, Python, C#, SQL), Frameworks (Spring Boot 3, Javalin, Next.js 15, FastAPI), Données (PostgreSQL, Oracle 9i-19c, SQL Server), Qualité & DevOps (CI/CD GitHub Actions, TDD JUnit).
+
+## EXPÉRIENCES PROFESSIONNELLES
+
+### Lead Architecte & Développeur Open Source — Mécénat GitHub & Recherche Deep-Tech | Lorient (Remote) | 07/2025 - Présent
+- Direction technique et architecture d'un écosystème souverain de 18 frameworks deep-tech (+1M lignes de code en Java 25, Rust, Python, TypeScript) illustrant la transformation digitale des cycles d'ingénierie par IA.
+- Ingénierie augmentée par IA (Google Antigravity) : Automatisation de 80% des tests unitaires et de la documentation, division par 5 du cycle moyen de mise en production logicielle.
+- HPC & Systèmes distribués massifs : Conception d'Episteme (calcul scientifique Java 25 / Panama FFM hors-heap, benchmarks 15x supérieurs aux standards Apache) et SwarmForge (simulation multi-agents 2M entités, ECS, Kubernetes, gRPC).
+- Plateformes Cloud & IA Générative : Architecture d'OpenPrimer (SaaS EdTech multi-agents, inférence hybride WebLLM/Gemini 2.5, Next.js 15, Supabase RLS) et d'Ether (simulation cliodynamique multi-nœuds, Java 21 Loom, Rust FFI, Uber H3, PostGIS).
+- **Environnement technique :** Google Antigravity, Java 21-25, Rust, Python, Next.js 15, Spring Boot 3, Kubernetes, Docker, gRPC, Redis, PostgreSQL.
+
+### Spécialiste Support Informatique Senior & Expert SI Industriel — Techteam (Fives Syleps) | Lorient | 06/2024 - 07/2025
+- Maintien en condition opérationnelle (MCO) et fiabilisation de plateformes logistiques automatisées et robotisées (WMS, WCS, GPAO, MES) en environnement industriel 24/7 sous flux tendus.
+- Gestion d'incidents critiques & MCO : Résolution en temps réel des blocages applicatifs et bases de données (Niveaux 1 à 3), garantissant un taux de disponibilité supérieur à 99,8%.
+- Modernisation de l'infrastructure & Sécurité : Audit et rationalisation des accès VPN sécurisés et du parc de virtualisation (VMware, Hyper-V), réduisant de 35% le temps moyen d'intervention de l'équipe support.
+- Performance des données : Maintenance, tuning d'index et administration des bases transactionnelles à haute volumétrie (Oracle 19c, MS SQL Server) et fiabilisation des flux d'échanges SFTP industriels.
+- **Environnement technique :** Windows Server, Linux/Unix, Oracle 19c, MS SQL Server, VMware, Hyper-V, SFTP, Java, .NET/C#, PL/SQL, Bash.
+
+### Responsable IT & Chef de Projet AMOA — Equitive (Groupe Deloitte) | Lorient | 10/2012 - 11/2023 (11 ans)
+- Direction de la transformation digitale et pilotage stratégique AMOA de solutions de dématérialisation RH/paie, facturation électronique et subventions (notamment pour le Ministère de la Culture).
+- Impact Business & Croissance : Pilotage stratégique des projets et relation client de haut niveau ayant contribué directement à une croissance de 400% du chiffre d'affaires client consolidé sur 7 ans.
+- Direction de Projets & Delivery : Encadrement d'équipes pluridisciplinaires (jusqu'à 8 ingénieurs/développeurs), cadrage des besoins, gestion budgétaire, plannings et conduite du changement en méthodes Agiles/Scrum et Cycle en V.
+- Urbanisation du SI & Cloud Hybride : Modernisation globale de l'infrastructure vers un cluster haute disponibilité de plus de 100 machines virtuelles sécurisées (VMware, Hyper-V, Docker, Apache Tomcat, Jenkins, Redmine, Git).
+- Automatisation des Processus (RPA & ETL) : Conception d'interfaces de données unifiées (Talend ETL, SOAP/REST, PowerShell) et d'automates RPA (UiPath) réduisant les tâches manuelles récurrentes de 80%.
+- Cybersécurité & Gouvernance des Données (RGPD) : Sécurisation de bout en bout des flux (TLS/SSL) et des volumes, mise en place des politiques d'anonymisation, pseudonymisation et purge des données sensibles RH et paie.
+- **Environnement technique :** Java, .NET/C#, Webdev, SQL Server, Oracle, Talend ETL, VMware, Hyper-V, Docker, Jenkins, UiPath, Redmine, Git, PowerShell, REST.
+
+### Architecte Base de Données & Tech Leader — Hardis | Grenoble | 03/2011 - 02/2012
+- Architecture et modélisation des données pour les plateformes de gestion d'assurance de Groupe Mutuel Assurances.
+- Modélisation, optimisation et refonte de la base de données Oracle 11g (tuning SQL/PL-SQL, indexation).
+- Architecture des flux de migration de données massives (Talend ETL) et développement des couches de persistance d'une application riche client-serveur (J2EE/RCP).
+- Encadrement technique de 5 développeurs seniors : revues de code, bonnes pratiques TDD sous JUnit, intégration continue.
+- **Environnement technique :** Java J2EE, Spring, Hibernate, Oracle 11g, PL/SQL, Talend ETL, JUnit, Eclipse RCP/SWT.
+
+### Ingénieur d'Études & de Développement — HR Team (EDF / Atos Worldgrid) | Grenoble | 10/2010 - 03/2011
+- Conception et optimisation de services Web transactionnels critiques (SOAP, WSDL, Spring, Hibernate) pour les flux d'énergie d'EDF.
+- Rédaction des dossiers d'architecture technique (DAT), plans de tests d'intégration JUnit et maintien en condition opérationnelle (MCO).
+- **Environnement technique :** Java, J2EE, Servlets, WSDL, SOAP, Spring, Hibernate, Oracle, JUnit, Eclipse.
+
+### Ingénieur R&D & Consultant Java — Steria | Grenoble / Lille | 04/2006 - 07/2010
+- Missions de conseil en architecture et développement logiciel J2EE pour grands comptes industriels.
+- STMicroelectronics (Crolles 2) : Développement de services Web J2EE interfaçant en temps réel les lignes de fabrication de semi-conducteurs ; anglais technique au quotidien.
+- Camaïeu : Maintenance corrective et évolutive des plateformes logistiques et gestion des stocks en temps réel (Spring, Hibernate, Oracle 10g, C3P0, EHCache).
+- France Télécom & Schneider Electric : Refonte de services transactionnels clients et exécution de plans de tests industriels (Quality Center).
+- **Environnement technique :** Java, J2EE, Servlets, JSP, Struts, Spring, Hibernate, Oracle 9i/10g, C3P0, EHCache, Quality Center, UML.
+
+### Architecte Logiciel & Co-Fondateur — Projets Pionniers R&D Open Source | Grenoble / Genève | 2002 - 2008
+- Initiatives fondatrices en calcul formel, robotique autonome et mondes virtuels distribués.
+- jRobotics.org (2007–2008) : Co-fondateur et architecte d'un framework Java open-source (+1 000 classes) dédié au contrôle robotique temps réel et simulation 3D (Java 5 multithreadé, Java3D, TCP/IP).
+- Calcul Scientifique & JSR-275 (2004–2007) : Co-fondateur et architecte d'une bibliothèque scientifique Java majeure (+5 000 classes de calcul formel et analyse dimensionnelle) en liaison étroite avec les travaux de standardisation JSR-275 (Units & Measures API).
+- Digital Biosphere (2002–2003) : Conception d'un moteur de monde virtuel 3D distribué temps réel (Java, JDO, réseau UDP/TCP Multicast sécurisé SSL, VRML/X3D).
+- **Environnement technique :** Java (JDK 1.1 à 5), JCP (JSR-275), JDO, Java3D, VRML/X3D, TCP/IP, UDP Multicast, SSL, Unix/Linux, Oracle, MySQL.
+
+### Assistant R&D, Enseignement & Administrateur Systèmes — TECFA — Université de Genève | Genève (Suisse) | 1994 - 1999
+- Recherche pionnière en technologies éducatives, informatique cognitive et administration d'infrastructures.
+- R&D en informatique cognitive : conception d'interfaces graphiques interactives, de simulations de vie artificielle et d'environnements virtuels 3D distribués (VRML).
+- Enseignement et encadrement des étudiants de 3e cycle / DESS en conception de logiciels interactifs et hypermédias.
+- Administration système et réseau d'un parc hétérogène de plus de 80 serveurs et postes (Unix, Linux, SunOS, Novell, Mac, Windows), gestion de la sécurité et des services Internet pionniers.
+- **Environnement technique :** Unix, Linux, SunOS, Solaris, C, C++, VRML, HTML, TCP/IP, Novell Netware.
+
+## FORMATION & LANGUES
+- **DEA Sciences Cognitives (Option Intelligence Artificielle) :** I.N.P.G Grenoble (1994, Boursier au mérite, Mention Assez Bien).
+- **Certificat de Neurosciences Cognitives & DESS de Psychologie Cognitive Expérimentale :** Université de Genève (1997–1998).
+- **Maîtrise d'Informatique & DEUG MASS (Mathématiques Appliquées) :** Université Joseph Fourier & UPMF Grenoble (1993).
+- **Master d'Histoire (M2 Recherche, Valorisation des Savoirs Historiques & Archéologiques) :** Université de Bretagne Sud, Lorient (2025, Mention Bien).
+- **Licences (L3) de Sociologie & d'Histoire de l'Art :** Universités de Toulouse Le Mirail & Grenoble UPMF (2010).
+- **Langues :** Anglais (C2 - Bilingue, TOEFL 267/300), Français (C2 - Langue maternelle), Espagnol (B2 - Professionnel), Italien (B1 - Opérationnel)."`;
+
+// Reference Standard CV Template in English (2 Full Pages)
+const TONE_REFERENCE_CV_EXAMPLE_EN = `"# ${CANDIDATE_PROFILE.fullName.toUpperCase()}
+${CANDIDATE_PROFILE.location} (Regional Mobility & Remote) | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+LinkedIn: ${CANDIDATE_PROFILE.linkedinRaw} | GitHub: ${CANDIDATE_PROFILE.githubRaw}
+
+## DIGITAL TRANSFORMATION MANAGER | SYSTEMS & AI ARCHITECT | LEAD ENGINEER
+
+Over 25 years of experience combining the strategic steering of digital transformations (functional project management, systems urbanization, critical legacy modernization) with deep expertise in distributed software architectures and AI-augmented engineering. Demonstrated track record collaborating with executive and business leadership to align IT with value creation (+400% consolidated client revenue at Deloitte/Equitive), while maintaining high-level hands-on architectural mastery to design, audit, and ship microservices, cloud-native, and high-performance systems.
+
+## CORE COMPETENCY PILLARS
+- **Management & Transformation:** Strategic Advisory & Scoping (IT/business alignment, ROI focus), Legacy Modernization (audit, redesign, ETL pipelines, RPA), Governance & Methodologies (Agile/Scrum, V-Model), Compliance & Risk Management (GDPR, cybersecurity, HR processes).
+- **Systems Architecture & AI:** Distributed Systems (microservices, Kafka, gRPC, REST APIs), Agentic AI & LLMs (Google Antigravity multi-agent systems, RAG pipelines), Cloud & Hybrid Infrastructure (GCP, AWS, Kubernetes, Docker, HA clusters), High-Performance Computing (HPC, bare-metal optimization, GPU CUDA).
+- **Software Engineering & Delivery:** Languages (Java 1.0 to 25+, Rust, Python, C#, SQL), Frameworks (Spring Boot 3, Javalin, Next.js 15, FastAPI), Data & Persistence (PostgreSQL, Oracle 9i-19c, SQL Server), Quality & DevOps (CI/CD GitHub Actions, TDD with JUnit).
+
+## PROFESSIONAL EXPERIENCE
+
+### Lead Open-Source Architect & Senior Engineer — GitHub Sponsorship & Deep-Tech Research | Lorient (Remote) | 07/2025 - Present
+- Technical direction and architecture of a sovereign 18-framework deep-tech ecosystem (+1M lines of code across Java 25, Rust, Python, TypeScript) illustrating AI-driven engineering transformation.
+- AI-Augmented Engineering (Google Antigravity): Automated generation of 80% of unit/integration test suites and documentation, accelerating release cadence 5x.
+- HPC & Massive Distributed Systems: Architected Episteme (Java 25 off-heap Panama FFM scientific computing, certified 15x faster than Apache Commons) and SwarmForge (massive multi-agent simulation for 2M entities, ECS, Kubernetes, gRPC).
+- Cloud Platforms & Generative AI: Architected OpenPrimer (multi-agent EdTech SaaS, hybrid in-browser WebLLM/Gemini 2.5 inference, Next.js 15, Supabase RLS) and Ether (planetary cliodynamics simulation, Java 21 Loom, Rust FFI, Uber H3, PostGIS).
+- **Technical Environment:** Google Antigravity, Java 21-25, Rust, Python, Next.js 15, Spring Boot 3, Kubernetes, Docker, gRPC, Redis, PostgreSQL.
+
+### Senior IT Support Specialist & Industrial IS Expert — Techteam (Fives Syleps) | Lorient | 06/2024 - 07/2025
+- Operational maintenance (MCO) and reliability engineering for automated and robotic logistics platforms (WMS, WCS, CAPM, MES) in 24/7 continuous industrial environments.
+- Critical Incident Resolution: Real-time debugging of mission-critical applications and databases (Tier 1-3), maintaining operational availability above 99.8%.
+- Infrastructure Modernization & Security: Audited and streamlined secure VPN access and virtual server clusters (VMware, Hyper-V), reducing mean intervention diagnostic time by 35%.
+- High-Volume Data Performance: Tuning, index maintenance, and administration for high-throughput transactional databases (Oracle 19c, MS SQL Server) and industrial SFTP data flows.
+- **Technical Environment:** Windows Server, Linux/Unix, Oracle 19c, MS SQL Server, VMware, Hyper-V, SFTP, Java, .NET/C#, PL/SQL, Bash.
+
+### IT Manager & Senior Technical Project Director (AMOA) — Equitive (Deloitte Group) | Lorient | 10/2012 - 11/2023 (11 years)
+- Led enterprise digital transformation initiatives and functional project management for digital dematerialization (e-invoicing, payroll, expense accounts, Ministry of Culture grants).
+- Business Growth & Executive Partnership: Strategic advisory and high-level client relationship management contributing directly to a +400% consolidated client revenue increase over 7 years.
+- Project Governance & Delivery: Supervised multidisciplinary engineering teams (up to 8 developers), budget management, risk governance, and change management using Agile/Scrum and V-Model.
+- Enterprise IS Urbanization: Modernized legacy infrastructure into a high-availability cluster of 100+ secure virtual machines (VMware, Hyper-V, Docker, Apache Tomcat, Jenkins, Redmine, Git).
+- Process Automation (RPA & ETL): Engineered unified ETL integration flows (Talend ETL, SOAP/REST, PowerShell) and RPA bots (UiPath), eliminating 80% of recurring manual operations.
+- Cybersecurity & GDPR Data Governance: End-to-end transport and volume encryption (TLS/SSL), implementing strict anonymization, pseudonymization, and purge protocols for sensitive HR data.
+- **Technical Environment:** Java, .NET/C#, Webdev, SQL Server, Oracle, Talend ETL, VMware, Hyper-V, Docker, Jenkins, UiPath, Redmine, Git, PowerShell, REST.
+
+### Database Architect & Technical Team Leader — Hardis | Grenoble | 03/2011 - 02/2012
+- Database architecture and relational modeling for Groupe Mutuel Assurances core insurance management platform.
+- Modeled, optimized, and tuned Oracle 11g database schemas (complex SQL/PL-SQL stored procedures, execution plan indexing).
+- Designed massive ETL migration pipelines (Talend) and developed persistence layers for a large-scale J2EE Eclipse RCP client-server application.
+- Provided technical leadership for 5 senior software engineers: code reviews, TDD practices under JUnit, and continuous integration.
+- **Technical Environment:** Java, J2EE, Spring, Hibernate, Oracle 11g, PL/SQL, Talend ETL, JUnit, Eclipse RCP/SWT.
+
+### Systems Study & Software Engineer — HR Team (EDF / Atos Worldgrid) | Grenoble | 10/2010 - 03/2011
+- Designed and optimized mission-critical transactional J2EE web services (SOAP, WSDL, Spring, Hibernate) for EDF energy distribution streams.
+- Authored technical architecture dossiers (DAT), comprehensive JUnit integration test suites, and operational runbooks.
+- **Technical Environment:** Java, J2EE, Servlets, WSDL, SOAP, Spring, Hibernate, Oracle, JUnit, Eclipse.
+
+### R&D Software Engineer & Java Consultant — Steria | Grenoble / Lille | 04/2006 - 07/2010
+- J2EE architectural consulting and engineering for major industrial and telecom accounts.
+- STMicroelectronics (Crolles 2): Developed J2EE web services interfacing live microchip fabrication cleanrooms; bilingual technical delivery.
+- Camaïeu: Corrective and evolutionary maintenance for real-time inventory and supply-chain platforms (Spring, Hibernate, Oracle 10g, C3P0, EHCache).
+- France Télécom & Schneider Electric: Refactored customer CRM services and executed industrial acceptance testing suites (Quality Center).
+- **Technical Environment:** Java, J2EE, Servlets, JSP, Struts, Spring, Hibernate, Oracle 9i/10g, C3P0, EHCache, Quality Center, UML.
+
+### Software Architect & Co-Founder — Pioneer Open-Source R&D Initiatives | Grenoble / Geneva | 2002 - 2008
+- Foundational deep-tech initiatives across symbolic computing, autonomous robotics, and distributed virtual worlds.
+- jRobotics.org (2007–2008): Co-founded and architected an open-source Java framework (1,000+ classes) for real-time robotics control and 3D physics (Java 5 multithreaded, Java3D, TCP/IP).
+- Scientific Computing & JSR-275 (2004–2007): Co-founded a major scientific Java library (+5,000 classes for dimensional analysis and symbolic computing) collaborating with official Java Community Process standards (JSR-275: Units & Measures API).
+- Digital Biosphere (2002–2003): Architected a real-time distributed 3D virtual world engine (Java, JDO, asynchronous UDP/TCP SSL Multicast networking, VRML/X3D).
+- **Technical Environment:** Java (JDK 1.1 to 5), JCP (JSR-275), JDO, Java3D, VRML/X3D, TCP/IP, UDP Multicast, SSL, Unix/Linux, Oracle, MySQL.
+
+### Research & Teaching Assistant, Systems Administrator — TECFA — University of Geneva | Geneva (Switzerland) | 1994 - 1999
+- Pioneer research in educational technologies, cognitive informatics, and systems infrastructure administration.
+- Cognitive Informatics R&D: Designed interactive graphical interfaces, artificial life simulations, and 3D distributed virtual collaborative spaces (VRML).
+- Teaching and supervising postgraduate master students in interactive hypermedia software engineering.
+- Systems and network administration for 80+ heterogeneous Unix, Linux, SunOS, Novell, Mac, and Windows servers and workstations; managed pioneer web/intranet security.
+- **Technical Environment:** Unix, Linux, SunOS, Solaris, C, C++, VRML, HTML, TCP/IP, Novell Netware.
+
+## EDUCATION & LANGUAGES
+- **M.Sc. (DEA) in Cognitive Sciences & Artificial Intelligence:** I.N.P.G Grenoble (1994, Research Fellowship, Honors).
+- **Certificate in Cognitive Neurosciences & DESS (M.Sc.) in Experimental Cognitive Psychology:** University of Geneva (1997–1998).
+- **Master of Computer Science (Maîtrise) & DEUG MASS (Applied Mathematics):** Université Joseph Fourier & UPMF Grenoble (1993).
+- **Master of History (M2 Research, Historical & Archaeological Data Valorization):** Université de Bretagne Sud, Lorient (2025, Honors).
+- **B.Sc. (Licences L3) in Sociology & Art History:** Universities of Toulouse Le Mirail & Grenoble UPMF (2010).
+- **Languages:** English (C2 - Bilingual, TOEFL 267/300), French (C2 - Native), Spanish (B2 - Professional), Italian (B1 - Conversational)."`;
 
 // --- 5. CATALOGUE MAÎTRE DES PROJETS TECHNIQUES (PORTFOLIO MAÎTRE - 18 PROJETS) ---
 const MASTER_TECHNICAL_PROJECTS = {
@@ -414,88 +539,141 @@ const MASTER_TECHNICAL_PROJECTS = {
   }
 };
 
-// --- 6. FONCTION DE CONSTRUCTION DYNAMIQUE DE LA NOTE TECHNIQUE ---
+// --- 6. FONCTION DE CONSTRUCTION DYNAMIQUE DE LA NOTE TECHNIQUE (MODÈLE 2 PAGES / PROJETS 1-8) ---
 /**
- * Assemble à la volée une Note de Réalisation Technique ciblée en Français ou en Anglais.
- * Sélectionne les projets demandés (par défaut 2 à 3 projets majeurs) et injecte l'en-tête et les compétences transversales.
+ * Assemble à la volée une Note de Réalisation Technique ciblée en Français ou en Anglais (2 pages complètes).
+ * Calibrée sur le modèle 4 pages (2 pages CV + 2 pages Note Technique) :
+ * - Page 3 (Partie 1) : En-tête, Cadrage Stratégique et Projets 1 à 4 (OpenPrimer, HelloApply, Episteme, SwarmForge)
+ * - ---pagebreak---
+ * - Page 4 (Partie 2) : Projets 5 à 8 (Ether, NexusLayer, Praxis, Volumen) et Synthèse de Valeur Ajoutée (2 piliers)
  * 
- * @param {string[]} projectKeys Liste des clés de projets à inclure (18 projets disponibles dans MASTER_TECHNICAL_PROJECTS : episteme, ether, swarmforge, praxis, volumen, openprimer, voynichductus, artstylometry, nisaba, eternity, nexuslayer, jrobotics, jgame, autoinsta, helloapply, univerlan, lumina, lembas)
+ * @param {string[]} projectKeys Liste des clés de projets à inclure (par défaut les 8 projets majeurs)
  * @param {string} lang "fr" ou "en"
  * @param {string} targetTitle Titre cible personnalisé
  * @param {string} customExpertise Phrase d'expertise clé ciblée
- * @returns {string} Markdown complet de la note technique
+ * @returns {string} Markdown complet de la note technique sur 2 pages
  */
 function buildTailoredTechnicalNote(projectKeys, lang = "fr", targetTitle = null, customExpertise = null) {
   const isEn = (lang || "").toLowerCase().startsWith("en");
   
-  // Clés par défaut si non spécifiées : sélection équilibrée de 3 projets majeurs
+  // Clés par défaut : sélection des 8 projets majeurs calibrés pour 2 pages (4 projets par page)
+  const default8Keys = ["openprimer", "helloapply", "episteme", "swarmforge", "ether", "nexuslayer", "praxis", "volumen"];
   const keysToUse = (projectKeys && projectKeys.length > 0) 
     ? projectKeys 
-    : ["openprimer", "episteme", "swarmforge"];
+    : default8Keys;
   
   const headerName = CANDIDATE_PROFILE.fullName.toUpperCase();
-  const phoneStr = CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone;
+  const phoneStr = isEn ? (CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone) : (CANDIDATE_PROFILE.phone || CANDIDATE_PROFILE.phoneInt);
   const defaultTitle = isEn 
-    ? "Senior Software Architect & Distributed Systems Lead" 
-    : "Architecte Logiciel Senior & Lead Systèmes Distribués / IA";
+    ? "Digital Transformation Manager | Systems & AI Architect | Lead Engineer" 
+    : "Manager en Transformation Digitale | Architecte Systèmes & IA | Lead Développeur";
   const finalTitle = targetTitle || defaultTitle;
   
-  const defaultExpertise = isEn
-    ? "Complex Distributed Architectures, HPC & Massive Multi-Agent Simulations, Production LLMOps Pipelines."
-    : "Architectures Distribuées Complexes, HPC & Simulations Multi-Agents Massives, Industrialisation LLMOps.";
-  const finalExpertise = customExpertise || defaultExpertise;
-
+  // ==========================================
+  // PAGE 3 (PARTIE 1 / PART 1) : PROJETS 1 À 4
+  // ==========================================
   let md = `# ${headerName}\n`;
   md += `${CANDIDATE_PROFILE.location} | ${phoneStr} | ${CANDIDATE_PROFILE.email}\n`;
   md += `LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}\n\n`;
 
   if (isEn) {
-    md += `## TECHNICAL BACKGROUND BRIEF: COMPLEX SYSTEMS & LARGE-SCALE SOFTWARE ENGINEERING\n`;
-    md += `For the attention of Recruiters and Technical Directors\n`;
-    md += `Candidate: ${CANDIDATE_PROFILE.fullName} – ${finalTitle}\n`;
-    md += `Core Expertise: ${finalExpertise}\n\n`;
+    md += `## TECHNICAL BACKGROUND BRIEF & PROJECT PORTFOLIO\n`;
+    md += `**COMPLEX SYSTEMS, DIGITAL TRANSFORMATION & SOFTWARE ENGINEERING**\n`;
+    md += `Technical Dossier for the attention of Executive Boards, Chief Technology Officers (CTO) and Recruiters\n`;
+    md += `Candidate: **${CANDIDATE_PROFILE.fullName}** – ${finalTitle}\n\n`;
+    md += `> **Strategic & Operational Scope:** This dossier presents a curated portfolio of landmark projects illustrating the ability to *architect enduring software systems, steer high-stakes digital transformations, and industrialize next-generation agentic AI*. These achievements materialize the synergy between executive architectural vision and rigorous hands-on engineering execution.\n\n`;
+    md += `## SELECTED LANDMARK ENGINEERING PROJECTS (PART 1)\n\n`;
   } else {
-    md += `## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGÉNIERIE LOGICIELLE\n`;
-    md += `À l'attention des Recruteurs et Directeurs Techniques\n`;
-    md += `Candidat : ${CANDIDATE_PROFILE.fullName} – ${finalTitle}\n`;
-    md += `Expertise clé : ${finalExpertise}\n\n`;
+    md += `## NOTE DE RÉALISATION TECHNIQUE & PORTFOLIO PROJETS\n`;
+    md += `**SYSTÈMES COMPLEXES, TRANSFORMATION DIGITALE & INGÉNIERIE LOGICIELLE**\n`;
+    md += `Dossier technique de référence destiné aux Directions Générales, Directeurs Techniques (CTO) et Recruteurs\n`;
+    md += `Candidat : **${CANDIDATE_PROFILE.fullName}** – ${finalTitle}\n\n`;
+    md += `> **Cadrage Stratégique & Opérationnel :** Cette note présente une sélection de projets majeurs démontrant la capacité à *concevoir des architectures logicielles pérennes, à piloter la transformation digitale des processus métiers et à industrialiser l'IA de nouvelle génération*. Ces réalisations concrétisent l'alliance entre vision managériale amont et rigueur d'ingénierie logicielle hands-on.\n\n`;
+    md += `## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 1)\n\n`;
   }
 
-  // Injecter chaque projet sélectionné
+  // Injecter la première moitié des projets (jusqu'à 4 projets sur la première page de la note)
+  const part1Count = Math.min(4, Math.ceil(keysToUse.length / 2));
+  const part1Keys = keysToUse.slice(0, part1Count);
+  const part2Keys = keysToUse.slice(part1Count);
+
   let projectIndex = 1;
-  keysToUse.forEach(k => {
+  part1Keys.forEach(k => {
     const proj = MASTER_TECHNICAL_PROJECTS[k.toLowerCase()];
     if (proj) {
       const pTitle = isEn ? proj.titleEn : proj.titleFr;
       const pSummary = isEn ? proj.summaryEn : proj.summaryFr;
       const pDetails = isEn ? proj.detailsEn : proj.detailsFr;
+      const stackLabel = isEn ? "Stack:" : "Stack :";
+      const tagsStr = (proj.tags && proj.tags.length > 0) ? `**${stackLabel}** ${proj.tags.join(" • ")}\n` : "";
       
       md += `### ${projectIndex}. ${pTitle}\n`;
+      if (tagsStr) md += `${tagsStr}`;
       md += `${pSummary}\n`;
       md += `${pDetails}\n\n`;
       projectIndex++;
     }
   });
 
-  // Compétences transversales
+  // ==========================================
+  // PAGE 4 (PARTIE 2 / PART 2) : PROJETS 5 À 8 + SYNTHÈSE DE VALEUR
+  // ==========================================
+  md += `---pagebreak---\n\n`;
+
   if (isEn) {
-    md += `### ${projectIndex}. CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION\n`;
-    md += `- **Technical Leadership & Architecture Vision**: Steering high-stakes software initiatives, translating ambitious scientific/business challenges into resilient, modular distributed architectures.\n`;
-    md += `- **Extreme Performance & Resource Efficiency**: Mastery of low-level concurrency, zero-copy serialization, hardware offloading (GPU/CUDA/SIMD), and strict inference/infrastructure cost governance (FinOps/LLMOps).\n`;
-    md += `- **Sovereignty, Security & Quality Discipline**: Mathematical rigor applied to codebases (TDD, automated regression suites, hardened transport protocols, zero-heap primitives, and self-healing patterns).`;
+    md += `## SELECTED LANDMARK ENGINEERING PROJECTS (PART 2)\n\n`;
   } else {
-    md += `### ${projectIndex}. COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION\n`;
-    md += `- **Direction Technique & Vision d'Architecture** : Pilotage stratégique de projets logiciels à forts enjeux, transformation d'objectifs métiers et scientifiques complexes en architectures distribuées résilientes et modulaires.\n`;
-    md += `- **Haute Performance & Efficience des Ressources** : Maîtrise de la concurrence de bas niveau, sérialisation zéro-copie, accélération matérielle (GPU/CUDA/SIMD) et gouvernance rigoureuse des coûts d'infrastructure et d'inférence (FinOps/LLMOps).\n`;
-    md += `- **Souveraineté, Sécurité & Rigueur d'Ingénierie** : Rigueur méthodologique et mathématique appliquée au code (TDD, suites de tests automatisées, protocoles durcis anti-vulnérabilités, primitives zero-heap et patterns auto-correctifs).`;
+    md += `## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 2)\n\n`;
+  }
+
+  part2Keys.forEach(k => {
+    const proj = MASTER_TECHNICAL_PROJECTS[k.toLowerCase()];
+    if (proj) {
+      const pTitle = isEn ? proj.titleEn : proj.titleFr;
+      const pSummary = isEn ? proj.summaryEn : proj.summaryFr;
+      const pDetails = isEn ? proj.detailsEn : proj.detailsFr;
+      const stackLabel = isEn ? "Stack:" : "Stack :";
+      const tagsStr = (proj.tags && proj.tags.length > 0) ? `**${stackLabel}** ${proj.tags.join(" • ")}\n` : "";
+      
+      md += `### ${projectIndex}. ${pTitle}\n`;
+      if (tagsStr) md += `${tagsStr}`;
+      md += `${pSummary}\n`;
+      md += `${pDetails}\n\n`;
+      projectIndex++;
+    }
+  });
+
+  // Synthèse de valeur ajoutée à double pilier (Management & Stratégie + Architecture & Qualité)
+  if (isEn) {
+    md += `## CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION\n\n`;
+    md += `### Management, Strategy & Transformation\n`;
+    md += `- **Technical Leadership & Business Vision**: Proven ability to articulate complex technical challenges to C-level executives and translate business goals into pragmatic, profitable architecture roadmaps.\n`;
+    md += `- **Enterprise Urbanization & Legacy De-risking**: Extensive track record in progressively modernizing legacy monoliths, establishing integration mediation layers (APIs, ETL, RPA) with zero operational disruption.\n`;
+    md += `- **Operational Excellence & Change Management**: Rigorous ROI culture, pragmatic Agile implementation, and empathetic mentorship elevating software engineering teams.\n\n`;
+    md += `### Architecture, AI & Engineering Discipline\n`;
+    md += `- **Engineering Rigor & Sovereignty**: Systematic application of modern software quality standards (TDD, >80% test coverage, continuous integration, decoupled clean architecture).\n`;
+    md += `- **Industrialization of Generative AI**: Operational mastery of multi-agent workflows, RAG pipelines, and LLM/SLM integration to automate business workflows and multiply developer velocity.\n`;
+    md += `- **High-Performance & FinOps**: Strict optimization of cloud infrastructure and inference costs, designing fault-tolerant high-availability architectures with compact memory footprints.\n\n`;
+    md += `*Complete portfolio, references, source code repositories, and interactive demos available upon request.*`;
+  } else {
+    md += `## SYNTHÈSE DE VALEUR AJOUTÉE POUR VOTRE ORGANISATION\n\n`;
+    md += `### Management, Stratégie & Transformation\n`;
+    md += `- **Leadership Technique & Vision Métier** : Capacité à vulgariser les enjeux techniques auprès des comités exécutifs et à traduire les objectifs business en feuilles de route d'architecture pragmatiques et rentables.\n`;
+    md += `- **Urbanisation du SI & Dé-risquage du Legacy** : Expérience confirmée dans la modernisation progressive de systèmes patrimoniaux complexes, la mise en place d'architectures de médiation (APIs, ETL, RPA) sans rupture de service.\n`;
+    md += `- **Excellence Opérationnelle & Conduite du Changement** : Culture de la mesure du ROI, mise en œuvre de méthodologies Agiles adaptées, tutorat bienveillant et montée en compétences des équipes.\n\n`;
+    md += `### Architecture, IA & Qualité d'Ingénierie\n`;
+    md += `- **Rigueur d'Ingénierie & Souveraineté** : Application systématique des standards de qualité logicielle (TDD, couverture de tests >80%, intégration continue, architecture propre sans dépendances superflues).\n`;
+    md += `- **Industrialisation de l'IA Générative** : Maîtrise opérationnelle des architectures multi-agents, pipelines RAG et intégration des LLMs/SLMs pour automatiser les processus métiers et décupler la productivité.\n`;
+    md += `- **Haute Performance & FinOps** : Optimisation fine des coûts d'infrastructure cloud et d'inférence IA, conception d'architectures résilientes à haute disponibilité et faible empreinte mémoire.\n\n`;
+    md += `*Dossier complet, références détaillées, dépôts de code source et démonstrations interactives disponibles sur demande.*`;
   }
 
   return md;
 }
 
-// Master Notes de référence complètes (incorporant l'ensemble des projets majeurs)
-const TECHNICAL_NOTE_FR = buildTailoredTechnicalNote(["openprimer", "episteme", "ether", "swarmforge", "praxis", "volumen"], "fr");
-const TECHNICAL_NOTE_EN = buildTailoredTechnicalNote(["openprimer", "episteme", "ether", "swarmforge", "praxis", "volumen"], "en");
+// Master Notes de référence complètes sur 2 pages (8 projets majeurs + Synthèse de valeur)
+const TECHNICAL_NOTE_FR = buildTailoredTechnicalNote(["openprimer", "helloapply", "episteme", "swarmforge", "ether", "nexuslayer", "praxis", "volumen"], "fr");
+const TECHNICAL_NOTE_EN = buildTailoredTechnicalNote(["openprimer", "helloapply", "episteme", "swarmforge", "ether", "nexuslayer", "praxis", "volumen"], "en");
 
 /**
  * Retourne la note technique appropriée selon la langue et éventuellement une sélection de projets.

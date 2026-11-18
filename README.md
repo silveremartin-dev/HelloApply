@@ -1,7 +1,7 @@
-# HelloApply v6.4.0 🤖💼
+# HelloApply v6.5.0 🤖💼
 ### *Agent IA Autonome de Veille Technologique & Candidature Asymétrique*
 
-**HelloApply** est un agent IA autonome conçu sous forme de micro-service résilient pour Google Apps Script. Il surveille votre boîte de réception Gmail en continu, intercepte les alertes de postes en provenance de **LinkedIn** et **HelloWork**, analyse leur pertinence en temps réel avec le LLM **Gemini 3.1 Flash-Lite**, et génère automatiquement un dossier de candidature sur-mesure (CV enrichi de sa note de réalisation technique, Lettre de motivation, et Mémo technique d'architecture) au format PDF sur Google Drive, prêt à l'envoi sous forme de brouillon Gmail.
+**HelloApply** est un agent IA autonome conçu sous forme de micro-service résilient pour Google Apps Script. Il surveille votre boîte de réception Gmail en continu, intercepte les alertes de postes en provenance de **LinkedIn** et **HelloWork**, analyse leur pertinence en temps réel avec le LLM **Gemini 3.1 Flash-Lite**, et génère automatiquement un dossier de candidature sur-mesure (Dossier complet de 4 pages : CV 2 pages + Note de réalisation technique 2 pages, Lettre de motivation bilingue stricte, et Mémo technique d'architecture) au format PDF sur Google Drive, prêt à l'envoi sous forme de brouillon Gmail.
 
 ---
 
@@ -12,10 +12,11 @@ Dans un marché du recrutement hautement concurrentiel et dominé par les filtre
 1. **Automatisation de la Veille** : L'agent élimine la tâche chronophage de tri manuel en analysant automatiquement chaque offre reçue par e-mail (LinkedIn & HelloWork) à la seconde près.
 2. **Filtrage Intelligent à Haute Sélectivité** : Grâce à une analyse sémantique avancée, l'agent calcule un score d'adéquation (seuil fixé à **75%** en production). Il élimine instantanément les postes juniors, géographiquement incompatibles (hors Morbihan ou hors télétravail/Full Remote depuis Lorient), ou n'offrant pas de défis techniques à la hauteur d'un profil Senior (30+ ans d'expérience).
 3. **Candidature Asymétrique Instantanée** : Pour chaque offre validée, l'agent produit en moins de 60 secondes un dossier d'une qualité technique irréprochable, rédigé dans la langue de l'offre (Français ou Anglais), composé de :
-   * 📄 **Un CV ATS-Compliant enrichi** : Restructuré comme un index dynamique de preuves de travail, pouvant intégrer la **Note de Réalisation Technique** sur des pages distinctes (`technicalNoteMode: 'appended'`).
-   * ✉️ **Une Lettre de Motivation Premium** : Construite sur une structure narrative captivante de type "You, Me, Us".
+   * 📄 **Un Dossier de CV 4 Pages ATS-Compliant ("Deux pages de CV, deux pages de mémo")** :
+     - **Pages 1 & 2 (CV)** : 3 piliers d'expertise, sélection dynamique des expériences professionnelles les plus pertinentes et impactantes avec réalisations quantifiées et environnements techniques détaillés, panorama technique global et cursus académique multidisciplinaire complet.
+     - **Pages 3 & 4 (Note Technique / Mémo de réalisations)** : Note de 2 pages avec saut de page (`---pagebreak---`), présentant une sélection dynamique de projets phares adaptés aux défis de l'offre et une synthèse de valeur ajoutée stratégique et d'ingénierie.
+   * ✉️ **Une Lettre de Motivation Premium & Purity Shield** : Construite sur une structure "You, Me, Us" avec étanchéité linguistique absolue (sanitisation stricte pour interdire les en-têtes, salutations ou formules de politesse françaises en anglais ou vice versa).
    * 💡 **Un Mémo d'Architecture Technique** : Document peer-to-peer rédigé au niveau du CTO/Directeur Technique, analysant et résolvant virtuellement les goulots d'étranglement et la dette technique de l'entreprise ciblée.
-   * 🛠️ **Une Note de Réalisation Technique sur-mesure générée à la volée** : Sélection intelligente par l'IA de 1 ou 2 projets parmi le catalogue maître de 18 projets majeurs (Episteme, Ether, SwarmForge, Praxis, Volumen, OpenPrimer, VoynichDuctus, ArtStylometry, Nisaba, Eternity II, NexusLayer, JRobotics, JGame, AutoInsta, HelloApply, Univerlan, Lumina, Lembas), pouvant être collée au CV, générée en PDF autonome (`standalone`), ou les deux (`both`).
 4. **Préparation du Brouillon Gmail** : L'agent compile les documents en PDF (3 à 4 pièces jointes selon le mode configuré), les joint à un brouillon Gmail prêt à être envoyé par l'utilisateur, et consigne la candidature dans un Google Sheet de suivi centralisé.
 
 ---

@@ -307,145 +307,191 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        - This profile has 30+ years of experience in complex systems. If the role is junior, purely executant, or unrelated to IT Management, Systems Architecture, or Senior AI Engineering, Score strictly < 80%, Decision = "Ignorer".
        `}
        
-    1. LANGUAGE DETECTION & CONSISTENCY (ABSOLUTE PRIORITY):
+    1. LANGUAGE DETECTION & CONSISTENCY (ABSOLUTE MANDATORY PRIORITY):
         - Detect the native language of the job description (usually English or French).
-        - CRITICAL RULE: If the job description is in English, ALL THREE generated documents ('cv_markdown', 'letter_markdown', 'memo_markdown') MUST be written 100% ENTIRELY IN ENGLISH. 
+        - CRITICAL RULE: If the job description is in English, ALL FOUR generated documents ('cv_markdown', 'letter_markdown', 'memo_markdown', 'technical_note_markdown') MUST be written 100% ENTIRELY IN ENGLISH. 
           * This means you MUST fully translate the French Master CV (headings, job titles, achievements, responsibilities, locations, and dates) into premium, high-level corporate English! 
-          * Absolutely NO French words should remain in the generated documents (e.g., change "Compétences clés" to "Key Competencies", "Expériences professionnelles" to "Professional Experience", "Formation & Langues" to "Education & Languages", "Présent" to "Present", "le" in dates to "${dateEn}").
-          * The French template and the French reference CV below are strictly structure and density references—you must produce their fluent English equivalents.
-          * The greetings and Recipient MUST be in English (e.g., "Attention: Hiring Manager", "Dear Hiring Manager,").
-          * The closing salutation MUST be in English (e.g., "Sincerely,"). Never mix French closings!
+          * Absolutely NO French words should remain in the generated documents (e.g., change "Compétences clés" to "Core Competencies", "Expériences professionnelles" to "Professional Experience", "Formation & Langues" to "Education & Languages", "Présent" to "Present", "le" in dates to "${dateEn}").
+          * The greetings and Recipient in the Cover Letter MUST be in English: "Attention: Hiring Team - [Company Name]" (or "Attention: Hiring Manager - [Company Name]"), greeting MUST be "Dear Hiring Manager,".
+          * The closing salutation in the Cover Letter MUST be in English: "Sincerely," (or "Yours sincerely,"). NEVER mix French greetings ("Madame, Monsieur,") or French closings ("Je vous prie d'agréer...") in English documents!
         - If the job description is in French, ALL documents MUST be written 100% entirely in French.
-          * The date block MUST be in French (e.g., "${dateFr}").
-          * The greeting MUST be "Madame, Monsieur,".
-          * The closing salutation MUST be "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.".
-       
-    1.5. EXECUTIVE WRITING STYLE (Emulate the Gold Standard tone):
-       - Emulate the high-impact, prestigious tone of the reference CV below.
-       - Write extremely rich, strategic, and metric-heavy bullet points and summaries from the Master CV details. Do not write short or generic bullet points.
-       
-    <tone_reference_only_do_not_copy>
-    [GOLD STANDARD CV EXAMPLE]:
-    ${TONE_REFERENCE_CV_EXAMPLE}
-    </tone_reference_only_do_not_copy>
-    
-    WARNING: The above is ONLY A TONE REFERENCE. DO NOT COPY THE JOB TITLES, COMPANY NAMES, OR EXACT BULLET POINTS FROM IT. ALWAYS EXTRACT THE TARGET TITLE FROM THE JOB DESCRIPTION, AND YOUR ACTUAL EXPERIENCE FROM THE MASTER CV.
-    ========================================================================
-       
-    2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
-       - Follow the premium cover letter formatting guidelines from version 4.4.x:
-         - Sender block at the absolute top of the letter:
-           \${CANDIDATE_PROFILE.fullName}
-           [Target Position Title matching the CV]
-           \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
-           LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
-           GitHub: \${CANDIDATE_PROFILE.githubUrl}
-         - A blank line, then the exact current date line: "${dateFr}" (if French) or "${dateEn}" (if English).
-         - Recipient: "À l'attention du Responsable du Recrutement - [Company Name]" (or English equivalent).
-         - Subject line: "## **Objet : Candidature au poste de [Exact Target Position]**" (or English equivalent) (must be standard black text, no horizontal rules below it).
-         - Formal greeting: "Madame, Monsieur," (or English equivalent).
-         - Narrative: Clean "You, Me, Us" narrative structure (written entirely in the target language):
-           - You: Show deep understanding of their business context, technical environment, and structural challenges.
-           - Me: Showcase authority by linking directly to candidate's elite projects (Episteme, Eternity, OpenPrimer, SwarmForge, Ether, Praxis, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
-           - Us: Propose high-value synergy and immediate technical collaboration.
-         - Formal closing salutation: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées." (or English equivalent).
-         - Sign-off: "\${CANDIDATE_PROFILE.fullName}."
-         
-    3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
-       - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
-       - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, and no subordination formulas ("À l'attention de..."). It must be at the absolute top of the document:
-           \${CANDIDATE_PROFILE.fullName}
-           [Target Position Title matching the CV]
-           \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
-           LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
-           GitHub: \${CANDIDATE_PROFILE.githubUrl}
-       - A blank line, then the exact current date line: "${dateFr}" (if French) or "${dateEn}" (if English), positioned right after the header block and before the subject line.
-       - Immediately following the date line, write the Subject Line: "## **Mémo d'Architecture : [Identify the core technical challenge or bottleneck implicitly described in the job offer]**" (or English equivalent).
-       - Under no circumstances should you prepend any subordination formulas like "À l'attention de la Direction Technique," or traditional greetings like "Madame, Monsieur,". Keep it strictly peer-to-peer, professional, and authoritative.
-       - The core content of the Memo must feature:
-         - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
-         - **The Proposition:** Propose a high-level architectural posture to solve it.
-         - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, Eternity, OpenPrimer, SwarmForge, Ether, Praxis, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
-         - **The Call to Action (CTA):** Close assertively. E.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." (or English equivalent).
-         - **Sign-off:** "\${CANDIDATE_PROFILE.fullName}."
+          * The date block MUST be in French: "${dateFr}".
+          * The recipient MUST be: "À l'attention du Responsable du Recrutement - [Company Name]".
+          * The greeting MUST be: "Madame, Monsieur,".
+          * The closing salutation MUST be: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.". NEVER mix English greetings or closings in French documents!
+        
+     1.5. EXECUTIVE WRITING STYLE & 4-PAGE DOSSIER BLUEPRINT (2 PAGES CV + 2 PAGES MEMO):
+        - Emulate the high-impact, prestigious executive tone of the 4-page reference documents (2 pages CV + 2 pages Technical Realization Note / Memo).
+        - Write rich, strategic, and metric-heavy bullet points and summaries from the Master CV details. Do not write short or generic bullet points.
+        - DYNAMIC ADAPTATION (CRITICAL): The tone reference examples below illustrate the structural density, depth, and formatting expected for a 2-page CV. They are NOT to be copied word-for-word. You are NOT required to use the same experiences, the same GitHub projects, the same keywords, or the same emphasis. The objective is simply to use more space (2 full pages of CV and 2 full pages of technical memo: "Deux pages de CV, deux pages de mémo. C'est tout, pas plus.") to present the candidate in the most compelling, complete, and tailored manner for the target job offer.
+        
+     <tone_reference_only_do_not_copy>
+     [TONE & DENSITY REFERENCE CV - FRENCH]:
+     ${TONE_REFERENCE_CV_EXAMPLE}
+
+     [TONE & DENSITY REFERENCE CV - ENGLISH]:
+     ${TONE_REFERENCE_CV_EXAMPLE_EN}
+     </tone_reference_only_do_not_copy>
+     
+     CRITICAL BLUEPRINT RULE: The candidate's standard production dossier is a cohesive 4-PAGE DOSSIER composed of:
+     - Pages 1 & 2: The tailored 2-page ATS CV ('cv_markdown') (~900 to 1,200 words, calibrated to fill exactly 2 pages).
+     - Pages 3 & 4: The 2-page Technical Realization Memo ('technical_note_markdown') (~800 to 1,100 words, calibrated to fill exactly 2 pages, with '---pagebreak---' separating Page 3 and Page 4).
+     Total: Exactly 4 pages (2 pages CV + 2 pages memo). No more, no less.
+     ========================================================================
+        
+     2. THE TRADITIONAL COVER LETTER ('letter_markdown'):
+        - Follow strict language purity with zero language contamination:
+          * SENDER BLOCK at the absolute top of the letter:
+            ${CANDIDATE_PROFILE.fullName}
+            [Target Position Title matching the CV in target language]
+            ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+            LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+            GitHub: ${CANDIDATE_PROFILE.githubUrl}
+          * A blank line, then the DATE LINE:
+            - If English: "${dateEn}"
+            - If French: "${dateFr}"
+          * RECIPIENT BLOCK:
+            - If English: "Attention: Hiring Team - [Company Name]" (or "Attention: Hiring Manager - [Company Name]")
+            - If French: "À l'attention du Responsable du Recrutement - [Company Name]"
+          * SUBJECT LINE:
+            - If English: "## **Subject: Application for the position of [Target Position]**"
+            - If French: "## **Objet : Candidature au poste de [Poste Cible]**"
+          * FORMAL GREETING:
+            - If English: "Dear Hiring Manager," (or "Dear Hiring Team,") — STRICTLY FORBIDDEN TO USE "Madame, Monsieur," IN ENGLISH!
+            - If French: "Madame, Monsieur," — STRICTEMENT INTERDIT D'UTILISER DES FORMULES ANGLAISES EN FRANÇAIS !
+          * NARRATIVE: Clean "You, Me, Us" narrative structure (written 100% in the target language):
+            - You: Deep understanding of their business context, technical environment, and structural challenges.
+            - Me: Authority linking directly to candidate's elite projects (Episteme, SwarmForge, Ether, OpenPrimer, Praxis, JRobotics, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
+            - Us: Immediate high-value synergy and technical collaboration.
+          * FORMAL CLOSING SALUTATION:
+            - If English: "Sincerely," (or "Yours sincerely," / "Best regards,") — STRICTLY FORBIDDEN TO WRITE "Je vous prie d'agréer..." IN AN ENGLISH LETTER!
+            - If French: "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées."
+          * SIGN-OFF: "${CANDIDATE_PROFILE.fullName}."
+          
+     3. THE PEER-TO-PEER TECHNICAL ARCHITECTURE MEMO ('memo_markdown'):
+        - Replaces traditional cover letter subordination with an elite, peer-to-peer technical architecture memo / flash audit addressed directly to the CTO/CEO.
+        - **ABSOLUTE HEADER REQUIREMENT**: The very first block of text in "memo_markdown" must be the raw header block below, with absolutely no greetings, and no subordination formulas ("À l'attention de..."). It must be at the absolute top of the document:
+            ${CANDIDATE_PROFILE.fullName}
+            [Target Position Title matching the CV in target language]
+            ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+            LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+            GitHub: ${CANDIDATE_PROFILE.githubUrl}
+        - A blank line, then the DATE LINE:
+            - If English: "${dateEn}"
+            - If French: "${dateFr}"
+        - Immediately following the date line, write the SUBJECT LINE:
+            - If English: "## **Architecture Memo: [Identify the core technical challenge or bottleneck implicitly described in the job offer]**"
+            - If French: "## **Mémo d'Architecture : [Identifier le défi technique ou goulot d'étranglement central]**"
+        - Under no circumstances should you prepend any subordination formulas like "À l'attention de..." or traditional greetings like "Madame, Monsieur," / "Dear Hiring Manager,". Keep it strictly peer-to-peer, professional, and authoritative.
+        - The core content of the Memo must feature:
+          - **The Hook (Le Diagnostic):** Start by dissecting their technical environment based on the offer. Point out the likely friction points (e.g., legacy debt, scaling LLMs in production, CI/CD bottlenecks).
+          - **The Proposition:** Propose a high-level architectural posture to solve it.
+          - **The Proof of Work (CRITICAL):** Explicitly link their bottleneck to the candidate's tangible, production-ready assets (Episteme, SwarmForge, Ether, OpenPrimer, Praxis, JRobotics, Volumen, Nisaba, ArtStylometry, or Google Antigravity).
+          - **The Call to Action (CTA):** Close assertively (e.g., "Je vous propose d'auditer cette architecture lors d'un premier échange technique." in French, or "I would welcome the opportunity to discuss and audit this architecture during a technical exchange." in English).
+          - **Sign-off:** "${CANDIDATE_PROFILE.fullName}."
 
      4. THE CV AS AN INDEX ('cv_markdown'):
-        - Use "### " for job titles/companies or sub-sections (e.g. "### Lead Architecte & Développeur Open Source — Mécénat GitHub | \${CANDIDATE_PROFILE.city} | 07/2025 - Présent").
+        - Use "### " for job titles/companies or sub-sections.
         - Maintain strict Markdown formatting: "# " for name, normal paragraphs for contact info, "## [TARGET POSITION]" for the dynamic title.
         - Contact info must include exactly these lines without any bullet points:
-          \${CANDIDATE_PROFILE.city} | \${CANDIDATE_PROFILE.phone} | \${CANDIDATE_PROFILE.email}
-          LinkedIn: \${CANDIDATE_PROFILE.linkedinUrl}
-          GitHub: \${CANDIDATE_PROFILE.githubUrl}
-        - **MANDATORY SECTIONS**: You MUST include a "## COMPÉTENCES CLÉS" (in French) or "## KEY COMPETENCIES" (in English) section right after the profile summary. Never skip it.
-        - **NO HALLUCINATION OF DATES OR ROLES**: You MUST strictly use the exact dates, company names, and official job titles from the masterCV. Do not alter dates (e.g., Hardis Group is 2011-2012) and do not invent roles (e.g., do not say you were Freelance in 2023 if it's not in the masterCV).
-        - **NO META-COMMENTS**: Never include AI notes or comments like "Additional historical experience maintained...". Output only the final CV text.
-        - **MAXIMUM DENSITY AND DETAIL (DO NOT TRUNCATE OR SUMMARIZE)**: Do not ever summarize, shorten, or truncate the professional experiences. You must retrieve and strictly preserve the complete, exhaustive list of responsibilities, tasks, detailed technologies used, methodologies (Agile, TDD, Design Patterns, UML), and quantified metrics from the "masterCV" source for each experience (e.g., Deloitte, Hardis, Fives Syleps, etc.). Every single experience must be highly informative, fully detailed, and dense with concrete achievements.
-        - Highlight the capability to govern AI and structure complex logic (not just write code).
-        - Ensure all metrics (budgets, team sizes, time saved) and the mandatory "**Environnement technique :**" (in French) or "**Technical Environment:**" (in English) line at the end of every experience are strictly preserved.
-        - Do not use numbered lists (1. 2. 3.). Use standard bullet points (- or *).
-        - **DYNAMIC LANGUAGES EXTRACTION**: Format a clean "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) section at the end of the CV. You MUST systematically list all 4 languages from the masterCV (English, French, Italian, Spanish) and their levels, translated to the target language (e.g. Anglais, Français, Italien, Espagnol).
-        - **PAGE FILLING**: The rendered CV must fill the page(s) almost entirely. Do NOT leave large blank space at the bottom of any page. If the content fits on 1 page, expand bullet points with more detail from the masterCV to fill the page. If there is enough relevant material for the target role, you may use 2 pages, but never leave half a page blank.
+          ${CANDIDATE_PROFILE.city} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+          LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl}
+          GitHub: ${CANDIDATE_PROFILE.githubUrl}
+        - **STRUCTURE OF THE 2-PAGE CV (NEVER SKIP ANY SECTION)**:
+          1. Header ("# ${CANDIDATE_PROFILE.fullName.toUpperCase()}", contact lines, "## [TARGET POSITION]", and a rich 4-6 line Executive Summary tailored to the job).
+          2. "## PILIERS D'EXPERTISE & COMPÉTENCES CLÉS" (in French) or "## CORE COMPETENCY PILLARS" (in English) — 3 structured pillars tailored to the target role (e.g. Direction & Transformation / Management, Architecture Systèmes & IA, Ingénierie Logicielle & Delivery).
+          3. "## EXPÉRIENCES PROFESSIONNELLES" (in French) or "## PROFESSIONAL EXPERIENCE" (in English):
+             * DYNAMIC & TAILORED SELECTION: Dynamically select, prioritize, and articulate experiences from the Master CV that best demonstrate fitness for the target role.
+             * You have complete freedom to choose which experiences to emphasize, which achievements to highlight, and which keywords to foreground depending on the offer, while keeping dates, titles, and company names strictly truthful to the masterCV.
+             * Calibrate the number of roles and level of detail so that the CV comfortably fills TWO FULL PAGES (typically 5 to 7 detailed experiences, balancing recent flagship roles with foundational milestones to showcase senior leadership and architectural depth).
+             * For each role, provide:
+               - Standard title line: \`### [Job Title] — [Company] | [Location] | [Dates]\`
+               - Rich bullet points highlighting strategic projects, quantified business/technical metrics, leadership responsibilities, and architecture achievements.
+               - An explicit \`**Environnement technique :**\` (in French) or \`**Technical Environment:**\` (in English) listing the stack, tools, and methodologies.
+             * NO HALLUCINATION: Always respect the truthful dates, company names, and core facts from the Master CV.
+          4. "## ENVIRONNEMENT TECHNIQUE" (in French) or "## TECHNICAL ENVIRONMENT" (in English) — Synthetic global overview across Languages, AI & Agentic Architectures, Frameworks & HPC, Databases & Big Data, Cloud & DevOps, Methodologies.
+          5. "## FORMATION & LANGUES" (in French) or "## EDUCATION & LANGUAGES" (in English) — Full multidisciplinary academic credentials (AI/Cognitive Sciences, Computer Science, History research, Human sciences) and Languages (English C2 bilingual, French C2 native, Spanish B2, Italian B1).
+        - **PAGE BUDGET (EXACTLY 2 FULL PAGES)**: Take full advantage of the 2-page space to present a thorough, authoritative profile without condensing into 1 page and without overflowing into page 3.
         
-     5. THE TAILORED TECHNICAL REALIZATION NOTE ('technical_note_markdown'):
-        - Candidate Technical Portfolio (Knowledge Repository of 18 Flagship Projects):
-          * EPISTEME: High-Performance Scientific Computing (HPC) & AI Industrialization (450k+ lines Java 25, Project Panama FFM off-heap, Vector API SIMD, native Rust Rayon, CUDA, autotuning backends, 15x Apache).
-          * ETHER: Distributed Cliodynamics & Biophysical Simulation Engine (multi-node cluster, Uber H3 hexagonal spatial indexing, ClusterClockBarrier deterministic sync, Java 21 Virtual Threads, Rust zero-cost FFI, PostGIS).
-          * SWARMFORGE: Distributed Massive Multi-Agent Simulation Platform & 3D Ecosystems (2M agents, Artemis-odb ECS, Rust SIMD, BDI / ONNX DRL, TornadoVM OpenCL GPU, jMonkeyEngine 3.6, React/Vite).
-          * PRAXIS: Video-to-Physical-Digital-Twin (V2PDT) for Humanoid Robotics (YouTube monocular to 3D twin, Unitree H1/Optimus/ALOHA retargeting, SDF collision avoidance, MuJoCo 3.x, LeRobot Parquet).
-          * VOLUMEN: High-Performance Rust Virtual Unwrapping & Volumetric Streaming (Vesuvius Challenge Herculaneum scrolls, 5-10 TB OME-Zarr, Archimedean spiral unrolling, Rayon/SIMD, ScrollPrize villa).
-          * OPENPRIMER: Autonomous Knowledge Orchestration & Generative AI (Gemini 2.5 API multi-agent, 10-level academic taxonomy, Next.js 15, Vercel, Supabase RLS, WebLLM, EdTech SaaS).
-          * VOYNICHDUCTUS: Objective Scribal Kinematics & Computational Paleography (40? beveled quill mechanics, EDT distance ridges, 5 vision paradigms, DINOv2, HDBSCAN, information-theoretic diagnostics).
-          * ARTSTYLOMETRY: Computational Stylometry & Quantitative Connoisseurship (12,300+ paintings, IIIF gigapixel APIs, DINOv2 / Gram matrices, Mahalanobis attribution heatmaps, 3D manifold).
-          * NISABA: High-Performance Computational Engine for Sumerian Epigraphy (135k tablets, DuckDB / Apache Parquet columnar pipeline, prosopography graph networks, Ur III accounting).
-          * ETERNITY II: Massive Distributed Combinatorial Solver & GPU Acceleration (Java 25, NP-complete 10^600 states, TornadoVM OpenCL/PTX GPU kernels, 64-bit zero-heap primitives, MCTS / UCT, 21M eval/sec/core).
-          * NEXUSLAYER: Modern Client-Server Database Schema Editor & Visual Designer (Java 21, Spring Boot 3.2, JavaFX 21 desktop client, PostgreSQL 16, Docker Compose, JWT/BCrypt, OpenAPI 3.0).
-          * JROBOTICS: Modular Universal Robotics Framework & API for Java 21+ (14 modules, ~25k LOC, FastSLAM 2.0, EKF sensor fusion, Deep Learning DJL YOLO, ROS 2 bridge, Swarm Boids).
-          * JGAME: Distributed Modular Multiplayer Gaming Platform & AI (Java 25, Javalin 6 REST, WebSockets, JavaFX & Web, Minimax AI alpha-beta pruning, concurrent lobbies, ELO, BCrypt/JWT).
-          * AUTOINSTA: Zero-Cost Egocentric Lifelogging & Multi-Sensor Agent (Gemini 1.5 Flash multimodal VLM, sensor fusion GPS/motion/light/heart-rate, zero-tolerance privacy shield, FastAPI).
-          * HELLOAPPLY: Autonomous Sourcing & Asymmetric Application AI Agent (Google Apps Script microservice, Gmail alert interception, Gemini cognitive scoring, automated PDF dossier generation).
-          * UNIVERLAN: Rationalized Interstellar Conlang Engine & Bilingual Web Studio (29 phonemes 1:1, zero irregular verbs, Wilkins ontology, symmetric 4-mode translation, STT/TTS, bilingual reader).
-          * LUMINA: Universal Logical Language, C1V1C2V2 Semantic Matrix & Speech Engine (Morphological analyzer, IPA transcription, formant WAV TTS, bidirectional translation, Web Studio).
-          * LEMBAS: Gamified Tolkien Elvish Learning Platform & Tengwar Calligraphy (Quenya/Sindarin translator, Duolingo-style XP/streak progression, Tengwar Annatar, Web Speech audio).
+     5. THE TAILORED TECHNICAL REALIZATION NOTE / MEMO ('technical_note_markdown'):
+        - Represents Pages 3 & 4 of the candidate's 4-page dossier (a 2-page technical deep-dive / memo).
+        - DYNAMIC PROJECT SELECTION:
+          * You have full freedom to select whichever projects from the candidate's portfolio (e.g. OpenPrimer, Episteme, SwarmForge, Ether, NexusLayer, Praxis, Volumen, JRobotics, HelloApply, Nisaba, ArtStylometry, Google Antigravity, etc.) best address the technical requirements, architecture, and domain challenges of the job offer.
+          * Do NOT feel obliged to pick the same projects every time—tailor the selection dynamically!
+        - TWO-PAGE STRUCTURE WITH PAGEBREAK:
+          * PAGE 3 (PART 1): Header, strategic framing, and the first set of selected flagship projects (typically 2 to 4 projects).
+          * '---pagebreak---' separator between Page 3 and Page 4.
+          * PAGE 4 (PART 2): The second set of selected flagship projects (typically 2 to 4 projects), followed by the dual-pillar "Synthèse de Valeur Ajoutée pour Votre Organisation" (or "Cross-Functional Expertise Deliverable to Your Organization") and closing call-to-action.
+        - Markdown Structure for 'technical_note_markdown' (STRICTLY MATCH TARGET LANGUAGE):
+          * IF LANGUAGE IS FRENCH ("fr"):
+            # ${CANDIDATE_PROFILE.fullName.toUpperCase()}
+            ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+            LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
 
-        - CRITICAL SELECTION RULE (DO NOT DUMP ALL PROJECTS):
-          The candidate maintains a portfolio of 18 major deep-tech and scientific projects. You MUST NOT include all projects systematically!
-          Instead, analyze the job requirements, required tech stack, and target industry, and select precisely the ONE or TWO (at most THREE if highly relevant) projects that offer the strongest, most convincing Proof-of-Work for this specific position:
-          * Web Platforms / GenAI / LLMOps / SaaS / Modern Fullstack -> Prioritize OpenPrimer (+ SwarmForge or HelloApply)
-          * HPC / Low-Level / Java 21-25 / GPU acceleration / Math / Algorithms -> Prioritize Episteme (+ Eternity or SwarmForge)
-          * Rust / Systems Programming / High-Throughput / Out-of-Core -> Prioritize Volumen (+ Ether or Episteme)
-          * Computer Vision / Robotics / Humanoid Manipulation / Digital Twins -> Prioritize Praxis (+ JRobotics)
-          * Distributed Systems / Macro-Systems / Spatial-GIS / Biophysics -> Prioritize Ether (+ SwarmForge or Episteme)
-          * Multi-Agents / Massive Simulation / Kubernetes / Real-time 3D -> Prioritize SwarmForge (+ Ether or JRobotics)
-          * Robotics / Autonomous Systems / Hardware / SLAM / Embedded AI -> Prioritize JRobotics (+ Praxis)
-          * Big Data / Data Engineering / Columnar DB / Graphs -> Prioritize Nisaba (+ NexusLayer)
-          * Database Architecture / Schema Design / Java Client-Server -> Prioritize NexusLayer (+ Nisaba or JGame)
-          * AI Vision / Art / Digital Humanities / Information Theory -> Prioritize ArtStylometry (+ VoynichDuctus)
-          * Paleography / Handwriting Derendering / Computational Linguistics -> Prioritize VoynichDuctus (+ ArtStylometry or Nisaba)
-          * Mobile / Sensor Fusion / Multimodal Agents / Automation -> Prioritize AutoInsta (+ HelloApply)
-          * Autonomous Workflow / Cloud Automation / Micro-Services -> Prioritize HelloApply (+ AutoInsta)
-          * Gaming / Turn-based Systems / Real-time Lobbies / WebSockets -> Prioritize JGame (+ SwarmForge)
-          * Linguistics / Conlangs / Educational Gamification / Audio-TTS -> Prioritize Univerlan (+ Lumina or Lembas)
+            ## NOTE DE RÉALISATION TECHNIQUE & PORTFOLIO PROJETS
+            **SYSTÈMES COMPLEXES, TRANSFORMATION DIGITALE & INGÉNIERIE LOGICIELLE**
+            Dossier technique de référence destiné aux Directions Générales, Directeurs Techniques (CTO) et Recruteurs
+            Candidat : **${CANDIDATE_PROFILE.fullName}** – [Target Position Title]
 
-        - Markdown Structure for 'technical_note_markdown':
-          # ${CANDIDATE_PROFILE.fullName.toUpperCase()}
-          ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
-          LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
+            > **Cadrage Stratégique & Opérationnel :** Cette note présente une sélection de projets majeurs démontrant la capacité à concevoir des architectures logicielles pérennes, à piloter la transformation digitale des processus métiers et à industrialiser l'IA de nouvelle génération.
 
-          ## NOTE DE RÉALISATION TECHNIQUE : SYSTÈMES COMPLEXES & INGÉNIERIE LOGICIELLE
-          (or in English: ## TECHNICAL BACKGROUND BRIEF: COMPLEX SYSTEMS & LARGE-SCALE SOFTWARE ENGINEERING)
-          À l'attention des Recruteurs et Directeurs Techniques (or English equivalent)
-          Candidat : ${CANDIDATE_PROFILE.fullName} – [Target Position Title]
-          Expertise clé : [Tailored summary sentence linking selected projects to target role requirements]
+            ## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 1)
+            [Selected Projects for Page 1 with Stack, Summary, and rich bullets]
 
-          [Detailed sections for each of the 1 to 2 (or 3) selected projects, including technical challenges, architecture, stack, and verification links]
+            ---pagebreak---
 
-          ### COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION
-          (or in English: ### CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION)
-          [2 to 3 high-impact bullet points demonstrating technical leadership, performance, and software rigor]
+            ## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 2)
+            [Selected Projects for Page 2 with Stack, Summary, and rich bullets]
 
+            ## SYNTHÈSE DE VALEUR AJOUTÉE POUR VOTRE ORGANISATION
+            ### Management, Stratégie & Transformation
+            - **Leadership Technique & Vision Métier** : ...
+            - **Urbanisation du SI & Dé-risquage du Legacy** : ...
+            - **Excellence Opérationnelle & Conduite du Changement** : ...
+
+            ### Architecture, IA & Qualité d'Ingénierie
+            - **Rigueur d'Ingénierie & Souveraineté** : ...
+            - **Industrialisation de l'IA Générative** : ...
+            - **Haute Performance & FinOps** : ...
+
+            *Dossier complet, références détaillées, dépôts de code source et démonstrations interactives disponibles sur demande.*
+
+          * IF LANGUAGE IS ENGLISH ("en"):
+            # ${CANDIDATE_PROFILE.fullName.toUpperCase()}
+            ${CANDIDATE_PROFILE.location} | ${CANDIDATE_PROFILE.phoneInt || CANDIDATE_PROFILE.phone} | ${CANDIDATE_PROFILE.email}
+            LinkedIn: ${CANDIDATE_PROFILE.linkedinUrl} | GitHub: ${CANDIDATE_PROFILE.githubUrl}
+
+            ## TECHNICAL BACKGROUND BRIEF & PROJECT PORTFOLIO
+            **COMPLEX SYSTEMS, DIGITAL TRANSFORMATION & SOFTWARE ENGINEERING**
+            Technical Dossier for the attention of Executive Boards, Chief Technology Officers (CTO) and Recruiters
+            Candidate: **${CANDIDATE_PROFILE.fullName}** – [Target Position Title]
+
+            > **Strategic & Operational Scope:** This dossier presents a curated portfolio of landmark projects illustrating the ability to architect enduring software systems, steer high-stakes digital transformations, and industrialize next-generation agentic AI.
+
+            ## SELECTED LANDMARK ENGINEERING PROJECTS (PART 1)
+            [Selected Projects for Page 1 with Stack, Summary, and rich bullets]
+
+            ---pagebreak---
+
+            ## SELECTED LANDMARK ENGINEERING PROJECTS (PART 2)
+            [Selected Projects for Page 2 with Stack, Summary, and rich bullets]
+
+            ## CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION
+            ### Management, Strategy & Transformation
+            - **Technical Leadership & Business Vision**: ...
+            - **Enterprise Urbanization & Legacy De-risking**: ...
+            - **Operational Excellence & Change Management**: ...
+
+            ### Architecture, AI & Engineering Discipline
+            - **Engineering Rigor & Sovereignty**: ...
+            - **Industrialization of Generative AI**: ...
+            - **High-Performance & FinOps**: ...
+
+            *Complete portfolio, references, source code repositories, and interactive demos available upon request.*
+        
      6. STRICT BANNING OF "JScience" (OR "Jscience"):
         - Do not ever mention JScience or any legacy projects in the CV, Cover Letter, Memo, or Technical Note.
-        - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework) or **"Eternity"** (massively parallel combinatorial optimization solver leveraging TornadoVM/OpenCL for GPU acceleration).
+        - If the job involves scientific or distributed computing, exclusively reference the modern successor **"Episteme"** (developed 2025-2026, 450,000+ lines of scientific/distributed Java framework), **"SwarmForge"** (150,000+ lines, massive multi-agent simulation) or **"Ether"** (150,000+ lines, distributed cliodynamics engine).
         - If JScience is found in the "masterCV" source, dynamically translate/rename it to **"Episteme"**.
 
      7. JSON STRUCTURE:
@@ -454,7 +500,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        "company": "Real Company Name",
        "position": "Exact Job Title",
        "score": 0-100,
-       "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, Eternity, Antigravity, etc.) solves their architectural problem.",
+       "reasoning": "Technical justification of why the candidate's specific PoW (Episteme, SwarmForge, Ether, JRobotics, Antigravity, etc.) solves their architectural problem.",
        "decision": "Postuler" or "Ignorer",
        "contract_type": "CDI", // or other type, or "?" if not found
        "location": "Lorient", // or other city, or "?" if not found
@@ -466,7 +512,7 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
        "cv_markdown": "Full CV tailored as an authoritative index of technical assets...",
        "letter_markdown": "The traditional Cover Letter following the premium You-Me-Us structure...",
        "memo_markdown": "The peer-to-peer Technical Architecture Memo...",
-       "technical_note_markdown": "The tailored Technical Realization Note with 1 to 2 (or 3) selected projects..."
+       "technical_note_markdown": "The tailored 2-page Technical Realization Memo structured across 2 pages with '---pagebreak---' selecting relevant flagship projects and concluding with strategic value synthesis..."
      }
   `;
   
@@ -501,6 +547,14 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
         }
       }
     });
+
+    // Programmatic shield: Sanitize language consistency (eliminate French headers in English Technical Note / CV)
+    sanitizeDocumentLanguage(result, isEnDoc);
+
+    // Programmatic shield: Enforce 2-page CV density & completeness (all 7 career blocks + Technical Environment + full Education)
+    if (result.cv_markdown) {
+      result.cv_markdown = enforceTwoPageCvCompleteness(result.cv_markdown, isEnDoc);
+    }
 
     // --- JS Post-Analysis Filters (applied only in automated scanning mode) ---
     if (!forceApply) {
@@ -560,12 +614,145 @@ function analyzeAndTailor(context, masterCV, cvTemplateText, letterTemplateText,
   return result;
 }
 /**
- * URL Transformation & Fetching
- * 3-tier extraction strategy:
- *   1. JSON-LD JobPosting schema  (cleanest — immune to cookie banners / login overlays)
- *   2. Open Graph meta tags       (title + description fallback)
- *   3. Targeted HTML scraping     (last resort, strips scripts/styles and finds content areas)
+ * Programmatic shield: Enforces 100% language consistency across CV and Technical Realization Note headers.
+ * Prevents French labels ("À l'attention des Recruteurs...", "Candidat :", "Expertise clé :") from leaking into English briefs.
  */
+function sanitizeDocumentLanguage(result, isEnDoc) {
+  if (!result) return;
+  const companyName = result.company || "Hiring Team";
+  
+  if (isEnDoc) {
+    // === 1. TECHNICAL NOTE (ENGLISH) ===
+    if (result.technical_note_markdown) {
+      result.technical_note_markdown = result.technical_note_markdown
+        .replace(/^##\s*NOTE DE R[ÉE]ALISATION TECHNIQUE.*$/gmi, "## TECHNICAL BACKGROUND BRIEF & PROJECT PORTFOLIO")
+        .replace(/^[ÀA]\s*l['’]attention des Recruteurs et Directeurs Techniques.*$/gmi, "Technical Dossier for the attention of Executive Boards, Chief Technology Officers (CTO) and Recruiters")
+        .replace(/^Candidat\s*:\s*/gmi, "Candidate: ")
+        .replace(/^Expertise\s+cl[ée]s?\s*:\s*/gmi, "Core Expertise: ")
+        .replace(/Cadrage Strat[ée]gique\s*&\s*Op[ée]rationnel\s*:/gi, "Strategic & Operational Scope:")
+        .replace(/^##\s*S[ée]lection de R[ée]alisations Techniques Cl[ée]s\s*\(Partie 1\)/gmi, "## SELECTED LANDMARK ENGINEERING PROJECTS (PART 1)")
+        .replace(/^##\s*S[ée]lection de R[ée]alisations Techniques Cl[ée]s\s*\(Partie 2\)/gmi, "## SELECTED LANDMARK ENGINEERING PROJECTS (PART 2)")
+        .replace(/^###?\s*(?:\d+\.\s*)?COMP[ÉE]TENCES TRANSVERSALES APPLICABLES [ÀA] VOTRE ORGANISATION.*$/gmi, "### CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION")
+        .replace(/^##\s*Synth[èe]se de Valeur Ajout[ée]e pour Votre Organisation/gmi, "## CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION")
+        .replace(/Management,\s*Strat[ée]gie\s*&\s*Transformation/gi, "Management, Strategy & Transformation")
+        .replace(/Architecture,\s*IA\s*&\s*Qualit[ée]\s*d['’]Ing[ée]nierie/gi, "Architecture, AI & Engineering Discipline")
+        .replace(/Dossier complet, r[ée]f[ée]rences d[ée]taill[ée]es.*disponibles sur demande\./gi, "Complete portfolio, references, source code repositories, and interactive demos available upon request.");
+    }
+    
+    // === 2. CV (ENGLISH) ===
+    if (result.cv_markdown) {
+      result.cv_markdown = result.cv_markdown
+        .replace(/^##\s*PILIERS D['’]EXPERTISE\s*&\s*COMP[ÉE]TENCES CL[ÉE]S.*$/gmi, "## CORE COMPETENCY PILLARS")
+        .replace(/^##\s*COMP[ÉE]TENCES CL[ÉE]S.*$/gmi, "## CORE COMPETENCY PILLARS")
+        .replace(/^##\s*EXP[ÉE]RIENCES PROFESSIONNELLES.*$/gmi, "## PROFESSIONAL EXPERIENCE")
+        .replace(/^##\s*ENVIRONNEMENT TECHNIQUE.*$/gmi, "## TECHNICAL ENVIRONMENT")
+        .replace(/^##\s*FORMATION\s*(?:&|ET)\s*LANGUES.*$/gmi, "## EDUCATION & LANGUAGES")
+        .replace(/\*\*Environnement technique\s*:\*\*/gi, "**Technical Environment:**")
+        .replace(/Environnement technique\s*:/gi, "Technical Environment:");
+    }
+
+    // === 3. COVER LETTER (ENGLISH) — STRICT ENGLISH PURITY ===
+    if (result.letter_markdown) {
+      let lm = result.letter_markdown;
+      // Sanitize Recipient / Header in English Letter
+      lm = lm.replace(/^[ÀA]\s*l['’]attention\s+(?:du\s+Responsable\s+du\s+Recrutement|de\s+l['’][ée]quipe\s+Recrutement).*$/gmi, `Attention: Hiring Team - ${companyName}`);
+      lm = lm.replace(/^[ÀA]\s*l['’]attention\s+de\s+.*$/gmi, `Attention: Hiring Team - ${companyName}`);
+      // Sanitize Subject line in English Letter
+      lm = lm.replace(/^##\s*\*{0,2}\s*Objet\s*:\s*(?:Candidature\s+(?:au\s+poste\s+de\s+)?)?(.*?)\*{0,2}$/gmi, "## **Subject: Application for the position of $1**");
+      // Sanitize Salutation / Greeting in English Letter (NEVER "Madame, Monsieur," in English)
+      lm = lm.replace(/^Madame,\s*Monsieur,?\s*$/gmi, "Dear Hiring Manager,");
+      lm = lm.replace(/^(?:Cher|Ch[èe]re)\s+.*?,?\s*$/gmi, "Dear Hiring Manager,");
+      // Sanitize Closing Salutation in English Letter (NEVER French closing)
+      lm = lm.replace(/^(?:Je vous prie d['’]agr[ée]er|Veuillez agr[ée]er|Dans l['’]attente|Avec mes salutations|Salutations distingu[ée]es|Bien cordialement|Cordialement)[\s\S]*?(?=\n\s*[A-Z]|\n\s*${CANDIDATE_PROFILE.safeName}|$)/gmi, "Sincerely,\n\n");
+      lm = lm.replace(/Je vous prie d['’]agr[ée]er.*?(?:salutations distingu[ée]es|consid[ée]ration).*?\./gi, "Sincerely,");
+      result.letter_markdown = lm;
+    }
+
+    // === 4. ARCHITECTURE MEMO (ENGLISH) ===
+    if (result.memo_markdown) {
+      let memo = result.memo_markdown;
+      memo = memo.replace(/^##\s*\*{0,2}\s*M[ée]mo d['’]Architecture\s*:\s*(.*?)\*{0,2}$/gmi, "## **Architecture Memo: $1**");
+      memo = memo.replace(/^[ÀA]\s*l['’]attention\s+.*$\n?/gmi, "");
+      memo = memo.replace(/^Madame,\s*Monsieur,?\s*$\n?/gmi, "");
+      memo = memo.replace(/^Dear\s+Hiring\s+Manager,?\s*$\n?/gmi, "");
+      result.memo_markdown = memo;
+    }
+  } else {
+    // === 1. TECHNICAL NOTE (FRENCH) ===
+    if (result.technical_note_markdown) {
+      result.technical_note_markdown = result.technical_note_markdown
+        .replace(/^##\s*TECHNICAL BACKGROUND BRIEF.*$/gmi, "## NOTE DE RÉALISATION TECHNIQUE & PORTFOLIO PROJETS")
+        .replace(/^For the attention of Recruiters and Technical Directors.*$/gmi, "Dossier technique de référence destiné aux Directions Générales, Directeurs Techniques (CTO) et Recruteurs")
+        .replace(/^Candidate\s*:\s*/gmi, "Candidat : ")
+        .replace(/^Core Expertise\s*:\s*/gmi, "Expertise clé : ")
+        .replace(/Strategic\s*&\s*Operational\s*Scope\s*:/gi, "Cadrage Stratégique & Opérationnel :")
+        .replace(/^##\s*Selected Landmark Engineering Projects\s*\(Part 1\)/gmi, "## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 1)")
+        .replace(/^##\s*Selected Landmark Engineering Projects\s*\(Part 2\)/gmi, "## SÉLECTION DE RÉALISATIONS TECHNIQUES CLÉS (PARTIE 2)")
+        .replace(/^###?\s*(?:\d+\.\s*)?CROSS-FUNCTIONAL EXPERTISE DELIVERABLE TO YOUR ORGANIZATION.*$/gmi, "### COMPÉTENCES TRANSVERSALES APPLICABLES À VOTRE ORGANISATION")
+        .replace(/^##\s*Cross-Functional Expertise Deliverable to Your Organization/gmi, "## SYNTHÈSE DE VALEUR AJOUTÉE POUR VOTRE ORGANISATION")
+        .replace(/Management,\s*Strategy\s*&\s*Transformation/gi, "Management, Stratégie & Transformation")
+        .replace(/Architecture,\s*AI\s*&\s*Engineering\s*Discipline/gi, "Architecture, IA & Qualité d'Ingénierie")
+        .replace(/Complete portfolio, references, source code repositories.*available upon request\./gi, "Dossier complet, références détaillées, dépôts de code source et démonstrations interactives disponibles sur demande.");
+    }
+
+    // === 2. CV (FRENCH) ===
+    if (result.cv_markdown) {
+      result.cv_markdown = result.cv_markdown
+        .replace(/^##\s*CORE COMPETENCY PILLARS.*$/gmi, "## PILIERS D'EXPERTISE & COMPÉTENCES CLÉS")
+        .replace(/^##\s*KEY COMPETENCIES.*$/gmi, "## PILIERS D'EXPERTISE & COMPÉTENCES CLÉS")
+        .replace(/^##\s*PROFESSIONAL EXPERIENCE.*$/gmi, "## EXPÉRIENCES PROFESSIONNELLES")
+        .replace(/^##\s*TECHNICAL ENVIRONMENT.*$/gmi, "## ENVIRONNEMENT TECHNIQUE")
+        .replace(/^##\s*EDUCATION\s*(?:&|AND)\s*LANGUAGES.*$/gmi, "## FORMATION & LANGUES")
+        .replace(/\*\*Technical Environment\s*:\*\*/gi, "**Environnement technique :**")
+        .replace(/Technical Environment\s*:/gi, "Environnement technique :");
+    }
+
+    // === 3. COVER LETTER (FRENCH) — STRICT FRENCH PURITY ===
+    if (result.letter_markdown) {
+      let lm = result.letter_markdown;
+      lm = lm.replace(/^Attention:\s*(?:Hiring Manager|Hiring Team).*$/gmi, `À l'attention du Responsable du Recrutement - ${companyName}`);
+      lm = lm.replace(/^To the attention of\s+.*$/gmi, `À l'attention du Responsable du Recrutement - ${companyName}`);
+      lm = lm.replace(/^##\s*\*{0,2}\s*Subject\s*:\s*(?:Application\s+for\s+(?:the\s+position\s+of\s+)?)?(.*?)\*{0,2}$/gmi, "## **Objet : Candidature au poste de $1**");
+      lm = lm.replace(/^Dear\s+Hiring\s+Manager,?\s*$/gmi, "Madame, Monsieur,");
+      lm = lm.replace(/^Dear\s+(?:Sir|Madam|Mr\.|Ms\.|Hiring\s+Team),?\s*$/gmi, "Madame, Monsieur,");
+      lm = lm.replace(/^(?:Sincerely|Yours sincerely|Best regards|Kind regards|Warm regards),?\s*$/gmi, "Je vous prie d'agréer, Madame, Monsieur, l'expression de mes salutations distinguées.");
+      result.letter_markdown = lm;
+    }
+
+    // === 4. ARCHITECTURE MEMO (FRENCH) ===
+    if (result.memo_markdown) {
+      let memo = result.memo_markdown;
+      memo = memo.replace(/^##\s*\*{0,2}\s*Architecture Memo\s*:\s*(.*?)\*{0,2}$/gmi, "## **Mémo d'Architecture : $1**");
+      memo = memo.replace(/^[ÀA]\s*l['’]attention\s+.*$\n?/gmi, "");
+      memo = memo.replace(/^Madame,\s*Monsieur,?\s*$\n?/gmi, "");
+      memo = memo.replace(/^Dear\s+Hiring\s+Manager,?\s*$\n?/gmi, "");
+      result.memo_markdown = memo;
+    }
+  }
+}
+
+function enforceTwoPageCvCompleteness(cvMarkdown, isEnDoc) {
+  if (!cvMarkdown) return cvMarkdown;
+  let cv = cvMarkdown.trim();
+
+  // 1. Ensure "## PROFESSIONAL EXPERIENCE" / "## EXPÉRIENCES PROFESSIONNELLES" heading exists before first "### " role
+  if (!/^##\s*(PROFESSIONAL EXPERIENCE|EXP[ÉE]RIENCES PROFESSIONNELLES)/mi.test(cv)) {
+    const expHeader = isEnDoc ? "## PROFESSIONAL EXPERIENCE" : "## EXPÉRIENCES PROFESSIONNELLES";
+    cv = cv.replace(/(\n###\s+)/, `\n\n${expHeader}\n$1`);
+  }
+
+  // 2. Ensure Education section is present if accidentally omitted by the LLM
+  const eduSectionRegex = /^##\s*(EDUCATION|FORMATION)/mi;
+  if (!eduSectionRegex.test(cv)) {
+    const fullEduSection = isEnDoc
+      ? `## EDUCATION & LANGUAGES\n- **Certificate in Cognitive Neurosciences & DESS (M.Sc.) in Experimental Cognitive Psychology:** University of Geneva (1997–1998).\n- **DEA (M.Sc.) in Cognitive Sciences & Artificial Intelligence:** I.N.P.G Grenoble (1994, Honors, Research Fellowship).\n- **Master of Computer Science (Maîtrise) & DEUG MASS (Applied Mathematics):** Université Joseph Fourier & UPMF Grenoble (1993).\n- **Master of History (M2 Research, Historical & Archaeological Data Valorization):** Université de Bretagne Sud, Lorient (2025, Honors).\n- **B.Sc. (Licences L3) in Sociology & Art History:** Universities of Toulouse Le Mirail & Grenoble UPMF (2010).\n- **Languages:** English (C2 - Bilingual, TOEFL 267/300), French (C2 - Native), Spanish (B2 - Professional), Italian (B1 - Conversational).`
+      : `## FORMATION & LANGUES\n- **Certificat de Neurosciences Cognitives & DESS de Psychologie Cognitive Expérimentale :** Université de Genève (1997–1998).\n- **DEA Sciences Cognitives (Option Intelligence Artificielle) :** I.N.P.G Grenoble (1994, Mention Assez Bien, Boursier).\n- **Maîtrise d'Informatique & DEUG MASS (Mathématiques Appliquées) :** Université Joseph Fourier & UPMF Grenoble (1993).\n- **Master d'Histoire (M2 Recherche, Valorisation des Savoirs Historiques & Archéologiques) :** Université de Bretagne Sud, Lorient (2025, Mention Bien).\n- **Licences (L3) de Sociologie & d'Histoire de l'Art :** Universités de Toulouse Le Mirail & Grenoble UPMF (2010).\n- **Langues :** Anglais (C2 - Bilingue, TOEFL 267/300), Français (C2 - Langue maternelle), Espagnol (B2 - Professionnel), Italien (B1 - Opérationnel).`;
+    cv += "\n\n" + fullEduSection;
+  }
+
+  return cv;
+}
+
 function fetchJobDescription(url) {
   try {
     const options = {
@@ -808,7 +995,7 @@ function processJob(inputFolder, outputFolder, job) {
  * Can be run manually from the Apps Script editor or called programmatically.
  * 
  * @param {string} lang "fr" or "en"
- * @param {string[]} projectKeys Optional array of keys: ['openprimer', 'episteme', 'ether', 'swarmforge', 'eternity', 'jrobotics', 'jgame']. If null, selects 3 flagship projects.
+ * @param {string[]} projectKeys Optional array of keys: ['openprimer', 'episteme', 'ether', 'swarmforge', 'jrobotics', 'praxis', 'volumen']. If null, selects 3 flagship projects.
  * @param {string} customTitle Optional target title
  * @param {string} customExpertise Optional target expertise phrase
  * @returns {Object} { docUrl, pdfBlob }
@@ -933,11 +1120,15 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
     
     console.log(`[CV OPTIMIZER] Standard render total page count: ${pageCount} pages. Char count: ${markdownText.length}`);
     
-    // Check if CV part spills onto extra page (Total = 4 pages means 2-page CV + 2-page Note; Total = 2 pages without note or 4 pages with note)
-    // Attempt compact layout to compress CV to 1 page if possible (bringing total from 4 to 3 pages, or from 2 to 1 page)
-    if (pageCount === 4 || pageCount === 2) {
-      const targetPageCount = pageCount === 4 ? 3 : 1;
-      console.log(`[CV OPTIMIZER] Total pages: ${pageCount}. Attempting compact render to fit CV on 1 page (target total: ${targetPageCount} pages)...`);
+    // Check if CV part spills onto extra page (Target CV is exactly 2 full pages)
+    const parts = markdownText.split(/\n*(?:---pagebreak---|\[PAGE_BREAK\])\n*/i);
+    const hasAppendedNote = parts.length > 1;
+    const noteLength = hasAppendedNote ? parts.slice(1).join("\n").length : 0;
+    const expectedNotePages = hasAppendedNote ? (parts.length >= 3 || noteLength > 3000 ? 2 : 1) : 0;
+    const targetPageCount = 2 + expectedNotePages;
+    const isSpill = pageCount > targetPageCount;
+    if (isSpill) {
+      console.log(`[CV OPTIMIZER] Total pages: ${pageCount} (expected target: ${targetPageCount}). Attempting compact render to fit CV on 2 pages...`);
       let compactLayout = {
         bodySize: 9.3,
         h1Size: 14,
@@ -975,47 +1166,36 @@ function generateFilesFromTemplate(inputFolder, outputFolder, templateName, mark
       
       console.log(`[CV OPTIMIZER] Compact render total page count: ${compactPageCount} page(s).`);
       
-      if (compactPageCount === targetPageCount) {
-        console.log(`[CV OPTIMIZER] Success! CV portion successfully compressed into exactly 1 page.`);
-        // Keep compact version!
+      if (compactPageCount <= targetPageCount) {
+        console.log(`[CV OPTIMIZER] Success! CV portion fitted into 2 pages (${compactPageCount} total pages).`);
       } else {
-        // If it still doesn't fit on 1 page, it's a genuine 2-page CV.
-        // Revert to comfortable standard layout.
-        console.log(`[CV OPTIMIZER] Genuine 2-page CV portion. Reverting to comfortable standard layout.`);
+        console.log(`[CV OPTIMIZER] Still ${compactPageCount} pages. Attempting ultra-compact layout to eliminate orphan spill...`);
+        let ultraCompactLayout = {
+          bodySize: 8.8,
+          h1Size: 13.5,
+          h2Size: 9.8,
+          h3Size: 9.5,
+          marginTop: 14,
+          marginBottom: 14,
+          marginLeft: 24,
+          marginRight: 24,
+          lineSpacing: 1.06,
+          spacingBeforeH1: 6,
+          spacingAfterH1: 1,
+          spacingBeforeH2: 7,
+          spacingAfterH2: 1.5,
+          spacingBeforeH3: 3,
+          spacingAfterH3: 1,
+          spacingBeforeBody: 0.5,
+          spacingAfterBody: 0.5,
+          spacingBeforeList: 0.3,
+          spacingAfterList: 0.3
+        };
         const docToReopen2 = DocumentApp.openById(copy.getId());
         const bodyToReopen2 = docToReopen2.getBody();
-        renderMarkdownToDoc(bodyToReopen2, markdownText, templateName, layout);
+        renderMarkdownToDoc(bodyToReopen2, markdownText, templateName, ultraCompactLayout);
         docToReopen2.saveAndClose();
       }
-    } else if (pageCount > 4) {
-      // If it spills onto 5+ pages, attempt compact layout to fit on 4 pages
-      console.log("[CV OPTIMIZER] Spills onto 5+ pages. Attempting compact render to fit on 4 pages...");
-      let compactLayout2 = {
-        bodySize: 9.3,
-        h1Size: 14,
-        h2Size: 10,
-        h3Size: 10,
-        marginTop: 18,
-        marginBottom: 18,
-        marginLeft: 30,
-        marginRight: 30,
-        lineSpacing: 1.1,
-        spacingBeforeH1: 8,
-        spacingAfterH1: 1,
-        spacingBeforeH2: 10,
-        spacingAfterH2: 2,
-        spacingBeforeH3: 4,
-        spacingAfterH3: 1,
-        spacingBeforeBody: 1,
-        spacingAfterBody: 1,
-        spacingBeforeList: 0.5,
-        spacingAfterList: 0.5
-      };
-      
-      const docToReopen3 = DocumentApp.openById(copy.getId());
-      const bodyToReopen3 = docToReopen3.getBody();
-      renderMarkdownToDoc(bodyToReopen3, markdownText, templateName, compactLayout2);
-      docToReopen3.saveAndClose();
     }
   } else {
     // Non-CV: standard render
@@ -1746,7 +1926,7 @@ function callGemini(prompt) {
   const options = { 
     method: 'post', 
     contentType: 'application/json', 
-    payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }), 
+    payload: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 8192, temperature: 0.3 } }), 
     muteHttpExceptions: true 
   };
   
